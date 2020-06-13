@@ -22,7 +22,7 @@ def show_image(title, img, height=405, width=720):
     cv2.imshow(title, img)
 
 
-def draw_lines(img, lines, probabilistic_mode=False):
+def draw_lines(img, lines, probabilistic_mode=True):
     # Draw the lines:
     # copy edges to the images that will display the results in BGR
     cdst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)

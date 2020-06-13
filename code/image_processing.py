@@ -425,6 +425,76 @@ def find_hough_lines(img, probabilistic_mode=False, rho=1, theta=np.pi / 180, th
     return lines
 
 
+def extend_image_lines(img, lines, probabilistic_mode, color_value=255):
+    """Create a mask by extending the lines received.
+
+    Create a mask of the same size of the image `img`, where the `lines` received
+    have been drawn in order to cross the whole image. The color used to draw
+    the lines is specified by `color_value`.
+
+    Parameters
+    ----------
+    img: ndarray
+        the input image
+    lines: ndarray
+        a NumPy.array of lines
+    probabilistic_mode: bool
+        determines whether to use the Standard (False) or the Probabilistic
+        (True) Hough Transform
+    color_value: tuple
+        tuple (B,G,R) that specifies the color of the lines
+
+    Returns
+    -------
+    ndarray
+        Returns the mask with the lines drawn.
+
+    Notes
+    -----
+    For details visit:
+    - https://answers.opencv.org/question/2966/how-do-the-rho-and-theta-values-work-in-houghlines/#:~:text=rho%20is%20the%20distance%20from,are%20called%20rho%20and%20theta.
+    """
+
+    h, w = img.shape
+    mask = np.zeros((h, w), dtype=np.uint8)
+
+    length = np.max((h, w))
+
+    # TODO: improve the loop and remove redundancy
+    for line in lines:
+        line = line[0]
+        if probabilistic_mode:
+            theta = np.arctan2(line[1] - line[3], line[0] - line[2])
+
+            x0 = line[0]
+            y0 = line[1]
+
+            a = np.cos(theta)
+            b = np.sin(theta)
+
+            pt1 = (int(x0 - length * a), int(y0 - length * b),)
+            pt2 = (int(x0 + length * a), int(y0 + length * b),)
+        else:
+            rho = line[0]
+            theta = line[1]
+
+            a = np.cos(theta)
+            b = np.sin(theta)
+
+            # Read: https://answers.opencv.org/question/2966/how-do-the-rho-and-theta-values-work-in-houghlines/#:~:text=rho%20is%20the%20distance%20from,are%20called%20rho%20and%20theta.
+            x0 = a * rho
+            y0 = b * rho
+
+            length = 1000
+
+            pt1 = (int(x0 + length * (-b)), int(y0 + length * (a)))
+            pt2 = (int(x0 - length * (-b)), int(y0 - length * (a)))
+
+        cv2.line(mask, pt1, pt2, color_value, 10, cv2.LINE_AA)
+
+    return mask
+
+
 def painting_db_lookup():
     """
     Function to lookup the DB for a specific painting
@@ -478,10 +548,10 @@ def recognize_painting(img, mask, contours):
         # ----------------------------
         print_next_step(generator, "Hough Lines:")
         start_time = time.time()
-        probabilistic_mode = True
+        probabilistic_mode = False
         rho = 1
         theta = np.pi / 180
-        threshold = 0  # 60
+        threshold = 50  # 60
         ratio_percentage = 0.10
         lines = find_hough_lines(
             img=edges,
@@ -493,6 +563,38 @@ def recognize_painting(img, mask, contours):
         )
         exe_time_hough = time.time() - start_time
         print("\ttime: {:.3f} s".format(exe_time_hough))
+
+        # Step 11: Create mask from painting edges
+        # ----------------------------
+        print_next_step(generator, "Create mask from painting edges:")
+        start_time = time.time()
+        color_value = 255
+        extended_lines_mask = extend_image_lines(sub_mask, lines, probabilistic_mode, color_value)
+        exe_time_paint_mask = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_time_paint_mask))
+        cv2.imshow('image_paint_mask', extended_lines_mask)
+
+        # Step 12: Isolate Painting from mask
+        # ----------------------------
+        print_next_step(generator, "Isolate Painting from mask:")
+        start_time = time.time()
+        contours_mode = cv2.RETR_TREE
+        contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
+        painting_contours = find_image_contours(invert_image(extended_lines_mask), contours_mode, contours_method)
+        exe_time_painting_contours = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_time_painting_contours))
+        # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
+        img_contours = sub_img.copy()
+        cv2.drawContours(img_contours, painting_contours, -1, (0, 255, 0), 3)
+        show_image('painting_contours', img_contours)
+
+        # TODO: [EVALUATE] If the mask does not look like we expect (like a sudoku puzzle)
+        # then give up at this point :(
+        # if len(painting_contours) < 9:
+        #     return []
+
+
+
         cv2.waitKey(0)
 
 

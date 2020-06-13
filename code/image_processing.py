@@ -495,6 +495,33 @@ def extend_image_lines(img, lines, probabilistic_mode, color_value=255):
     return mask
 
 
+def isolate_painting(img):
+    """
+
+    Parameters
+    ----------
+    img
+
+    Returns
+    -------
+
+    """
+    contours_mode = cv2.RETR_TREE
+    contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
+    painting_contours = find_image_contours(invert_image(img), contours_mode, contours_method)
+
+    # TODO: [EVALUATE] If the mask does not look like we expect (like a sudoku puzzle)
+    # then give up at this point :(
+    # if len(painting_contours) < 9:
+    #     return []
+
+    largest_contour = painting_contours[0]
+    for contour in painting_contours[1:]:
+        largest_contour = contour if contour.shape[0] > largest_contour.shape[0] else largest_contour
+
+    return largest_contour
+
+
 def painting_db_lookup():
     """
     Function to lookup the DB for a specific painting
@@ -578,22 +605,13 @@ def recognize_painting(img, mask, contours):
         # ----------------------------
         print_next_step(generator, "Isolate Painting from mask:")
         start_time = time.time()
-        contours_mode = cv2.RETR_TREE
-        contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
-        painting_contours = find_image_contours(invert_image(extended_lines_mask), contours_mode, contours_method)
-        exe_time_painting_contours = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_painting_contours))
+        painting_contour = isolate_painting(extended_lines_mask)
+        exe_time_painting_contour = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_time_painting_contour))
         # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
         img_contours = sub_img.copy()
-        cv2.drawContours(img_contours, painting_contours, -1, (0, 255, 0), 3)
+        cv2.drawContours(img_contours, painting_contour, -1, (0, 255, 0), 3)
         show_image('painting_contours', img_contours)
-
-        # TODO: [EVALUATE] If the mask does not look like we expect (like a sudoku puzzle)
-        # then give up at this point :(
-        # if len(painting_contours) < 9:
-        #     return []
-
-
 
         cv2.waitKey(0)
 

@@ -495,31 +495,36 @@ def extend_image_lines(img, lines, probabilistic_mode, color_value=255):
     return mask
 
 
-def isolate_painting(img):
-    """
+def isolate_painting(mask):
+    """Isolate painting from the mask of the image
 
     Parameters
     ----------
-    img
+    mask: ndarray
+        mask of the same size of the image. The painting should be white, the background black
 
     Returns
     -------
+    list
+        Largest contour found. Each contour is stored as a list of all the
+        contours in the image. Each individual contour is a Numpy array
+        of (x,y) coordinates of boundary points of the object.
 
     """
     contours_mode = cv2.RETR_TREE
     contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
-    painting_contours = find_image_contours(invert_image(img), contours_mode, contours_method)
+    painting_contours = find_image_contours(invert_image(mask), contours_mode, contours_method)
 
     # TODO: [EVALUATE] If the mask does not look like we expect (like a sudoku puzzle)
     # then give up at this point :(
     # if len(painting_contours) < 9:
     #     return []
 
-    largest_contour = painting_contours[0]
-    for contour in painting_contours[1:]:
-        largest_contour = contour if contour.shape[0] > largest_contour.shape[0] else largest_contour
+    # largest_contour = painting_contours[0]
+    # for contour in painting_contours[1:]:
+    #     largest_contour = contour if contour.shape[0] > largest_contour.shape[0] else largest_contour
 
-    return largest_contour
+    return max(painting_contours, key=cv2.contourArea)
 
 
 def painting_db_lookup():
@@ -609,8 +614,10 @@ def recognize_painting(img, mask, contours):
         exe_time_painting_contour = time.time() - start_time
         print("\ttime: {:.3f} s".format(exe_time_painting_contour))
         # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-        img_contours = sub_img.copy()
-        cv2.drawContours(img_contours, painting_contour, -1, (0, 255, 0), 3)
+        img_contours = np.zeros((sub_img.shape[0], sub_img.shape[1]))
+        cv2.drawContours(img_contours, [painting_contour], 0, 255, cv2.FILLED)
+        # If `cv2.drawContours` doesn't work, use `cv2.fillPoly`
+        # cv2.fillPoly(img_contours, pts=[painting_contour], color=255)
         show_image('painting_contours', img_contours)
 
         cv2.waitKey(0)

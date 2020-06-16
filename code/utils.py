@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import os
 
 
 def step_generator():
@@ -49,7 +50,57 @@ def draw_lines(img, lines, probabilistic_mode=True):
         "Probabilistic" if probabilistic_mode else "Standard"), cdst)
 
 
+def draw_corners(img, corners):
+    for i in corners:
+        x, y = i.ravel()
+        cv2.circle(img, (x, y), 3, 255, -1)
+
+
+def order_points(pts):
+    """Order a list of coordinates.
+
+    Order a list of coordinates in a way
+    such that the first entry in the list is the top-left,
+    the second entry is the top-right, the third is the
+    bottom-left, and the fourth is the bottom-right.
+    
+    Parameters
+    ----------
+    pts: ndarray
+        list of coordinates
+
+    Returns
+    -------
+    ndarray
+        Returns a list of ordered coordinates
+
+    Notes
+    -----
+    Credits: https://www.pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
+
+    """
+    # initialzie a list of coordinates that will be ordered
+    # such that the first entry in the list is the top-left,
+    # the second entry is the top-right, the third is the
+    # bottom-left, and the fourth is the bottom-right
+    rect = np.zeros((4, 2), dtype="float32")
+    # the top-left point will have the smallest sum, whereas
+    # the bottom-left will have the largest difference
+    s = pts.sum(axis=1)
+    rect[0] = pts[np.argmin(s)]
+    rect[3] = pts[np.argmax(s)]
+    # now, compute the difference between the points, the
+    # top-right point will have the smallest difference,
+    # whereas the bottom-right point will have the largest sum
+    diff = np.diff(pts, axis=1)
+    rect[1] = pts[np.argmin(diff)]
+    rect[2] = pts[np.argmax(diff)]
+    # return the ordered coordinates
+    return rect
+
+
 if __name__ == '__main__':
+    # db = create_paintings_db("./paintings_db")
     # for num in step_generator("A"):
     #     if num > 5:
     #         break

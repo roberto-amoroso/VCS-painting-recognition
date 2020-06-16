@@ -1,9 +1,21 @@
 # Testing MODE ON
-from utils import print_next_step, step_generator, show_image, draw_lines
+from utils import print_next_step, step_generator, show_image, draw_lines, draw_corners, order_points
 import cv2
 import numpy as np
 import os
 import time
+
+
+def create_paintings_db(path):
+    painting_db = []
+    for subdir, dirs, files in os.walk(path):
+        db_dir_name = subdir.replace('/', '\\').split('\\')[-1]
+
+        print('Opened directory "{}"'.format(db_dir_name))
+
+        for painting in files:
+            painting_db.append(cv2.imread(os.path.join(path, painting)))
+    return painting_db
 
 
 def mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level):
@@ -527,22 +539,200 @@ def isolate_painting(mask):
     return max(painting_contours, key=cv2.contourArea)
 
 
-def painting_db_lookup():
+def find_painting_corners(img, max_number_corners=4, corner_quality=0.001, min_distance=20):
+    """Perform Shi-Tomasi Corner detection.
+
+    Perform Shi-Tomasi Corner detection to return the corners found in the image.
+
+    Parameters
+    ----------
+    img: ndarray
+        the input image
+    max_number_corners: int
+        maximum number of corners to return
+    corner_quality: float
+        minimal accepted quality of image corners. The corners with the quality
+        measure less than the product are rejected.
+    min_distance: int
+        minimum Euclidean distance between the returned corners
+
+    Returns
+    -------
+    ndarray
+        Returns a NumPy array of the most prominent corners in the image, in the form (x,y).
+
+    Notes
+    -----
+    For details visit:
+    - https://docs.opencv.org/master/dd/d1a/group__imgproc__feature.html#ga1d6bb77486c8f92d79c8793ad995d541
+    - https://docs.opencv.org/master/d4/d8c/tutorial_py_shi_tomasi.html
+    - https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_features_harris/py_features_harris.html
+    """
+
+    corners = cv2.goodFeaturesToTrack(
+        img,
+        max_number_corners,
+        corner_quality,
+        min_distance
+    )
+    return corners
+
+
+def painting_rectification(src_img, dst_img, corners):
+    """Executes Painting Rectification through an Affine Transformation.
+
+
+    Returns a rectified version of the `src_img`. The 'corners' of the
+    `src_img` are translated to the corners of the 'dst_img'.
+
+    Parameters
+    -------
+    src_img: ndarray
+        source image to apply the transformation
+    dst_img: ndarray
+        destination image, the image used to transform the perspective of `src_img`
+        After transform, `src_img` will have the same perspective as `dst_img`.
+    corners: ndarray
+        the NumPy array of the image corners
+
+    Returns
+    -------
+    ndarray
+        Returns an image that is like `src_img` but with the same perspective
+        and shape as `dst_img`.
+
+    Notes
+    -----
+    For details visit:
+    - https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#warpperspective
+    - https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html?highlight=findhomography#findhomography
+    """
+
+    h_dst = dst_img.shape[0]
+    w_dst = dst_img.shape[1]
+
+    # Source and destination points for the affine transformation
+    src_points = np.float32(order_points(corners[:, 0]))
+    dst_points = np.float32([
+        [0, 0],
+        [w_dst - 1, 0],
+        [0, h_dst - 1],
+        [w_dst - 1, h_dst - 1]
+    ])
+
+    # Find perspective transformation
+    retval, mask = cv2.findHomography(src_points, dst_points)
+
+    # Apply perspective transformation to the image
+    im_warped = cv2.warpPerspective(src_img, retval, (w_dst, h_dst), cv2.RANSAC)
+    return im_warped
+
+
+def match_features_orb(src_img, dst_img, max_distance=50):
+    """Find the matches between two images.
+
+    Find the matches between two images using ORB to find Keypoints.
+
+    Parameters
+    ----------
+    src_img: ndarray
+        source image
+    dst_img: ndarray
+        destination image
+    max_distance: int
+        minimum distance to consider a match valid
+    Returns
+    -------
+    list
+        Returns a list of all valid matched found.
+
+    Notes
+    -----
+    For details visit
+    - https://docs.opencv.org/3.4.0/d3/da1/classcv_1_1BFMatcher.html#ac6418c6f87e0e12a88979ea57980c020
+
+    """
+    orb = cv2.ORB_create()
+
+    src_kp = orb.detect(src_img, None)
+    src_kp, src_des = orb.compute(src_img, src_kp)
+    cv2.imshow("src_kp", cv2.drawKeypoints(src_img, src_kp, None, color=(0, 255, 0), flags=0))
+
+    dst_kp = orb.detect(dst_img, None)
+    dst_kp, dst_des = orb.compute(dst_img, dst_kp)
+    cv2.imshow("dst_kp", cv2.drawKeypoints(dst_img, dst_kp, None, color=(0, 255, 0), flags=0))
+
+    # Find matches between the features in the source image and the destination
+    # image (i.e. painting)
+    matcher = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True)
+    matches = matcher.match(src_des, dst_des)
+    matches = [m for m in matches if m.distance <= max_distance]
+
+    # Show matches
+    draw_params = dict(  # draw matches in green color
+        singlePointColor=None,
+        flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT)
+    matches_img = cv2.drawMatches(src_img, src_kp, dst_img, dst_kp, matches, None, **draw_params)
+    cv2.imshow("matches_img", matches_img)
+    # cv2.waitKey(0)
+
+    return matches
+
+
+def painting_db_lookup(img, corners, paintings_db):
     """
     Function to lookup the DB for a specific painting
+
     Returns
     -------
 
+    Notes
+    -----
+    For details visit:
+    - https://docs.opencv.org/3.4/d1/d89/tutorial_py_orb.html
+
     """
-    pass
+
+    best_match_id = -1
+    best_match_size = 0
+
+    for id, painting in enumerate(paintings_db):
+        # Step 14: Rectify Painting
+        # ----------------------------
+        print_next_step(generator, "Rectify Painting")
+        start_time = time.time()
+        rectified_img = painting_rectification(img, painting, corners)
+        exe_time_rectification = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_time_rectification))
+        cv2.imshow('image_rectified', rectified_img)
+        cv2.imshow('image_db', painting)
+
+        # STEP 15: Match features using ORB
+        # ----------------------------
+        print_next_step(generator, "Match features using ORB")
+        start_time = time.time()
+        max_distance = 50
+        matches = match_features_orb(rectified_img, painting, max_distance)
+
+        if len(matches) > best_match_size:
+            best_match_size = len(matches)
+            best_match_id = id
+
+        exe_time_orb = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_time_orb))
+
+    # If there is a best match, then return it
+    if best_match_id >= 0:
+        return best_match_id
+
+    # Otherwise, return the id of painting having the most similar histogram
+    else:
+        pass
 
 
-def find_painting_corners(img, mask):
-    pass
-
-
-def recognize_painting(img, mask, contours):
+def recognize_painting(img, mask, contours, paintings_db):
     """TODO: add descriotion and parameters needed
+    TODO: fix `generator` variable in the function
 
     Parameters
     ----------
@@ -563,15 +753,43 @@ def recognize_painting(img, mask, contours):
         cv2.imshow('image_sub_img', sub_img)
         cv2.imshow('image_sub_mask', sub_mask)
 
+        # Step 7: Erode components to remove unwanted objects connected to the frame
+        # ----------------------------
+        print_next_step(generator, "Erode Components:")
+        start_time = time.time()
+        kernel_size = 40
+        eroded_mask = image_erosion(sub_mask, kernel_size)
+        exe_time_mask_erosion = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
+        cv2.imshow('image_mask_eroded', eroded_mask)
+
+        # Step 8: Blur using Median Filter to smooth the lines of the frame
+        # ----------------------------
+        print_next_step(generator, "Blur with Median Filter:")
+        start_time = time.time()
+        blur_size = 31
+        blurred_mask = image_blurring(eroded_mask, blur_size)
+        exe_time_blurring = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_time_blurring))
+        cv2.imshow('image_mask_blurred', blurred_mask)
+
+        # -----------------------
+        # PADDING:
+        # Add a black pixel of padding in order to avoid problem
+        # when you will try find edge of painting touching the border.
+        # You can also use the `borderType=` parameter of `cv2.erode`
+        # -----------------------
+        blurred_mask = cv2.copyMakeBorder(blurred_mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, 0)
+
         # Step 9: Canny Edge detection to get the outline of the frame
         # ----------------------------
         print_next_step(generator, "Canny Edge detection:")
         start_time = time.time()
         # Credits: https://stackoverflow.com/questions/4292249/automatic-calculation-of-low-and-high-thresholds-for-the-canny-operation-in-open
-        otsu_th, otsu_im = cv2.threshold(sub_mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        otsu_th, otsu_im = cv2.threshold(blurred_mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         threshold1 = otsu_th * 0.5
         threshold2 = otsu_th
-        edges = canny_edge_detection(sub_mask, threshold1, threshold2)
+        edges = canny_edge_detection(blurred_mask, threshold1, threshold2)
         exe_time_canny = time.time() - start_time
         print("\ttime: {:.3f} s".format(exe_time_canny))
         cv2.imshow('image_mask_canny', edges)
@@ -610,24 +828,55 @@ def recognize_painting(img, mask, contours):
         # ----------------------------
         print_next_step(generator, "Isolate Painting from mask:")
         start_time = time.time()
-        painting_contour = isolate_painting(extended_lines_mask)
+        max_contour = isolate_painting(extended_lines_mask)
         exe_time_painting_contour = time.time() - start_time
         print("\ttime: {:.3f} s".format(exe_time_painting_contour))
         # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-        img_contours = np.zeros((sub_img.shape[0], sub_img.shape[1]))
-        cv2.drawContours(img_contours, [painting_contour], 0, 255, cv2.FILLED)
+        painting_contour = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
+        cv2.drawContours(painting_contour, [max_contour], 0, 255, cv2.FILLED)
         # If `cv2.drawContours` doesn't work, use `cv2.fillPoly`
-        # cv2.fillPoly(img_contours, pts=[painting_contour], color=255)
-        show_image('painting_contours', img_contours)
+        # cv2.fillPoly(painting_contour, pts=[painting_contour], color=255)
+        cv2.imshow('painting_contours', painting_contour)
 
+        # Step 13: Corner Detection of the painting
+        # ----------------------------
+        print_next_step(generator, "Corner Detection")
+        start_time = time.time()
+        max_number_corners = 4
+        corner_quality = 0.001
+        min_distance = 20
+        corners = find_painting_corners(
+            painting_contour,
+            max_number_corners=max_number_corners,
+            corner_quality=corner_quality,
+            min_distance=min_distance
+        )
+        exe_corner_detection = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_corner_detection))
+        painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
+        draw_corners(painting_corners, corners)
+        cv2.imshow('painting_corners', painting_corners)
+
+        # If we found painting corners, then we execute DB lookup
+        if corners.shape[0] == 4:
+            painting_id = painting_db_lookup(sub_img, corners, paintings_db)
+            if painting_id is not None:
+                cv2.imshow("prediction", paintings_db[painting_id])
         cv2.waitKey(0)
 
 
 if __name__ == '__main__':
     photos_path = 'dataset/photos'
-    videos_dir_name = '013'
+    videos_dir_name = '009'  # '013'
     # filename = '20180529_112417_ok_0031.jpg'
-    filename = '20180529_112417_ok_0026.jpg'
+    # filename = '20180529_112417_ok_0026.jpg'
+    # filename = 'IMG_2653_0002.jpg'
+    # filename = 'IMG_2657_0006.jpg'
+    filename = 'IMG_2659_0012.jpg'  # CRITIC
+    filename = 'IMG_2659_0006.jpg'
+    painting_db_path = "./paintings_db"
+
+    paintings_db = create_paintings_db(painting_db_path)
 
     generator = step_generator()
     total_time = 0
@@ -720,9 +969,9 @@ if __name__ == '__main__':
     print_next_step(generator, "Refine Components found:")
     start_time = time.time()
     find_min_area_rect = True
-    width_min = 100
-    height_min = 100
-    area_percentage_min = 0.5
+    width_min = 200
+    height_min = 200
+    area_percentage_min = 0.6
     candidate_painting_contours = extract_candidate_painting_contours(
         img=img,
         contours=contours,
@@ -738,34 +987,34 @@ if __name__ == '__main__':
     cv2.drawContours(img_refined_contours, candidate_painting_contours, -1, (0, 255, 0), 3)
     show_image('image_refined_contours', img_refined_contours)
 
-    # Step 7: Erode components to remove unwanted objects connected to the frame
-    # ----------------------------
-    print_next_step(generator, "Erode Components:")
-    start_time = time.time()
-    kernel_size = 40
-    eroded_mask = image_erosion(wall_mask_inverted, kernel_size)
-    exe_time_mask_erosion = time.time() - start_time
-    total_time += exe_time_mask_erosion
-    print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
-    show_image('image_mask_eroded', eroded_mask)
-
-    # Step 8: Blur using Median Filter to smooth the lines of the frame
-    # ----------------------------
-    print_next_step(generator, "Blur with Median Filter:")
-    start_time = time.time()
-    blur_size = 31
-    blurred_mask = image_blurring(eroded_mask, blur_size)
-    exe_time_blurring = time.time() - start_time
-    total_time += exe_time_blurring
-    print("\ttime: {:.3f} s".format(exe_time_blurring))
-    show_image('image_mask_blurred', blurred_mask)
+    # # Step 7: Erode components to remove unwanted objects connected to the frame
+    # # ----------------------------
+    # print_next_step(generator, "Erode Components:")
+    # start_time = time.time()
+    # kernel_size = 40
+    # eroded_mask = image_erosion(wall_mask_inverted, kernel_size)
+    # exe_time_mask_erosion = time.time() - start_time
+    # total_time += exe_time_mask_erosion
+    # print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
+    # show_image('image_mask_eroded', eroded_mask)
+    #
+    # # Step 8: Blur using Median Filter to smooth the lines of the frame
+    # # ----------------------------
+    # print_next_step(generator, "Blur with Median Filter:")
+    # start_time = time.time()
+    # blur_size = 31
+    # blurred_mask = image_blurring(eroded_mask, blur_size)
+    # exe_time_blurring = time.time() - start_time
+    # total_time += exe_time_blurring
+    # print("\ttime: {:.3f} s".format(exe_time_blurring))
+    # show_image('image_mask_blurred', blurred_mask)
 
     # ----------------------------
     # Recognize Painting:
     # for each frame contour, recognise a painting from it
     # ----------------------------
     start_time = time.time()
-    recognize_painting(img, blurred_mask, candidate_painting_contours)
+    recognize_painting(img, wall_mask_inverted, candidate_painting_contours, paintings_db)
     exe_time_recognizing = time.time() - start_time
     total_time += exe_time_recognizing
     print("\n# Recognizing paintings total time: {:.3f} s".format(exe_time_recognizing))

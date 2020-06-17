@@ -1,21 +1,52 @@
 # Testing MODE ON
-from utils import print_next_step, step_generator, show_image, draw_lines, draw_corners, order_points
+from model.painting import Painting
+import pandas as pd
+from utils import print_next_step, step_generator, show_image, draw_lines, draw_corners, order_points, translate_points
 import cv2
 import numpy as np
 import os
 import time
 
+generator = step_generator()
 
-def create_paintings_db(path):
-    painting_db = []
-    for subdir, dirs, files in os.walk(path):
+
+def create_paintings_db(db_path, data_path):
+    """Creates a list of all paintings in the DB and their info.
+
+    Parameters
+    ----------
+    db_path: str
+        path of the directory containing all painting files.
+    data_path: str
+        path of the '.csv' file containing all paintings info.
+
+    Returns
+    -------
+    list
+        list of `Painting` objects, describing all the paintings that populate
+        the DB.
+    """
+    paintings_db = []
+    df_painting_data = pd.read_csv(data_path)
+    for subdir, dirs, files in os.walk(db_path):
         db_dir_name = subdir.replace('/', '\\').split('\\')[-1]
 
         print('Opened directory "{}"'.format(db_dir_name))
 
-        for painting in files:
-            painting_db.append(cv2.imread(os.path.join(path, painting)))
-    return painting_db
+        for painting_file in files:
+            image = cv2.imread(os.path.join(db_path, painting_file))
+            painting_info = df_painting_data.loc[df_painting_data['Image'] == painting_file].iloc[0]
+            title = painting_info['Title']
+            author = painting_info['Author']
+            room = painting_info['Room']
+            painting = Painting(
+                image,
+                title,
+                author,
+                room
+            )
+            paintings_db.append(painting)
+    return paintings_db
 
 
 def mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level):
@@ -497,7 +528,7 @@ def extend_image_lines(img, lines, probabilistic_mode, color_value=255):
             x0 = a * rho
             y0 = b * rho
 
-            length = 1000
+            length = 2000
 
             pt1 = (int(x0 + length * (-b)), int(y0 + length * (a)))
             pt2 = (int(x0 - length * (-b)), int(y0 - length * (a)))
@@ -679,12 +710,94 @@ def match_features_orb(src_img, dst_img, max_distance=50):
     return matches
 
 
-def painting_db_lookup(img, corners, paintings_db):
-    """
-    Function to lookup the DB for a specific painting
+def histo_matching(src_img, dst_img):
+    """Histogram Comparison of two images.
+
+    Parameters
+    ----------
+    src_img: ndarray
+        first image to compare
+    dst_img: ndarray
+        second image to compare
 
     Returns
     -------
+    float
+        Returns the value of the Histogram Comparison of two images using the
+        Intersection method.
+
+    Notes
+    -----
+    For details visit:
+    - https://docs.opencv.org/3.4/d8/dc8/tutorial_histogram_comparison.html
+    - https://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html
+    - https://docs.opencv.org/3.4/d8/dbc/tutorial_histogram_calculation.html
+    - https://docs.opencv.org/3.4/d6/dc7/group__imgproc__hist.html#ga6ca1876785483836f72a77ced8ea759a
+    """
+
+    # Convert image from BGR to HSV
+    src_img = cv2.cvtColor(src_img, cv2.COLOR_BGR2HSV)
+    dst_img = cv2.cvtColor(dst_img, cv2.COLOR_BGR2HSV)
+
+    # Set number of bins for hue and saturation
+    hue_bins = 50
+    sat_bins = 60
+    hist_size = [hue_bins, sat_bins]
+
+    # Set ranges for hue and saturation
+    hue_range = [0, 180]
+    sat_range = [0, 256]
+    hist_range = hue_range + sat_range
+
+    # Use the 0-th and 1-st channels of the histograms for the comparison
+    channels = [0, 1]
+
+    # Create histograms
+    src_hist = cv2.calcHist(
+        [src_img],
+        channels,
+        None,
+        hist_size,
+        hist_range,
+        accumulate=False
+    )
+    cv2.normalize(src_hist, src_hist, 0, 1, cv2.NORM_MINMAX)
+
+    dst_hist = cv2.calcHist(
+        [dst_img],
+        channels,
+        None,
+        hist_size,
+        hist_range,
+        accumulate=False
+    )
+    cv2.normalize(dst_hist, dst_hist, 0, 1, cv2.NORM_MINMAX)
+
+    hist_comparison = cv2.compareHist(src_hist, dst_hist, cv2.HISTCMP_INTERSECT)
+    return hist_comparison
+
+
+def painting_db_lookup(img, corners, paintings_db, histo_mode=False):
+    """Lookup the DB for a specific painting using ORB or histogram matching.
+
+    Parameters
+    ----------
+    img: ndarray
+        the input image.
+    corners: ndarray
+        a NumPy array of the corners in `img`, in the form (x,y).
+    paintings_db: list
+        list of all `Painting` object that populate the DB.
+    histo_mode: bool
+        indicate which method use for the matching:
+        - True = Histogram Matching.
+        - False = ORB matching.
+
+    Returns
+    -------
+    int
+        Returns the id of the painting of the DB that generated the
+        best matching.
 
     Notes
     -----
@@ -696,8 +809,10 @@ def painting_db_lookup(img, corners, paintings_db):
     best_match_id = -1
     best_match_size = 0
 
-    for id, painting in enumerate(paintings_db):
-        # Step 14: Rectify Painting
+    for id, painting_data in enumerate(paintings_db):
+        painting = painting_data.image
+
+        # Step 15: Rectify Painting
         # ----------------------------
         print_next_step(generator, "Rectify Painting")
         start_time = time.time()
@@ -707,43 +822,59 @@ def painting_db_lookup(img, corners, paintings_db):
         cv2.imshow('image_rectified', rectified_img)
         cv2.imshow('image_db', painting)
 
-        # STEP 15: Match features using ORB
-        # ----------------------------
-        print_next_step(generator, "Match features using ORB")
-        start_time = time.time()
-        max_distance = 50
-        matches = match_features_orb(rectified_img, painting, max_distance)
+        if not histo_mode:
+            # Step 16: Match features using ORB
+            # ----------------------------
+            print_next_step(generator, "Match features using ORB")
+            start_time = time.time()
+            max_distance = 50
+            matches = match_features_orb(rectified_img, painting, max_distance)
+            match_size = len(matches)
+            exe_time_orb = time.time() - start_time
+            print("\ttime: {:.3f} s".format(exe_time_orb))
+        else:
+            # Step 17: Match features using HISTOGRAMS
+            # ----------------------------
+            print_next_step(generator, "Match features using HISTOGRAMS")
+            start_time = time.time()
+            match_size = histo_matching(rectified_img, painting)
+            exe_time_histo = time.time() - start_time
+            print("\ttime: {:.3f} s".format(exe_time_histo))
 
-        if len(matches) > best_match_size:
-            best_match_size = len(matches)
+        if match_size > best_match_size:
+            best_match_size = match_size
             best_match_id = id
-
-        exe_time_orb = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_orb))
 
     # If there is a best match, then return it
     if best_match_id >= 0:
         return best_match_id
-
     # Otherwise, return the id of painting having the most similar histogram
     else:
-        pass
+        return painting_db_lookup(img, corners, paintings_db, True)
 
 
 def recognize_painting(img, mask, contours, paintings_db):
-    """TODO: add descriotion and parameters needed
-    TODO: fix `generator` variable in the function
+    """Recognizes a painting from each frame contour.
 
     Parameters
     ----------
-    img
-    mask
-    contours
+    img: ndarray
+        the input image.
+    mask: ndarray
+        the mask of the image in which the wall is black and the possible
+        paintings are white.
+    contours: list
+        the list of the contours of possible paintings found in the image.
+    paintings_db: list
+        list of all `Painting` object that populate the DB.
 
     Returns
     -------
+    list
+        Returns a list of all painting recognized in the input image `img`.
 
     """
+    frame_paintings_recognized = []
     for contour in contours:
         x, y, w_rect, h_rect = cv2.boundingRect(contour)
 
@@ -753,25 +884,25 @@ def recognize_painting(img, mask, contours, paintings_db):
         cv2.imshow('image_sub_img', sub_img)
         cv2.imshow('image_sub_mask', sub_mask)
 
-        # Step 7: Erode components to remove unwanted objects connected to the frame
-        # ----------------------------
-        print_next_step(generator, "Erode Components:")
-        start_time = time.time()
-        kernel_size = 40
-        eroded_mask = image_erosion(sub_mask, kernel_size)
-        exe_time_mask_erosion = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
-        cv2.imshow('image_mask_eroded', eroded_mask)
-
-        # Step 8: Blur using Median Filter to smooth the lines of the frame
-        # ----------------------------
-        print_next_step(generator, "Blur with Median Filter:")
-        start_time = time.time()
-        blur_size = 31
-        blurred_mask = image_blurring(eroded_mask, blur_size)
-        exe_time_blurring = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_blurring))
-        cv2.imshow('image_mask_blurred', blurred_mask)
+        # # Step 7: Erode components to remove unwanted objects connected to the frame
+        # # ----------------------------
+        # print_next_step(generator, "Erode Components:")
+        # start_time = time.time()
+        # kernel_size = 40
+        # eroded_mask = image_erosion(sub_mask, kernel_size)
+        # exe_time_mask_erosion = time.time() - start_time
+        # print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
+        # cv2.imshow('image_mask_eroded', eroded_mask)
+        #
+        # # Step 8: Blur using Median Filter to smooth the lines of the frame
+        # # ----------------------------
+        # print_next_step(generator, "Blur with Median Filter:")
+        # start_time = time.time()
+        # blur_size = 31
+        # blurred_mask = image_blurring(eroded_mask, blur_size)
+        # exe_time_blurring = time.time() - start_time
+        # print("\ttime: {:.3f} s".format(exe_time_blurring))
+        # cv2.imshow('image_mask_blurred', blurred_mask)
 
         # -----------------------
         # PADDING:
@@ -779,7 +910,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         # when you will try find edge of painting touching the border.
         # You can also use the `borderType=` parameter of `cv2.erode`
         # -----------------------
-        blurred_mask = cv2.copyMakeBorder(blurred_mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, 0)
+        blurred_mask = cv2.copyMakeBorder(sub_mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, 0)
 
         # Step 9: Canny Edge detection to get the outline of the frame
         # ----------------------------
@@ -838,6 +969,11 @@ def recognize_painting(img, mask, contours, paintings_db):
         # cv2.fillPoly(painting_contour, pts=[painting_contour], color=255)
         cv2.imshow('painting_contours', painting_contour)
 
+        # -----------------------
+        # PADDING
+        # -----------------------
+        painting_contour = cv2.copyMakeBorder(painting_contour, 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, 0)
+
         # Step 13: Corner Detection of the painting
         # ----------------------------
         print_next_step(generator, "Corner Detection")
@@ -853,32 +989,45 @@ def recognize_painting(img, mask, contours, paintings_db):
         )
         exe_corner_detection = time.time() - start_time
         print("\ttime: {:.3f} s".format(exe_corner_detection))
-        painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
-        draw_corners(painting_corners, corners)
-        cv2.imshow('painting_corners', painting_corners)
 
         # If we found painting corners, then we execute DB lookup
-        if corners.shape[0] == 4:
+        if corners is not None and corners.shape[0] == 4:
+            painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
+            draw_corners(painting_corners, corners)
+            cv2.imshow('painting_corners', painting_corners)
+
+            # Step 14: Painting DB lookup
+            # ----------------------------
+            print_next_step(generator, "Painting DB lookup")
+            start_time = time.time()
             painting_id = painting_db_lookup(sub_img, corners, paintings_db)
-            if painting_id is not None:
-                cv2.imshow("prediction", paintings_db[painting_id])
+            exe_db_lookup = time.time() - start_time
+            print("\ttime: {:.3f} s".format(exe_db_lookup))
+            if painting_id is not None and painting_id != -1:
+                recognized_painting = paintings_db[painting_id]
+                cv2.imshow("prediction", recognized_painting.image)
+                recognized_painting.frame_contour = contour
+                recognized_painting.points = translate_points(max_contour, [x, y])
+                recognized_painting.corners = translate_points(corners, [x, y])
+                frame_paintings_recognized.append(recognized_painting)
+
         cv2.waitKey(0)
+    return frame_paintings_recognized
 
 
 if __name__ == '__main__':
     photos_path = 'dataset/photos'
-    videos_dir_name = '009'  # '013'
+    videos_dir_name = '009'  # '013' or '009'
     # filename = '20180529_112417_ok_0031.jpg'
     # filename = '20180529_112417_ok_0026.jpg'
     # filename = 'IMG_2653_0002.jpg'
-    # filename = 'IMG_2657_0006.jpg'
-    filename = 'IMG_2659_0012.jpg'  # CRITIC
-    filename = 'IMG_2659_0006.jpg'
+    filename = 'IMG_2657_0006.jpg'
+    # filename = 'IMG_2659_0012.jpg'  # CRITIC
+    # filename = 'IMG_2659_0006.jpg'
     painting_db_path = "./paintings_db"
+    painting_data_path = "./data/data.csv"
 
-    paintings_db = create_paintings_db(painting_db_path)
-
-    generator = step_generator()
+    paintings_db = create_paintings_db(painting_db_path, painting_data_path)
     total_time = 0
 
     img_path = os.path.join(photos_path, videos_dir_name, filename)
@@ -905,7 +1054,7 @@ if __name__ == '__main__':
     print_next_step(generator, "Mask the Wall:")
     start_time = time.time()
     color_difference = 2
-    x_samples = 8
+    x_samples = 8  # 8 or 16
     wall_mask = get_mask_largest_segment(img_mss, color_difference, x_samples)
     exe_time_mask_largest_segment = time.time() - start_time
     total_time += exe_time_mask_largest_segment
@@ -987,34 +1136,34 @@ if __name__ == '__main__':
     cv2.drawContours(img_refined_contours, candidate_painting_contours, -1, (0, 255, 0), 3)
     show_image('image_refined_contours', img_refined_contours)
 
-    # # Step 7: Erode components to remove unwanted objects connected to the frame
-    # # ----------------------------
-    # print_next_step(generator, "Erode Components:")
-    # start_time = time.time()
-    # kernel_size = 40
-    # eroded_mask = image_erosion(wall_mask_inverted, kernel_size)
-    # exe_time_mask_erosion = time.time() - start_time
-    # total_time += exe_time_mask_erosion
-    # print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
-    # show_image('image_mask_eroded', eroded_mask)
-    #
-    # # Step 8: Blur using Median Filter to smooth the lines of the frame
-    # # ----------------------------
-    # print_next_step(generator, "Blur with Median Filter:")
-    # start_time = time.time()
-    # blur_size = 31
-    # blurred_mask = image_blurring(eroded_mask, blur_size)
-    # exe_time_blurring = time.time() - start_time
-    # total_time += exe_time_blurring
-    # print("\ttime: {:.3f} s".format(exe_time_blurring))
-    # show_image('image_mask_blurred', blurred_mask)
+    # Step 7: Erode components to remove unwanted objects connected to the frame
+    # ----------------------------
+    print_next_step(generator, "Erode Components:")
+    start_time = time.time()
+    kernel_size = 40
+    eroded_mask = image_erosion(wall_mask_inverted, kernel_size)
+    exe_time_mask_erosion = time.time() - start_time
+    total_time += exe_time_mask_erosion
+    print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
+    show_image('image_mask_eroded', eroded_mask)
+
+    # Step 8: Blur using Median Filter to smooth the lines of the frame
+    # ----------------------------
+    print_next_step(generator, "Blur with Median Filter:")
+    start_time = time.time()
+    blur_size = 31
+    blurred_mask = image_blurring(eroded_mask, blur_size)
+    exe_time_blurring = time.time() - start_time
+    total_time += exe_time_blurring
+    print("\ttime: {:.3f} s".format(exe_time_blurring))
+    show_image('image_mask_blurred', blurred_mask)
 
     # ----------------------------
     # Recognize Painting:
     # for each frame contour, recognise a painting from it
     # ----------------------------
     start_time = time.time()
-    recognize_painting(img, wall_mask_inverted, candidate_painting_contours, paintings_db)
+    frame_paintings_recognized = recognize_painting(img, blurred_mask, candidate_painting_contours, paintings_db)
     exe_time_recognizing = time.time() - start_time
     total_time += exe_time_recognizing
     print("\n# Recognizing paintings total time: {:.3f} s".format(exe_time_recognizing))

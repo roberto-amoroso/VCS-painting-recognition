@@ -99,6 +99,14 @@ def order_points(pts):
     return rect
 
 
+def translate_points(points, translation):
+    """
+    Returns the points translated according to translation.
+    """
+
+    return points + translation
+
+
 if __name__ == '__main__':
     # db = create_paintings_db("./paintings_db")
     # for num in step_generator("A"):

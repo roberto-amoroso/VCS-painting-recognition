@@ -43,7 +43,8 @@ def create_paintings_db(db_path, data_path):
                 image,
                 title,
                 author,
-                room
+                room,
+                painting_file
             )
             paintings_db.append(painting)
     return paintings_db
@@ -609,7 +610,7 @@ def find_painting_corners(img, max_number_corners=4, corner_quality=0.001, min_d
     return corners
 
 
-def painting_rectification(src_img, dst_img, corners):
+def painting_rectification(src_img, corners, dst_img=None):
     """Executes Painting Rectification through an Affine Transformation.
 
 
@@ -637,18 +638,41 @@ def painting_rectification(src_img, dst_img, corners):
     For details visit:
     - https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#warpperspective
     - https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html?highlight=findhomography#findhomography
+    - https://www.pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
     """
-
-    h_dst = dst_img.shape[0]
-    w_dst = dst_img.shape[1]
 
     # Source and destination points for the affine transformation
     src_points = np.float32(order_points(corners[:, 0]))
+    (tl, tr, br, bl) = src_points
+
+    if dst_img is not None:
+        h_dst = dst_img.shape[0]
+        w_dst = dst_img.shape[1]
+    else:
+        # compute the width of the new image, which will be the
+        # maximum distance between bottom-right and bottom-left
+        # x-coordiates or the top-right and top-left x-coordinates
+        widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+        widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+        w_dst = max(int(widthA), int(widthB))
+
+        # compute the height of the new image, which will be the
+        # maximum distance between the top-right and bottom-right
+        # y-coordinates or the top-left and bottom-left y-coordinates
+        heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+        heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+        h_dst = max(int(heightA), int(heightB))
+
+    # now that we have the dimensions of the new image, construct
+    # the set of destination points to obtain a "birds eye view",
+    # (i.e. top-down view) of the image, again specifying points
+    # in the top-left, top-right, bottom-right, and bottom-left
+    # order
     dst_points = np.float32([
         [0, 0],
         [w_dst - 1, 0],
-        [0, h_dst - 1],
-        [w_dst - 1, h_dst - 1]
+        [w_dst - 1, h_dst - 1],
+        [0, h_dst - 1]
     ])
 
     # Find perspective transformation
@@ -809,17 +833,17 @@ def painting_db_lookup(img, corners, paintings_db, histo_mode=False):
     best_match_id = -1
     best_match_size = 0
 
+    # Step 15: Rectify Painting
+    # ----------------------------
+    print_next_step(generator, "Rectify Painting")
+    start_time = time.time()
+    rectified_img = painting_rectification(img, corners)
+    exe_time_rectification = time.time() - start_time
+    print("\ttime: {:.3f} s".format(exe_time_rectification))
+    cv2.imshow('image_rectified', rectified_img)
+
     for id, painting_data in enumerate(paintings_db):
         painting = painting_data.image
-
-        # Step 15: Rectify Painting
-        # ----------------------------
-        print_next_step(generator, "Rectify Painting")
-        start_time = time.time()
-        rectified_img = painting_rectification(img, painting, corners)
-        exe_time_rectification = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_rectification))
-        cv2.imshow('image_rectified', rectified_img)
         cv2.imshow('image_db', painting)
 
         if not histo_mode:
@@ -874,7 +898,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         Returns a list of all painting recognized in the input image `img`.
 
     """
-    frame_paintings_recognized = []
+    paintings_recognized = []
     for contour in contours:
         x, y, w_rect, h_rect = cv2.boundingRect(contour)
 
@@ -1002,17 +1026,147 @@ def recognize_painting(img, mask, contours, paintings_db):
             start_time = time.time()
             painting_id = painting_db_lookup(sub_img, corners, paintings_db)
             exe_db_lookup = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_db_lookup))
+            print("\n# Painting DB lookup total time: {:.3f} s".format(exe_db_lookup))
             if painting_id is not None and painting_id != -1:
                 recognized_painting = paintings_db[painting_id]
                 cv2.imshow("prediction", recognized_painting.image)
                 recognized_painting.frame_contour = contour
                 recognized_painting.points = translate_points(max_contour, [x, y])
                 recognized_painting.corners = translate_points(corners, [x, y])
-                frame_paintings_recognized.append(recognized_painting)
+                paintings_recognized.append(recognized_painting)
 
         cv2.waitKey(0)
-    return frame_paintings_recognized
+    return paintings_recognized
+
+
+def draw_paintings_info(img, paintings):
+    """
+
+    Parameters
+    ----------
+    img
+    paintings
+
+    Returns
+    -------
+
+    Notes
+    -----
+    For details visit:
+    - https://docs.opencv.org/3.4/d6/d6e/group__imgproc__draw.html
+    - https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
+    """
+
+    img_copy = img.copy()
+    h = img_copy.shape[0]
+    w = img_copy.shape[1]
+
+    # Choose the room of the actual video frame by majority
+    possible_rooms = [p.room for p in paintings]
+    major_room = max(possible_rooms, key=possible_rooms.count)
+    room = f"Room: {major_room}"
+
+    for painting in paintings:
+        corner_points = np.int32(order_points(painting.corners[:, 0]))
+
+        # Find position of text above painting
+        top = np.min(corner_points[:, 1])
+        bottom = np.max(corner_points[:, 1])
+        left = np.min(corner_points[:, 0])
+        right = np.max(corner_points[:, 0])
+
+        # top = np.inf
+        # bottom = 0
+        # left = np.inf
+        # right = 0
+
+        # for point in painting.frame_contour:
+        #     point = point[0]
+        #     top = np.min((top, point[1]))
+        #     bottom = np.max((bottom, point[1]))
+        #     left = np.min((left, point[0]))
+        #     right = np.max((right, point[0]))
+
+        # Draw the title of the painting
+        title = f"{painting.filename} - {painting.title}"
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 1
+        font_color = (0, 0, 0)
+        line_thickness = 2
+        title_width, title_height = cv2.getTextSize(
+            title,
+            font,
+            font_scale,
+            line_thickness
+        )[0]
+
+        xb_title = int(left + (right - left) / 2 - title_width / 2)
+        yb_title = int(top - title_height)
+
+        # Check if the painting title is inside the video frame
+        if yb_title - title_height < 0:
+            yb_title = int(top + title_height + 15)
+            font_color = (255, 255, 255)
+        else:
+            cv2.rectangle(
+                img_copy,
+                (xb_title - 15, yb_title - title_height - 15),
+                (xb_title + title_width + 15, yb_title + 15),
+                (255, 255, 255),
+                -1
+            )
+
+        bottom_left_corner_of_title = (xb_title, yb_title)
+
+        # TODO: manage special character (like "ù") printed as "??"
+        cv2.putText(img_copy,
+                    title,
+                    bottom_left_corner_of_title,
+                    font,
+                    font_scale,
+                    font_color,
+                    line_thickness)
+
+        # Draw the room of the painting
+        font_color = (0, 0, 0)
+        room_width, room_height = cv2.getTextSize(
+            room,
+            font,
+            font_scale,
+            line_thickness
+        )[0]
+        xb_room = int(w / 2 - room_width / 2)
+        yb_room = int(h - 20)
+
+        bottom_left_corner_of_room = (xb_room, yb_room)
+
+
+        cv2.rectangle(
+            img_copy,
+            (xb_room - 15, yb_room - room_height - 15),
+            (xb_room + room_width + 15, h - 5),
+            (255, 255, 255),
+            -1
+        )
+        cv2.putText(img_copy,
+                    room,
+                    bottom_left_corner_of_room,
+                    font,
+                    font_scale,
+                    font_color,
+                    line_thickness)
+
+        # Draw painting outline
+        tl = tuple(corner_points[0])
+        tr = tuple(corner_points[1])
+        bl = tuple(corner_points[3])
+        br = tuple(corner_points[2])
+        cv2.line(img_copy, tl, tr, (0, 0, 255), 5)
+        cv2.line(img_copy, tr, br, (0, 0, 255), 5)
+        cv2.line(img_copy, br, bl, (0, 0, 255), 5)
+        cv2.line(img_copy, bl, tl, (0, 0, 255), 5)
+
+    return img_copy
 
 
 if __name__ == '__main__':
@@ -1163,10 +1317,20 @@ if __name__ == '__main__':
     # for each frame contour, recognise a painting from it
     # ----------------------------
     start_time = time.time()
-    frame_paintings_recognized = recognize_painting(img, blurred_mask, candidate_painting_contours, paintings_db)
+    paintings_recognized = recognize_painting(img, blurred_mask, candidate_painting_contours, paintings_db)
     exe_time_recognizing = time.time() - start_time
     total_time += exe_time_recognizing
     print("\n# Recognizing paintings total time: {:.3f} s".format(exe_time_recognizing))
+
+    # Step 18: Draw information about Paintings found
+    # ----------------------------
+    print_next_step(generator, "Draw paintings information:")
+    start_time = time.time()
+    final_frame = draw_paintings_info(img, paintings_recognized)
+    exe_time_draw_info = time.time() - start_time
+    total_time += exe_time_draw_info
+    print("\ttime: {:.3f} s".format(exe_time_draw_info))
+    show_image('final_frame', final_frame)
 
     print()
     print("-" * 30)

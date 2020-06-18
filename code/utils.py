@@ -62,7 +62,7 @@ def order_points(pts):
     Order a list of coordinates in a way
     such that the first entry in the list is the top-left,
     the second entry is the top-right, the third is the
-    bottom-left, and the fourth is the bottom-right.
+    bottom-right, and the fourth is the bottom-left.
     
     Parameters
     ----------
@@ -83,18 +83,18 @@ def order_points(pts):
     # such that the first entry in the list is the top-left,
     # the second entry is the top-right, the third is the
     # bottom-left, and the fourth is the bottom-right
-    rect = np.zeros((4, 2), dtype="float32")
+    rect = np.zeros((4, 2))  # dtype="float32"
     # the top-left point will have the smallest sum, whereas
-    # the bottom-left will have the largest difference
+    # the bottom-right will have the largest difference
     s = pts.sum(axis=1)
     rect[0] = pts[np.argmin(s)]
-    rect[3] = pts[np.argmax(s)]
+    rect[2] = pts[np.argmax(s)]
     # now, compute the difference between the points, the
     # top-right point will have the smallest difference,
-    # whereas the bottom-right point will have the largest sum
+    # whereas the bottom-left point will have the largest sum
     diff = np.diff(pts, axis=1)
     rect[1] = pts[np.argmin(diff)]
-    rect[2] = pts[np.argmax(diff)]
+    rect[3] = pts[np.argmax(diff)]
     # return the ordered coordinates
     return rect
 

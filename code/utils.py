@@ -17,10 +17,14 @@ def print_next_step(generator, title):
     pass
 
 
-def show_image(title, img, height=405, width=720):
-    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(title, width, height)
-    cv2.imshow(title, img)
+def show_image(title, img, height=None, width=None, wait_key=True):
+    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    # if height is not None and width is not None:
+    #     cv2.resizeWindow(title, width, height)
+    # cv2.imshow(title, img)
+    # if wait_key:
+    #     cv2.waitKey(0)
+    pass
 
 
 def draw_lines(img, lines, probabilistic_mode=True):
@@ -46,8 +50,8 @@ def draw_lines(img, lines, probabilistic_mode=True):
                 pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
                 cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
 
-    cv2.imshow("Detected Lines (in red) - {} Hough Line Transform".format(
-        "Probabilistic" if probabilistic_mode else "Standard"), cdst)
+    show_image("Detected Lines (in red) - {} Hough Line Transform".format(
+        "Probabilistic" if probabilistic_mode else "Standard"), cdst, wait_key=False)
 
 
 def draw_corners(img, corners):

@@ -7,8 +7,80 @@ import numpy as np
 import os
 import time
 from copy import copy
+import matplotlib.pyplot as plt
 
 generator = step_generator()
+
+
+def automatic_brightness_and_contrast(image, clip_hist_percent=1):
+    """Adjust automatically brightness and contrast of the image.
+
+    Brightness and contrast is linear operator with parameter alpha and beta:
+        g(x,y)= α * f(x,y)+ β
+
+    It is recommended to visit the first link in the notes.
+
+    Parameters
+    ----------
+    img: ndarray
+        the input image
+
+    Returns
+    -------
+    tuple
+        new_img = adjusted image,
+        alpha = alpha value calculated,
+        beta = beta value calculated
+
+    Notes
+    -----
+    For details visit.
+    - https://stackoverflow.com/questions/56905592/automatic-contrast-and-brightness-adjustment-of-a-color-photo-of-a-sheet-of-pape
+    - https://answers.opencv.org/question/75510/how-to-make-auto-adjustmentsbrightness-and-contrast-for-image-android-opencv-image-correction/
+    - https://docs.opencv.org/2.4/modules/core/doc/operations_on_arrays.html#convertscaleabs
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Calculate grayscale histogram
+    hist = cv2.calcHist([gray], [0], None, [256], [0, 256])
+    hist_size = len(hist)
+
+    # Calculate cumulative distribution from the histogram
+    accumulator = []
+    accumulator.append(float(hist[0]))
+    for index in range(1, hist_size):
+        accumulator.append(accumulator[index - 1] + float(hist[index]))
+
+    # Locate points to clip
+    maximum = accumulator[-1]
+    clip_hist_percent *= (maximum / 100.0)
+    clip_hist_percent /= 2.0
+
+    # Locate left cut
+    minimum_gray = 0
+    while accumulator[minimum_gray] < clip_hist_percent:
+        minimum_gray += 1
+
+    # Locate right cut
+    maximum_gray = hist_size - 1
+    while accumulator[maximum_gray] >= (maximum - clip_hist_percent):
+        maximum_gray -= 1
+
+    # Calculate alpha and beta values
+    alpha = 255 / (maximum_gray - minimum_gray)
+    beta = -minimum_gray * alpha
+
+    '''
+    # Calculate new histogram with desired range and show histogram 
+    new_hist = cv2.calcHist([gray],[0],None,[256],[minimum_gray,maximum_gray])
+    plt.plot(hist)
+    plt.plot(new_hist)
+    plt.xlim([0,256])
+    plt.show()
+    '''
+
+    new_img = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
+    return new_img, alpha, beta
 
 
 def create_paintings_db(db_path, data_path):
@@ -147,7 +219,7 @@ def get_mask_largest_segment(img, color_difference=1, x_samples=8, skip_white=Fa
                 if segment_size > largest_segment:
                     largest_segment = segment_size
                     wall_mask = mask[1:-1, 1:-1].copy()
-    #                     show_image('rect[2]', mask)
+    #                     show_image('rect[2]', mask, height=405, width=720)
     # cv2.waitKey(0)
     return wall_mask
 
@@ -377,7 +449,7 @@ def extract_candidate_painting_contours(img, contours, find_min_area_rect=False,
         for contour in contours:
             if find_min_area_rect:
                 rect = cv2.minAreaRect(contour)
-                x, y = rect[0]
+                x_center, y_center = rect[0]
                 w_rect, h_rect = rect[1]
                 rotation_angle = rect[2]
                 box = cv2.boxPoints(rect)
@@ -389,9 +461,10 @@ def extract_candidate_painting_contours(img, contours, find_min_area_rect=False,
                 img_copy = cv2.rectangle(img_copy, (x, y), (x + w_rect, y + h_rect), (0, 255, 0), 2)
 
             area_rect = h_rect * w_rect
-            if area_img > area_rect >= area_rect_min and cv2.contourArea(contour) >= (area_rect * area_percentage_min):
+            if area_img * 0.99 > area_rect >= area_rect_min and cv2.contourArea(contour) >= (
+                    area_rect * area_percentage_min):
                 candidate_painting_contours.append(contour)
-    show_image('image_rectangles', img_copy)
+    show_image('image_rectangles', img_copy, height=405, width=720)
     return candidate_painting_contours
 
 
@@ -616,8 +689,11 @@ def painting_rectification(src_img, corners, dst_img=None):
     """Executes Painting Rectification through an Affine Transformation.
 
 
-    Returns a rectified version of the `src_img`. The 'corners' of the
-    `src_img` are translated to the corners of the 'dst_img'.
+    Returns a rectified version of the `src_img`. If The 'dst_img' is not None,
+    the 'corners' of the `src_img` are translated to the corners of the
+    'dst_img'. If The 'dst_img' is None the 'corners' of the `src_img` are
+    used to calculate the aspect ratio of `src_img` and then rectify it using
+    this information.
 
     Parameters
     -------
@@ -713,11 +789,11 @@ def match_features_orb(src_img, dst_img, max_distance=50):
 
     src_kp = orb.detect(src_img, None)
     src_kp, src_des = orb.compute(src_img, src_kp)
-    cv2.imshow("src_kp", cv2.drawKeypoints(src_img, src_kp, None, color=(0, 255, 0), flags=0))
+    show_image("src_kp", cv2.drawKeypoints(src_img, src_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
 
     dst_kp = orb.detect(dst_img, None)
     dst_kp, dst_des = orb.compute(dst_img, dst_kp)
-    cv2.imshow("dst_kp", cv2.drawKeypoints(dst_img, dst_kp, None, color=(0, 255, 0), flags=0))
+    show_image("dst_kp", cv2.drawKeypoints(dst_img, dst_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
 
     # Find matches between the features in the source image and the destination
     # image (i.e. painting)
@@ -730,7 +806,7 @@ def match_features_orb(src_img, dst_img, max_distance=50):
         singlePointColor=None,
         flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT)
     matches_img = cv2.drawMatches(src_img, src_kp, dst_img, dst_kp, matches, None, **draw_params)
-    cv2.imshow("matches_img", matches_img)
+    show_image("matches_img", matches_img, wait_key=False)
     # cv2.waitKey(0)
 
     return matches
@@ -803,7 +879,7 @@ def histo_matching(src_img, dst_img):
     return hist_comparison
 
 
-def painting_db_lookup(img, corners, paintings_db, max_distance=40, histo_mode=False):
+def painting_db_lookup(img, corners, paintings_db, max_distance=40, match_db_image=False, histo_mode=False):
     """Lookup the DB for a specific painting using ORB or histogram matching.
 
     Parameters
@@ -814,6 +890,10 @@ def painting_db_lookup(img, corners, paintings_db, max_distance=40, histo_mode=F
         a NumPy array of the corners in `img`, in the form (x,y).
     paintings_db: list
         list of all `Painting` object that populate the DB.
+    match_db_image: bool
+        define if:
+        - rectify `img` one time using aspect ratio (True)
+        - rectify `img` for every painting in `paintings_db`
     histo_mode: bool
         indicate which method use for the matching:
         - True = Histogram Matching.
@@ -835,18 +915,29 @@ def painting_db_lookup(img, corners, paintings_db, max_distance=40, histo_mode=F
     best_match_id = -1
     best_match_size = 0
 
-    # Step 15: Rectify Painting
-    # ----------------------------
-    print_next_step(generator, "Rectify Painting")
-    start_time = time.time()
-    rectified_img = painting_rectification(img, corners)
-    exe_time_rectification = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_rectification))
-    cv2.imshow('image_rectified', rectified_img)
+    if not match_db_image:
+        # Step 15: Rectify Painting
+        # ----------------------------
+        print_next_step(generator, "Rectify Painting")
+        start_time = time.time()
+        rectified_img = painting_rectification(img, corners)
+        exe_time_rectification = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_time_rectification))
+        show_image('image_rectified', rectified_img)
 
-    for id, painting_data in enumerate(paintings_db):
-        painting = painting_data.image
-        cv2.imshow('image_db', painting)
+    for id, painting_obj in enumerate(paintings_db):
+        painting = painting_obj.image
+        show_image('image_db', painting, wait_key=False)
+
+        if match_db_image:
+            # Step 15: Rectify Painting
+            # ----------------------------
+            print_next_step(generator, "Rectify Painting")
+            start_time = time.time()
+            rectified_img = painting_rectification(img, corners, painting)
+            exe_time_rectification = time.time() - start_time
+            print("\ttime: {:.3f} s".format(exe_time_rectification))
+            show_image('image_rectified', rectified_img, wait_key=False)
 
         if not histo_mode:
             # Step 16: Match features using ORB
@@ -876,7 +967,7 @@ def painting_db_lookup(img, corners, paintings_db, max_distance=40, histo_mode=F
         return best_match_id
     # Otherwise, return the id of painting having the most similar histogram
     else:
-        return painting_db_lookup(img, corners, paintings_db, histo_mode=True)
+        return painting_db_lookup(img, corners, paintings_db, max_distance, histo_mode=True)
 
 
 def recognize_painting(img, mask, contours, paintings_db):
@@ -907,8 +998,25 @@ def recognize_painting(img, mask, contours, paintings_db):
         sub_img = img[y:y + h_rect, x:x + w_rect]
         sub_mask = mask[y:y + h_rect, x:x + w_rect]
 
-        cv2.imshow('image_sub_img', sub_img)
-        cv2.imshow('image_sub_mask', sub_mask)
+        # If the mask has more black pixels than white, I invert the mask
+        if np.sum(sub_mask == 0) > np.sum(sub_mask == 255):
+            sub_mask = invert_image(sub_mask)
+
+        show_image('image_sub_img', sub_img)
+        show_image('image_sub_mask', sub_mask)
+
+        # Step 0: Adjust automatically brightness and contrast of the image
+        # ----------------------------
+        print_next_step(generator, "Adjust brightness and contrast:")
+        start_time = time.time()
+        img_auto_adjusted, alpha, beta = automatic_brightness_and_contrast(sub_img)
+        print(f"\talpha: {alpha}")
+        print(f"\tbeta: {beta}")
+        exe_time_auto_adjust = time.time() - start_time
+        print("\ttime: {:.3f} s".format(exe_time_auto_adjust))
+        show_image('auto_adjusted', img_auto_adjusted)
+
+        sub_img = img_auto_adjusted
 
         # # Step 7: Erode components to remove unwanted objects connected to the frame
         # # ----------------------------
@@ -918,7 +1026,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         # eroded_mask = image_erosion(sub_mask, kernel_size)
         # exe_time_mask_erosion = time.time() - start_time
         # print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
-        #         cv2.imshow('image_mask_eroded', eroded_mask)
+        #         show_image()('image_mask_eroded', eroded_mask)
         #
         # # Step 8: Blur using Median Filter to smooth the lines of the frame
         # # ----------------------------
@@ -928,7 +1036,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         # blurred_mask = image_blurring(eroded_mask, blur_size)
         # exe_time_blurring = time.time() - start_time
         # print("\ttime: {:.3f} s".format(exe_time_blurring))
-        #         cv2.imshow('image_mask_blurred', blurred_mask)
+        #         show_image()('image_mask_blurred', blurred_mask)
 
         # -----------------------
         # PADDING:
@@ -949,7 +1057,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         edges = canny_edge_detection(blurred_mask, threshold1, threshold2)
         exe_time_canny = time.time() - start_time
         print("\ttime: {:.3f} s".format(exe_time_canny))
-        cv2.imshow('image_mask_canny', edges)
+        show_image('image_mask_canny', edges)
 
         # Step 10: Hough Lines to find vertical and horizontal edges of the paintings
         # ----------------------------
@@ -983,7 +1091,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         extended_lines_mask = extend_image_lines(sub_mask, lines, probabilistic_mode, color_value)
         exe_time_paint_mask = time.time() - start_time
         print("\ttime: {:.3f} s".format(exe_time_paint_mask))
-        cv2.imshow('image_paint_mask', extended_lines_mask)
+        show_image('image_paint_mask', extended_lines_mask)
 
         # Step 12: Isolate Painting from mask
         # ----------------------------
@@ -997,7 +1105,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         cv2.drawContours(painting_contour, [max_contour], 0, 255, cv2.FILLED)
         # If `cv2.drawContours` doesn't work, use `cv2.fillPoly`
         # cv2.fillPoly(painting_contour, pts=[painting_contour], color=255)
-        cv2.imshow('painting_contours', painting_contour)
+        show_image('painting_contours', painting_contour)
 
         # -----------------------
         # PADDING
@@ -1024,35 +1132,48 @@ def recognize_painting(img, mask, contours, paintings_db):
         if corners is not None and corners.shape[0] == 4:
             painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
             draw_corners(painting_corners, corners)
-            cv2.imshow('painting_corners', painting_corners)
+            show_image('painting_corners', painting_corners)
 
             # Step 14: Painting DB lookup
             # ----------------------------
             print_next_step(generator, "Painting DB lookup")
             start_time = time.time()
-            max_distance = 40
-            painting_id = painting_db_lookup(sub_img, corners, paintings_db, max_distance=max_distance)
+            max_distance = 40  # 40
+            match_db_image = False  # False
+            painting_id = painting_db_lookup(
+                sub_img,
+                corners,
+                paintings_db,
+                max_distance=max_distance,
+                match_db_image=match_db_image
+            )
             exe_db_lookup = time.time() - start_time
             print("\n# Painting DB lookup total time: {:.3f} s".format(exe_db_lookup))
             if painting_id is not None and painting_id != -1:
                 recognized_painting = paintings_db[painting_id]
-                # Check if the painting has been already found for the current video frame
-                while recognized_painting in paintings_recognized:
-                    # TODO: manage if I have already found the painting in the current frame:
-                    ## - make another DB lookup with a lower `max_distance` -> What if was the first painting the wrong one?
-                    ## - make another DB lookup for BOTH the duplicated matching
 
-                    max_distance -= 5
+                if recognized_painting in paintings_recognized:
+                    recognized_painting = copy(paintings_db[painting_id])
 
-                    if max_distance <= 0:
-                        # I duplicate the painting, easy but poor
-                        recognized_painting = copy(paintings_db[painting_id])
-                        break
+                # # Check if the painting has been already found for the current video frame
+                # while recognized_painting in paintings_recognized:
+                #     # TODO: manage if I have already found the painting in the current frame:
+                #     ## - make another DB lookup with a lower `max_distance` -> What if was the first painting the wrong one?
+                #     ## - make another DB lookup for BOTH the duplicated matching
+                #
+                #     max_distance -= 5
+                #
+                #     if max_distance <= 0:
+                #         # I duplicate the painting, easy but poor
+                #         recognized_painting = copy(paintings_db[painting_id])
+                #         print("# Duplicate painting in the same frame")
+                #         break
+                #
+                #     print("# Found duplicated painting: new db lookup")
+                #     painting_id = painting_db_lookup(sub_img, corners, paintings_db, max_distance=max_distance)
+                #     recognized_painting = paintings_db[painting_id]
 
-                    painting_id = painting_db_lookup(sub_img, corners, paintings_db, max_distance=max_distance)
-                    recognized_painting = paintings_db[painting_id]
-
-                cv2.imshow("prediction", recognized_painting.image)
+                show_image("prediction", recognized_painting.image)
                 recognized_painting.frame_contour = contour
                 recognized_painting.points = translate_points(max_contour, [x, y])
                 recognized_painting.corners = translate_points(corners, [x, y])
@@ -1181,9 +1302,9 @@ def draw_paintings_info(img, paintings):
         cv2.line(img_copy, br, bl, (0, 0, 255), 5)
         cv2.line(img_copy, bl, tl, (0, 0, 255), 5)
 
-        show_image("partial_final_frame", img_copy)
+        show_image("partial_final_frame", img_copy, height=405, width=720)
 
-        cv2.waitKey(0)
+        # cv2.waitKey(0)
 
     return img_copy
 
@@ -1192,13 +1313,21 @@ if __name__ == '__main__':
     photos_path = 'dataset/photos'
     recognized_painting_path = 'dataset/recognized_paintings'
     videos_dir_name = '014'  # '013' or '009'
+    filename = None
     # filename = '20180529_112417_ok_0031.jpg'
     # filename = '20180529_112417_ok_0026.jpg'
     # filename = 'IMG_2653_0002.jpg'
     # filename = 'IMG_2657_0006.jpg'
     # filename = 'IMG_2659_0012.jpg'  # CRITIC
     # filename = 'IMG_2659_0006.jpg'
-    filename = 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
+    # filename = 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
+    # filename = "VID_20180529_112517_0004.jpg"
+    # filename = "VID_20180529_112517_0005.jpg"
+    # filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
+    # filename = "VID_20180529_112739_0004.jpg"  # Wall inverted
+    # filename = "VID_20180529_112627_0000.jpg"  # Wall correct
+    # filename = "VID_20180529_112517_0002.jpg"  # strange case
+    # filename = "VID_20180529_112553_0005.jpg"
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
 
@@ -1206,168 +1335,214 @@ if __name__ == '__main__':
     total_time = 0
 
     dst_dir = os.path.join(recognized_painting_path, videos_dir_name)
-    # if not os.path.exists(dst_dir):
-    #     os.makedirs(dst_dir)
-    #     print('Created the directory "{}"'.format(dst_dir))
-    # else:
-    #     print('The directory "{}" already exists'.format(dst_dir))
-    #
-    # for subdir, dirs, files in os.walk(os.path.join(photos_path, videos_dir_name)):
-    #
-    #     for photo in files:
-    #         img_path = os.path.join(subdir, photo)
-    img_path = os.path.join(photos_path, videos_dir_name, filename)
-    img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-    print(f"Image shape: {img.shape}")
-    show_image('image_original', img)
-
-    # Step 1: Perform mean shift segmentation on the image
-    # ----------------------------
-    print_next_step(generator, "Mean Shift Segmentation:")
-    start_time = time.time()
-    spatial_radius = 7
-    color_radius = 13
-    maximum_pyramid_level = 1
-    img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
-    exe_time_mean_shift_segmentation = time.time() - start_time
-    total_time += exe_time_mean_shift_segmentation
-    print("\ttime: {:.3f} s".format(exe_time_mean_shift_segmentation))
-    show_image('image_mean_shift_segmentation', img_mss)
-
-    # Step 2: Get a mask of just the wall in the gallery
-    # ----------------------------
-    print_next_step(generator, "Mask the Wall:")
-    start_time = time.time()
-    color_difference = 2
-    x_samples = 8  # 8 or 16
-    wall_mask = get_mask_largest_segment(img_mss, color_difference, x_samples)
-    exe_time_mask_largest_segment = time.time() - start_time
-    total_time += exe_time_mask_largest_segment
-    print("\ttime: {:.3f} s".format(exe_time_mask_largest_segment))
-    show_image('image_mask_largest_segment', wall_mask)
-
-    # Step 3: Dilate and Erode the wall mask to remove noise
-    # ----------------------------
-    # IMPORTANT: We have not yet inverted the mask, therefore making
-    # dilation at this stage is equivalent to erosion and vice versa
-    # (we dilate the white pixels that are those of the wall).
-    # ----------------------------
-    print_next_step(generator, "Dilate and Erode:")
-    kernel_size = 18
-    start_time = time.time()
-    dilated_wall_mask = image_dilation(wall_mask, kernel_size)
-    exe_time_dilation = time.time() - start_time
-    total_time += exe_time_dilation
-    show_image('image_dilation', dilated_wall_mask)
-
-    start_time = time.time()
-    eroded_wall_mask = image_erosion(dilated_wall_mask, kernel_size)
-    exe_time_erosion = time.time() - start_time
-    total_time += exe_time_erosion
-    print("\ttime: {:.3f} s".format(exe_time_dilation + exe_time_dilation))
-    show_image('image_erosion', eroded_wall_mask)
-
-    # Step 4: Invert the wall mask
-    # ----------------------------
-    print_next_step(generator, "Invert Wall Mask:")
-    start_time = time.time()
-    wall_mask_inverted = invert_image(eroded_wall_mask)
-    exe_time_invertion = time.time() - start_time
-    total_time += exe_time_invertion
-    print("\ttime: {:.3f} s".format(exe_time_invertion))
-    show_image('image_inversion', wall_mask_inverted)
-
-    # ----------------------------
-    # Connected Components Analysis:
-    #   Perform connected components on the inverted wall mask to find the
-    #   non-wall components
-    # ----------------------------
-
-    # Step 5: Find all contours
-    # ----------------------------
-    print_next_step(generator, "Find Contours:")
-    start_time = time.time()
-    contours_mode = cv2.RETR_TREE
-    contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
-    contours = find_image_contours(wall_mask_inverted, contours_mode, contours_method)
-    exe_time_contours = time.time() - start_time
-    total_time += exe_time_contours
-    print("\ttime: {:.3f} s".format(exe_time_contours))
-    # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-    img_contours = img.copy()
-    cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
-    show_image('image_contours', img_contours)
-
-    # Step 6: Refine list of components found
-    # ----------------------------
-    print_next_step(generator, "Refine Components found:")
-    start_time = time.time()
-    find_min_area_rect = True
-    width_min = 150
-    height_min = 150
-    area_percentage_min = 0.6
-    candidate_painting_contours = extract_candidate_painting_contours(
-        img=img,
-        contours=contours,
-        find_min_area_rect=find_min_area_rect,
-        width_min=width_min,
-        height_min=height_min,
-        area_percentage_min=area_percentage_min
-    )
-    exe_time_contours_refined = time.time() - start_time
-    total_time += exe_time_contours_refined
-    print("\ttime: {:.3f} s".format(exe_time_contours_refined))
-    img_refined_contours = img.copy()
-    cv2.drawContours(img_refined_contours, candidate_painting_contours, -1, (0, 255, 0), 3)
-    show_image('image_refined_contours', img_refined_contours)
-
-    # Step 7: Erode components to remove unwanted objects connected to the frame
-    # ----------------------------
-    print_next_step(generator, "Erode Components:")
-    start_time = time.time()
-    kernel_size = 40
-    eroded_mask = image_erosion(wall_mask_inverted, kernel_size)
-    exe_time_mask_erosion = time.time() - start_time
-    total_time += exe_time_mask_erosion
-    print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
-    show_image('image_mask_eroded', eroded_mask)
-
-    # Step 8: Blur using Median Filter to smooth the lines of the frame
-    # ----------------------------
-    print_next_step(generator, "Blur with Median Filter:")
-    start_time = time.time()
-    blur_size = 31
-    blurred_mask = image_blurring(eroded_mask, blur_size)
-    exe_time_blurring = time.time() - start_time
-    total_time += exe_time_blurring
-    print("\ttime: {:.3f} s".format(exe_time_blurring))
-    show_image('image_mask_blurred', blurred_mask)
-
-    # ----------------------------
-    # Recognize Painting:
-    # for each frame contour, recognise a painting from it
-    # ----------------------------
-    start_time = time.time()
-    paintings_recognized = recognize_painting(img, blurred_mask, candidate_painting_contours, paintings_db)
-    exe_time_recognizing = time.time() - start_time
-    total_time += exe_time_recognizing
-    print("\n# Recognizing paintings total time: {:.3f} s".format(exe_time_recognizing))
-
-    if len(paintings_recognized) > 0:
-        # Step 18: Draw information about Paintings found
-        # ----------------------------
-        print_next_step(generator, "Draw paintings information:")
-        start_time = time.time()
-        final_frame = draw_paintings_info(img, paintings_recognized)
-        exe_time_draw_info = time.time() - start_time
-        total_time += exe_time_draw_info
-        print("\ttime: {:.3f} s".format(exe_time_draw_info))
-        show_image('final_frame', final_frame)
+    if not os.path.exists(dst_dir):
+        os.makedirs(dst_dir)
+        print('Created the directory "{}"'.format(dst_dir))
     else:
-        final_frame = img
+        print('The directory "{}" already exists'.format(dst_dir))
 
-    # save_path = os.path.join(dst_dir, photo)
-    # cv2.imwrite(save_path, final_frame)
+    for subdir, dirs, files in os.walk(os.path.join(photos_path, videos_dir_name)):
+        for photo in files:
+            # img_path = os.path.join(photos_path, videos_dir_name, filename)
+            img_path = os.path.join(subdir, photo)
+            print("#", "-" * 30)
+            print(f"# Processing imag: {img_path}")
+            print("#", "-" * 30)
+            img_original = cv2.imread(img_path, cv2.IMREAD_COLOR)
+            print(f"Image shape: {img_original.shape}")
+            show_image('image_original', img_original, height=405, width=720)
+
+            # # Step 0: Adjust automatically brightness and contrast of the image
+            # # ----------------------------
+            # print_next_step(generator, "Adjust brightness and contrast:")
+            # start_time = time.time()
+            # img_auto_adjusted, alpha, beta = automatic_brightness_and_contrast(img_original)
+            # print(f"\talpha: {alpha}")
+            # print(f"\tbeta: {beta}")
+            # exe_time_auto_adjust = time.time() - start_time
+            # total_time += exe_time_auto_adjust
+            # print("\ttime: {:.3f} s".format(exe_time_auto_adjust))
+            # show_image('image_auto_adjusted', img_auto_adjusted, height=405, width=720)
+
+            # TODO: if auto-adjust will be in the `recognize_painting` function, than remove the following assigment
+            # and change the name og `img_original` in `img`
+            img = img_original
+
+            # Step 1: Perform mean shift segmentation on the image
+            # ----------------------------
+            print_next_step(generator, "Mean Shift Segmentation:")
+            start_time = time.time()
+            spatial_radius = 7  # 7
+            color_radius = 13  # 13
+            maximum_pyramid_level = 1  # 1
+            img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
+            exe_time_mean_shift_segmentation = time.time() - start_time
+            total_time += exe_time_mean_shift_segmentation
+            print("\ttime: {:.3f} s".format(exe_time_mean_shift_segmentation))
+            show_image('image_mean_shift_segmentation', img_mss, height=405, width=720)
+
+            # Step 2: Get a mask of just the wall in the gallery
+            # ----------------------------
+            print_next_step(generator, "Mask the Wall:")
+            start_time = time.time()
+            color_difference = 2  # 2
+            x_samples = 8  # 8 or 16
+            wall_mask = get_mask_largest_segment(img_mss, color_difference, x_samples)
+            exe_time_mask_largest_segment = time.time() - start_time
+            total_time += exe_time_mask_largest_segment
+            print("\ttime: {:.3f} s".format(exe_time_mask_largest_segment))
+            show_image('image_mask_largest_segment', wall_mask, height=405, width=720)
+
+            # Step 3: Dilate and Erode the wall mask to remove noise
+            # ----------------------------
+            # IMPORTANT: We have not yet inverted the mask, therefore making
+            # dilation at this stage is equivalent to erosion and vice versa
+            # (we dilate the white pixels that are those of the wall).
+            # ----------------------------
+            print_next_step(generator, "Dilate and Erode:")
+            kernel_size = 20  # 18
+            start_time = time.time()
+            dilated_wall_mask = image_dilation(wall_mask, kernel_size)
+            exe_time_dilation = time.time() - start_time
+            total_time += exe_time_dilation
+            show_image('image_dilation', dilated_wall_mask, height=405, width=720)
+
+            start_time = time.time()
+            eroded_wall_mask = image_erosion(dilated_wall_mask, kernel_size)
+            exe_time_erosion = time.time() - start_time
+            total_time += exe_time_erosion
+            print("\ttime: {:.3f} s".format(exe_time_dilation + exe_time_dilation))
+            show_image('image_erosion', eroded_wall_mask, height=405, width=720)
+
+            # Step 4: Invert the wall mask
+            # ----------------------------
+            print_next_step(generator, "Invert Wall Mask:")
+            start_time = time.time()
+            wall_mask_inverted = invert_image(eroded_wall_mask)
+            exe_time_invertion = time.time() - start_time
+            total_time += exe_time_invertion
+            print("\ttime: {:.3f} s".format(exe_time_invertion))
+            show_image('image_inversion', wall_mask_inverted, height=405, width=720)
+
+            # ----------------------------
+            # Connected Components Analysis:
+            #   Perform connected components on the inverted wall mask to find the
+            #   non-wall components
+            # ----------------------------
+
+            # Step 5: Find all contours
+            # ----------------------------
+            print_next_step(generator, "Find Contours:")
+            start_time = time.time()
+            contours_mode = cv2.RETR_TREE
+            contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
+            contours_1 = find_image_contours(wall_mask_inverted, contours_mode, contours_method)
+            exe_time_contours = time.time() - start_time
+            total_time += exe_time_contours
+            print("\ttime: {:.3f} s".format(exe_time_contours))
+            # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
+
+            # TODO: test if keep or remove
+            # Add a white border to manage cases when `get_mask_largest_segment`
+            # works the opposite way (wall black and painting white)
+            wall_mask_inverted_2 = cv2.copyMakeBorder(wall_mask_inverted, 1, 1, 1, 1, cv2.BORDER_CONSTANT, None, 255)
+
+            # Step 5: Find all contours
+            # ----------------------------
+            print_next_step(generator, "Find Contours:")
+            start_time = time.time()
+            contours_mode = cv2.RETR_TREE
+            contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
+            contours_2 = find_image_contours(wall_mask_inverted_2, contours_mode, contours_method)
+            exe_time_contours = time.time() - start_time
+            total_time += exe_time_contours
+            print("\ttime: {:.3f} s".format(exe_time_contours))
+            # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
+            img_contours = img.copy()
+
+            contours = contours_2 if len(contours_2) >= len(contours_1) else contours_1
+
+            # # Print every contour step-by-step
+            # for contour in contours:
+            #     cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
+            #     show_image('image_contours', img_contours, height=405, width=720)
+
+            cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
+            show_image('image_contours', img_contours, height=405, width=720)
+
+            # Step 6: Refine list of components found
+            # ----------------------------
+            print_next_step(generator, "Refine Components found:")
+            start_time = time.time()
+            find_min_area_rect = True  # True
+            width_min = 150
+            height_min = 150
+            area_percentage_min = 0.6
+            candidate_painting_contours = extract_candidate_painting_contours(
+                img=img,
+                contours=contours,
+                find_min_area_rect=find_min_area_rect,
+                width_min=width_min,
+                height_min=height_min,
+                area_percentage_min=area_percentage_min
+            )
+            exe_time_contours_refined = time.time() - start_time
+            total_time += exe_time_contours_refined
+            print("\ttime: {:.3f} s".format(exe_time_contours_refined))
+            img_refined_contours = img.copy()
+            cv2.drawContours(img_refined_contours, candidate_painting_contours, -1, (0, 255, 0), 3)
+            show_image('image_refined_contours', img_refined_contours, height=405, width=720)
+
+            # Step 7: Erode components to remove unwanted objects connected to the frame
+            # ----------------------------
+            print_next_step(generator, "Erode Components:")
+            start_time = time.time()
+            kernel_size = 40
+            eroded_mask = image_erosion(wall_mask_inverted, kernel_size)
+            exe_time_mask_erosion = time.time() - start_time
+            total_time += exe_time_mask_erosion
+            print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
+            show_image('image_mask_eroded', eroded_mask, height=405, width=720)
+
+            # Step 8: Blur using Median Filter to smooth the lines of the frame
+            # ----------------------------
+            print_next_step(generator, "Blur with Median Filter:")
+            start_time = time.time()
+            blur_size = 31
+            blurred_mask = image_blurring(eroded_mask, blur_size)
+            exe_time_blurring = time.time() - start_time
+            total_time += exe_time_blurring
+            print("\ttime: {:.3f} s".format(exe_time_blurring))
+            show_image('image_mask_blurred', blurred_mask, height=405, width=720)
+
+            # ----------------------------
+            # Recognize Painting:
+            # for each frame contour, recognise a painting from it
+            # ----------------------------
+            start_time = time.time()
+            paintings_recognized = recognize_painting(img, blurred_mask, candidate_painting_contours, paintings_db)
+            exe_time_recognizing = time.time() - start_time
+            total_time += exe_time_recognizing
+            print("\n# Recognizing paintings total time: {:.3f} s".format(exe_time_recognizing))
+
+            if len(paintings_recognized) > 0:
+                # Step 18: Draw information about Paintings found
+                # ----------------------------
+                print_next_step(generator, "Draw paintings information:")
+                start_time = time.time()
+                final_frame = draw_paintings_info(img_original, paintings_recognized)
+                exe_time_draw_info = time.time() - start_time
+                total_time += exe_time_draw_info
+                print("\ttime: {:.3f} s".format(exe_time_draw_info))
+                show_image('final_frame', final_frame, height=405, width=720)
+            else:
+                final_frame = img_original
+
+            if filename is not None:
+                break
+
+            save_path = os.path.join(dst_dir, photo)
+            cv2.imwrite(save_path, final_frame)
 
     print()
     print("-" * 30)
@@ -1375,3 +1550,4 @@ if __name__ == '__main__':
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+#

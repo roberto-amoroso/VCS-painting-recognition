@@ -12,20 +12,21 @@ def step_generator():
 
 
 def print_next_step(generator, title):
+    # if title == "Hough Lines:":
     step = next(generator)
     print(f"\n# Step {step}: {title}")
     # print("-" * 30)
-    pass
+    # pass
 
 
 def show_image(title, img, height=None, width=None, wait_key=True):
-    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    if height is not None and width is not None:
-        cv2.resizeWindow(title, width, height)
-    cv2.imshow(title, img)
-    if wait_key:
-        cv2.waitKey(0)
-    # pass
+    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    # if height is not None and width is not None:
+    #     cv2.resizeWindow(title, width, height)
+    # cv2.imshow(title, img)
+    # if wait_key:
+    #     cv2.waitKey(0)
+    pass
 
 
 def draw_lines(img, lines, probabilistic_mode=True):

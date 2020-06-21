@@ -392,20 +392,15 @@ def find_image_contours(img, mode, method):
     Fot details visit:
     - https://docs.opencv.org/trunk/d3/dc0/group__imgproc__shape.html#gadf1ad6a0b82947fa1fe3c3d497f260e0
     - https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html
-
     """
 
     contours, hierarchy = cv2.findContours(img, mode, method)
 
-    # Remove overlapping contours
-    for i, h in reversed(list(enumerate(hierarchy[0]))):
-        if h[3] != -1:
-            contours = np.delete(contours, i, 0) # TODO: eliminate the parent or the children???
-    return contours
+    return contours, hierarchy
 
 
-def extract_candidate_painting_contours(img, contours, find_min_area_rect=False, width_min=100, height_min=100,
-                                        area_percentage_min=0.6):
+def extract_candidate_painting_contours(img, contours, hierarchy, find_min_area_rect=False, width_min=100,
+                                        height_min=100, area_percentage_min=0.6, remove_overlapping=False):
     """Find the contours that are candidated to be considered possible paintings.
 
     Returns the list of the contours that meet the following criteria:
@@ -423,6 +418,10 @@ def extract_candidate_painting_contours(img, contours, find_min_area_rect=False,
         the input image
     contours: list
         list of contours to check
+    hierarchy: ndarray
+        Representation of relationship between contours. OpenCV represents it as
+        an array of four values :
+            [Next, Previous, First_Child, Parent]
     find_min_area_rect: bool
         determines whether to use `cv2.boundingRect(contour)` (False) or `cv2.minAreaRect(contour)` (True)
     width_min: int
@@ -431,6 +430,8 @@ def extract_candidate_painting_contours(img, contours, find_min_area_rect=False,
         min height of the bounding rectangle a painting
     area_percentage_min: float
         min area of the bounding rectangle that must be occupied by the contour area
+    remove_overlapping: bool
+        determine if remove or not overlapping contours
 
     Returns
     -------
@@ -443,15 +444,18 @@ def extract_candidate_painting_contours(img, contours, find_min_area_rect=False,
     - https://docs.opencv.org/trunk/dd/d49/tutorial_py_contour_features.html
     - https://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=boundingrect#boundingrect
     - https://stackoverflow.com/questions/42453605/how-does-cv2-boundingrect-function-of-opencv-work
-
+    - https://docs.opencv.org/trunk/d9/d8b/tutorial_py_contours_hierarchy.html
     """
     img_copy = img.copy()
     h_img, w_img, _ = img.shape
     area_img = h_img * w_img
     area_rect_min = height_min * width_min
     candidate_painting_contours = []
+
     if contours:
-        for contour in contours:
+        hierarchy = hierarchy[0]
+        candidate_painting_hierarchy = []
+        for h, contour in enumerate(contours):
             if find_min_area_rect:
                 rect = cv2.minAreaRect(contour)
                 x_center, y_center = rect[0]
@@ -465,10 +469,22 @@ def extract_candidate_painting_contours(img, contours, find_min_area_rect=False,
                 # Draw rectangles on the image [MUST be a COPY of the image]
                 img_copy = cv2.rectangle(img_copy, (x, y), (x + w_rect, y + h_rect), (0, 255, 0), 2)
 
+            # show_image('image_rectangles', img_copy, height=405, width=720)
+
             area_rect = h_rect * w_rect
             if area_img * 0.95 > area_rect >= area_rect_min and cv2.contourArea(contour) >= (
                     area_rect * area_percentage_min):
                 candidate_painting_contours.append(contour)
+                candidate_painting_hierarchy.append(list(hierarchy[h]))
+
+        # Remove overlapping contours
+        if remove_overlapping:
+            for i, h in reversed(list(enumerate(candidate_painting_hierarchy))):
+                # If the child of the current contour is a candidate contour, then
+                # I remove the current contour
+                if h[2] != -1 and list(hierarchy[h[2]]) in candidate_painting_hierarchy:
+                    del candidate_painting_contours[i]
+
     show_image('image_rectangles', img_copy, height=405, width=720)
     return candidate_painting_contours
 
@@ -539,7 +555,7 @@ def find_hough_lines(img, probabilistic_mode=False, rho=1, theta=np.pi / 180, th
     h, w = img.shape
     if probabilistic_mode:
         img_ratio = np.max([h, w]) * ratio_percentage
-        lines = cv2.HoughLinesP(img, rho, theta, threshold, img_ratio, img_ratio / 5.5)
+        lines = cv2.HoughLinesP(img, rho, theta, threshold, img_ratio, img_ratio / 3.5)
     else:
         lines = cv2.HoughLines(img, rho, theta, threshold, None, 0, 0)
 
@@ -637,7 +653,7 @@ def isolate_painting(mask):
     """
     contours_mode = cv2.RETR_TREE
     contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
-    painting_contours = find_image_contours(invert_image(mask), contours_mode, contours_method)
+    painting_contours, _ = find_image_contours(invert_image(mask), contours_mode, contours_method)
 
     # TODO: [EVALUATE] If the mask does not look like we expect (like a sudoku puzzle)
     # then give up at this point :(
@@ -1037,7 +1053,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         # kernel_size = 40
         # eroded_mask = image_erosion(sub_mask, kernel_size)
         # exe_time_mask_erosion = time.time() - start_time
-        # print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
+                # print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
         #         show_image()('image_mask_eroded', eroded_mask)
         #
         # # Step 8: Blur using Median Filter to smooth the lines of the frame
@@ -1047,7 +1063,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         # blur_size = 31
         # blurred_mask = image_blurring(eroded_mask, blur_size)
         # exe_time_blurring = time.time() - start_time
-        # print("\ttime: {:.3f} s".format(exe_time_blurring))
+                # print("\ttime: {:.3f} s".format(exe_time_blurring))
         #         show_image()('image_mask_blurred', blurred_mask)
 
         # -----------------------
@@ -1076,10 +1092,10 @@ def recognize_painting(img, mask, contours, paintings_db):
         # ----------------------------
         print_next_step(generator, "Hough Lines:")
         start_time = time.time()
-        probabilistic_mode = True
+        probabilistic_mode = False
         rho = 1
         theta = np.pi / 180
-        threshold = 30  # 50 or 30 or 0
+        threshold = 50  # 50 or 30 or 0
         ratio_percentage = 0.10
         lines = find_hough_lines(
             img=edges,
@@ -1330,13 +1346,15 @@ if __name__ == '__main__':
     # filename = 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
     # filename = "VID_20180529_112517_0004.jpg"
     # filename = "VID_20180529_112517_0005.jpg"
-    filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
+    # filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
     # filename = "VID_20180529_112739_0004.jpg"  # Wall inverted
-    # filename = "VID_20180529_112627_0000.jpg"  # Wall correct
+    filename = "VID_20180529_112627_0000.jpg"  # Wall correct
     # filename = "VID_20180529_112517_0002.jpg"  # strange case
     # filename = "VID_20180529_112553_0005.jpg"
     # filename = "IMG_2646_0004.jpg"
-    # filename = "IMG_2646_0003.jpg"
+    # filename = "IMG_2646_0003.jpg" # overlapping contours
+    # filename = "IMG_2646_0006.jpg" # overlapping contours
+
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
 
@@ -1375,7 +1393,7 @@ if __name__ == '__main__':
             # print(f"\tbeta: {beta}")
             # exe_time_auto_adjust = time.time() - start_time
             # total_time += exe_time_auto_adjust
-            # print("\ttime: {:.3f} s".format(exe_time_auto_adjust))
+                        # print("\ttime: {:.3f} s".format(exe_time_auto_adjust))
             # show_image('image_auto_adjusted', img_auto_adjusted, height=405, width=720)
 
             # TODO: if auto-adjust will be in the `recognize_painting` function, than remove the following assigment
@@ -1450,11 +1468,14 @@ if __name__ == '__main__':
             start_time = time.time()
             contours_mode = cv2.RETR_TREE
             contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
-            contours_1 = find_image_contours(wall_mask_inverted, contours_mode, contours_method)
+            contours_1, hierarchy_1 = find_image_contours(wall_mask_inverted, contours_mode, contours_method)
             exe_time_contours = time.time() - start_time
             total_time += exe_time_contours
             print("\ttime: {:.3f} s".format(exe_time_contours))
             # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
+            img_contours = img.copy()
+            cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
+            show_image('image_contours_1', img_contours, height=405, width=720)
 
             # TODO: test if keep or remove
             # Add a white border to manage cases when `get_mask_largest_segment`
@@ -1470,20 +1491,31 @@ if __name__ == '__main__':
             start_time = time.time()
             contours_mode = cv2.RETR_TREE
             contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
-            contours_2 = find_image_contours(wall_mask_inverted_2, contours_mode, contours_method)
+            contours_2, hierarchy_2 = find_image_contours(wall_mask_inverted_2, contours_mode, contours_method)
             exe_time_contours = time.time() - start_time
             total_time += exe_time_contours
             print("\ttime: {:.3f} s".format(exe_time_contours))
             # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
             img_contours = img.copy()
+            cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
+            show_image('image_contours_2', img_contours, height=405, width=720)
 
-            contours = contours_2 if len(contours_2) >= len(contours_1) else contours_1
+            remove_overlapping = False
+            if len(contours_2) >= len(contours_1):
+                contours = contours_2
+                hierarchy = hierarchy_2
+                remove_overlapping = True
+            else:
+                contours = contours_1
+                hierarchy = hierarchy_1
 
             # # Print every contour step-by-step
             # for contour in contours:
             #     cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
             #     show_image('image_contours', img_contours, height=405, width=720)
 
+            # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
+            img_contours = img.copy()
             cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
             show_image('image_contours', img_contours, height=405, width=720)
 
@@ -1498,10 +1530,12 @@ if __name__ == '__main__':
             candidate_painting_contours = extract_candidate_painting_contours(
                 img=img,
                 contours=contours,
+                hierarchy=hierarchy,
                 find_min_area_rect=find_min_area_rect,
                 width_min=width_min,
                 height_min=height_min,
-                area_percentage_min=area_percentage_min
+                area_percentage_min=area_percentage_min,
+                remove_overlapping=remove_overlapping
             )
             exe_time_contours_refined = time.time() - start_time
             total_time += exe_time_contours_refined
@@ -1551,7 +1585,8 @@ if __name__ == '__main__':
                 exe_time_draw_info = time.time() - start_time
                 total_time += exe_time_draw_info
                 print("\ttime: {:.3f} s".format(exe_time_draw_info))
-                show_image('final_frame', final_frame, height=405, width=720)
+                # show_image('final_frame', final_frame, height=405, width=720)
+                cv2.imshow('final_frame', final_frame)
             else:
                 final_frame = img_original
 

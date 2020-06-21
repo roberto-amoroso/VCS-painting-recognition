@@ -1,3 +1,4 @@
 data/estensi.glb
 dataset/videos/*
 dataset/videos_backup/*
+yolov3.weights

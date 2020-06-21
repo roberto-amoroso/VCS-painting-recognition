@@ -47,6 +47,8 @@ for subdir, dirs, files in os.walk(videos_path):
         print('Created the directory "{}"'.format(dst_dir))
     else:
         print('The directory "{}" already exists'.format(dst_dir))
+        # TODO: evaluate if remove or not the following command
+        continue
 
     for video in files:
         start_time = time.time()

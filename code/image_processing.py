@@ -1,4 +1,5 @@
 # Testing MODE ON
+from yolo.people_detection import PeopleDetection
 from model.painting import Painting
 import pandas as pd
 from utils import print_next_step, step_generator, show_image, draw_lines, draw_corners, order_points, translate_points
@@ -453,7 +454,7 @@ def extract_candidate_painting_contours(img, contours, hierarchy, find_min_area_
     candidate_painting_contours = []
 
     if contours:
-        hierarchy = hierarchy[0]
+        hierarchy = [list(h) for h in hierarchy[0]]
         candidate_painting_hierarchy = []
         for h, contour in enumerate(contours):
             if find_min_area_rect:
@@ -480,10 +481,18 @@ def extract_candidate_painting_contours(img, contours, hierarchy, find_min_area_
         # Remove overlapping contours
         if remove_overlapping:
             for i, h in reversed(list(enumerate(candidate_painting_hierarchy))):
-                # If the child of the current contour is a candidate contour, then
-                # I remove the current contour
-                if h[2] != -1 and list(hierarchy[h[2]]) in candidate_painting_hierarchy:
-                    del candidate_painting_contours[i]
+                # If at least one of the child of the current contour is a
+                # candidate contour, then I remove the current contour
+                # if h[2] != -1 and list(hierarchy[h[2]]) in candidate_painting_hierarchy:
+                #     del candidate_painting_contours[i]
+                if h[2] != -1:
+                    # create a list of indices in candidate_painting_hierarchy
+                    # of the childs of the current contour
+                    contour_idx = hierarchy.index(h)
+                    childs = [c for c in hierarchy if c[3] == contour_idx and c in candidate_painting_hierarchy]
+
+                    if len(childs) > 0:
+                        del candidate_painting_contours[i]
 
     show_image('image_rectangles', img_copy, height=405, width=720)
     return candidate_painting_contours
@@ -1053,7 +1062,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         # kernel_size = 40
         # eroded_mask = image_erosion(sub_mask, kernel_size)
         # exe_time_mask_erosion = time.time() - start_time
-                # print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
+        # print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
         #         show_image()('image_mask_eroded', eroded_mask)
         #
         # # Step 8: Blur using Median Filter to smooth the lines of the frame
@@ -1063,7 +1072,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         # blur_size = 31
         # blurred_mask = image_blurring(eroded_mask, blur_size)
         # exe_time_blurring = time.time() - start_time
-                # print("\ttime: {:.3f} s".format(exe_time_blurring))
+        # print("\ttime: {:.3f} s".format(exe_time_blurring))
         #         show_image()('image_mask_blurred', blurred_mask)
 
         # -----------------------
@@ -1333,9 +1342,13 @@ def draw_paintings_info(img, paintings):
 
 
 if __name__ == '__main__':
+
+    # YOLO People Detector
+    people_detector = PeopleDetection()
+
     photos_path = 'dataset/photos'
     recognized_painting_path = 'dataset/recognized_paintings'
-    videos_dir_name = '014'  # '013' or '009' or '014'
+    videos_dir_name = '002'  # '013' or '009' or '014'
     filename = None
     # filename = '20180529_112417_ok_0031.jpg'
     # filename = '20180529_112417_ok_0026.jpg'
@@ -1348,12 +1361,13 @@ if __name__ == '__main__':
     # filename = "VID_20180529_112517_0005.jpg"
     # filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
     # filename = "VID_20180529_112739_0004.jpg"  # Wall inverted
-    filename = "VID_20180529_112627_0000.jpg"  # Wall correct
+    # filename = "VID_20180529_112627_0000.jpg"  # Wall correct
     # filename = "VID_20180529_112517_0002.jpg"  # strange case
     # filename = "VID_20180529_112553_0005.jpg"
     # filename = "IMG_2646_0004.jpg"
     # filename = "IMG_2646_0003.jpg" # overlapping contours
-    # filename = "IMG_2646_0006.jpg" # overlapping contours
+    # filename = "IMG_2646_0006.jpg"  # overlapping contours
+    # filename = "20180206_114604_0000.jpg"  # people
 
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
@@ -1393,7 +1407,7 @@ if __name__ == '__main__':
             # print(f"\tbeta: {beta}")
             # exe_time_auto_adjust = time.time() - start_time
             # total_time += exe_time_auto_adjust
-                        # print("\ttime: {:.3f} s".format(exe_time_auto_adjust))
+            # print("\ttime: {:.3f} s".format(exe_time_auto_adjust))
             # show_image('image_auto_adjusted', img_auto_adjusted, height=405, width=720)
 
             # TODO: if auto-adjust will be in the `recognize_painting` function, than remove the following assigment
@@ -1577,16 +1591,27 @@ if __name__ == '__main__':
             print("\n# Recognizing paintings total time: {:.3f} s".format(exe_time_recognizing))
 
             if len(paintings_recognized) > 0:
+
+                # Step YOLO: People Detection
+                # ----------------------------
+                print_next_step(generator, "YOLO People Detection:")
+                start_time = time.time()
+                img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img_original)
+                exe_time_people_detection = time.time() - start_time
+                total_time += exe_time_people_detection
+                print("\ttime: {:.3f} s".format(exe_time_people_detection))
+                show_image('people_detection', img_people_detected, height=405, width=720)
+
                 # Step 18: Draw information about Paintings found
                 # ----------------------------
                 print_next_step(generator, "Draw paintings information:")
                 start_time = time.time()
-                final_frame = draw_paintings_info(img_original, paintings_recognized)
+                final_frame = draw_paintings_info(img_people_detected, paintings_recognized)
                 exe_time_draw_info = time.time() - start_time
                 total_time += exe_time_draw_info
                 print("\ttime: {:.3f} s".format(exe_time_draw_info))
-                # show_image('final_frame', final_frame, height=405, width=720)
-                cv2.imshow('final_frame', final_frame)
+                show_image('final_frame', final_frame, height=405, width=720)
+                # cv2.imshow('final_frame', final_frame)
             else:
                 final_frame = img_original
 

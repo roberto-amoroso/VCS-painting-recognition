@@ -1045,7 +1045,7 @@ def painting_db_lookup(img, corners, paintings_db, max_matches=40, match_db_imag
     if matches_rank[0][1] > limit:
         return matches_rank
     else:
-        return -1
+        return None
 
 
 def recognize_painting(img, mask, contours, paintings_db):
@@ -1186,13 +1186,17 @@ def recognize_painting(img, mask, contours, paintings_db):
             start_time = time.time()
             max_number_corners = 4
             corner_quality = 0.001
-            min_distance = 20
+            min_distance = 10  # 20
             corners = find_painting_corners(
                 painting_contour,
                 max_number_corners=max_number_corners,
                 corner_quality=corner_quality,
                 min_distance=min_distance
             )
+            painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
+            draw_corners(painting_corners, corners)
+            show_image('painting_corners', painting_corners)
+
             # Checking corners to avoid problem (read function descr. for info)
             min_percentage = 0.90  # 0.8 or 0.85
             corners = check_corners_area(sub_img, contour, corners, min_percentage)
@@ -1220,7 +1224,7 @@ def recognize_painting(img, mask, contours, paintings_db):
                 max_matches=max_matches,
                 match_db_image=match_db_image
             )
-            if matches_rank == -1 and histo_mode:
+            if matches_rank is None and histo_mode:
                 matches_rank = painting_db_lookup(
                     sub_img,
                     corners,
@@ -1229,7 +1233,7 @@ def recognize_painting(img, mask, contours, paintings_db):
                     match_db_image=match_db_image,
                     histo_mode=histo_mode
                 )
-            if matches_rank == -1:
+            if matches_rank is None:
                 recognized_painting = Painting()
             else:
                 painting_id = matches_rank[0][0]
@@ -1394,7 +1398,7 @@ def draw_paintings_info(img, paintings):
 if __name__ == '__main__':
 
     # YOLO People Detector
-    # people_detector = PeopleDetection()
+    people_detector = PeopleDetection()
 
     photos_path = 'dataset/photos'
     recognized_painting_path = 'dataset/recognized_paintings'
@@ -1411,7 +1415,7 @@ if __name__ == '__main__':
     # filename = "VID_20180529_112517_0005.jpg"
     # filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
     # filename = "VID_20180529_112739_0004.jpg"  # Wall inverted
-    filename = "VID_20180529_112627_0000.jpg"  # Wall correct
+    # filename = "VID_20180529_112627_0000.jpg"  # Wall correct
     # filename = "VID_20180529_112517_0002.jpg"  # strange case
     # filename = "VID_20180529_112553_0005.jpg"
     # filename = "IMG_2646_0004.jpg"
@@ -1421,6 +1425,7 @@ if __name__ == '__main__':
     # filename = "VID_20180529_112553_0004.jpg"  # wall inverted and cutted painting
     # videos_dir_name = '009'
     # filename = "IMG_2646_0018.jpg"  # wall inverted and cutted painting
+    # filename = "VID_20180529_113001_0001.jpg"
 
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
@@ -1662,8 +1667,8 @@ if __name__ == '__main__':
                 # ----------------------------
                 print_next_step(generator, "YOLO People Detection:")
                 start_time = time.time()
-                # img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img_original)
-                img_people_detected = img_original
+                img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img_original)
+                # img_people_detected = img_original
                 exe_time_people_detection = time.time() - start_time
                 total_time += exe_time_people_detection
                 print("\ttime: {:.3f} s".format(exe_time_people_detection))

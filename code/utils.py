@@ -20,12 +20,12 @@ def print_next_step(generator, title):
 
 
 def show_image(title, img, height=None, width=None, wait_key=True):
-    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    if height is not None and width is not None:
-        cv2.resizeWindow(title, width, height)
-    cv2.imshow(title, img)
-    if wait_key:
-        cv2.waitKey(0)
+    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    # if height is not None and width is not None:
+    #     cv2.resizeWindow(title, width, height)
+    # cv2.imshow(title, img)
+    # if wait_key:
+    #     cv2.waitKey(0)
     pass
 
 

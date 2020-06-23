@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 from scipy.spatial import distance as dist
 import os
+import pickle as pkl
+import random
 
 
 def step_generator():
@@ -17,6 +19,28 @@ def print_next_step(generator, title):
     print(f"\n# Step {step}: {title}")
     # print("-" * 30)
     # pass
+
+
+def draw_people_bounding_box(img, people_bounding_boxes):
+    """
+    Draws the bounding box of people detected in the image.
+    """
+    colors = pkl.load(open("yolo/pallete", "rb"))
+    for box in people_bounding_boxes:
+        x, y, w, h = box
+
+        label = "Person"
+        color = random.choice(colors)
+        cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
+
+        font_scale = 1.5
+        line_thickness = 2
+        t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, font_scale, line_thickness)[0]
+        c2 = x + t_size[0] + 3, y + t_size[1] + 4
+        cv2.rectangle(img, (x, y), c2, color, -1)
+        cv2.putText(img, label, (x, y + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, font_scale, [225, 255, 255],
+                    line_thickness)
+    return img
 
 
 def show_image(title, img, height=None, width=None, wait_key=True):

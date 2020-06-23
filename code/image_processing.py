@@ -3,7 +3,7 @@ from yolo.people_detection import PeopleDetection
 from model.painting import Painting
 import pandas as pd
 from utils import print_next_step, step_generator, show_image, draw_lines, draw_corners, order_points, translate_points, \
-    calculate_polygon_area
+    calculate_polygon_area, draw_people_bounding_box
 import cv2
 import numpy as np
 import os
@@ -1193,9 +1193,9 @@ def recognize_painting(img, mask, contours, paintings_db):
                 corner_quality=corner_quality,
                 min_distance=min_distance
             )
-            painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
-            draw_corners(painting_corners, corners)
-            show_image('painting_corners', painting_corners)
+            # painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
+            # draw_corners(painting_corners, corners)
+            # show_image('painting_corners', painting_corners)
 
             # Checking corners to avoid problem (read function descr. for info)
             min_percentage = 0.90  # 0.8 or 0.85
@@ -1298,40 +1298,6 @@ def draw_paintings_info(img, paintings):
     font_color = (0, 0, 0)
     line_thickness = 2
 
-    # Choose the room of the actual video frame by majority
-    possible_rooms = [p.room for p in paintings if p.room is not None]
-    if len(possible_rooms) > 0:
-        major_room = max(possible_rooms, key=possible_rooms.count)
-        room = f"Room: {major_room}"
-
-        # Draw the room of the painting
-        font_color = (0, 0, 0)
-        room_width, room_height = cv2.getTextSize(
-            room,
-            font,
-            font_scale,
-            line_thickness
-        )[0]
-        xb_room = int(w / 2 - room_width / 2)
-        yb_room = int(h - 20)
-
-        bottom_left_corner_of_room = (xb_room, yb_room)
-
-        cv2.rectangle(
-            img_copy,
-            (xb_room - 15, yb_room - room_height - 15),
-            (xb_room + room_width + 15, h - 5),
-            (255, 255, 255),
-            -1
-        )
-        cv2.putText(img_copy,
-                    room,
-                    bottom_left_corner_of_room,
-                    font,
-                    font_scale,
-                    font_color,
-                    line_thickness)
-
     for painting in paintings:
         corner_points = np.int32(painting.corners)
 
@@ -1392,7 +1358,87 @@ def draw_paintings_info(img, paintings):
 
         # cv2.waitKey(0)
 
+    # Choose the room of the actual video frame by majority
+    possible_rooms = [p.room for p in paintings if p.room is not None]
+    if len(possible_rooms) > 0:
+        major_room = max(possible_rooms, key=possible_rooms.count)
+        room = f"Room: {major_room}"
+
+        # Draw the room of the painting
+        font_color = (0, 0, 0)
+        room_width, room_height = cv2.getTextSize(
+            room,
+            font,
+            font_scale,
+            line_thickness
+        )[0]
+        xb_room = int(w / 2 - room_width / 2)
+        yb_room = int(h - 20)
+
+        bottom_left_corner_of_room = (xb_room, yb_room)
+
+        cv2.rectangle(
+            img_copy,
+            (xb_room - 15, yb_room - room_height - 15),
+            (xb_room + room_width + 15, h - 5),
+            (255, 255, 255),
+            -1
+        )
+        cv2.putText(img_copy,
+                    room,
+                    bottom_left_corner_of_room,
+                    font,
+                    font_scale,
+                    font_color,
+                    line_thickness)
+
     return img_copy
+
+
+def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percentage=0.9):
+    """
+    Remove all the people bounding boxes which overlap more than
+    `max_percentage` with one of the detected paintings.
+
+    Parameters
+    ----------
+    img: ndarray
+        the input image. Necessary to show the size of the mask to create.
+    paintings: list
+        list of painting detected
+    people_bounding_boxes: list
+        list of people bounding boxes
+    max_percentage: float
+        maximum percentage of overlap between the bounding box and one of
+        the paintings
+
+    Returns
+    -------
+    list
+        the list of the valid people bounding boxes
+    """
+
+    h_img = img.shape[0]
+    w_img = img.shape[1]
+    for painting in paintings:
+        for box in people_bounding_boxes:
+            x, y, w, h = box
+            corner_points = np.int32(painting.corners)
+
+            mask = np.zeros((h_img, w_img), dtype=np.uint8)
+            # show_image("test_1", mask)
+            mask[y:y + h, x:x + w] = 255
+            # show_image("test_2", mask)
+            cv2.fillPoly(mask, pts=[corner_points], color=0)
+            # show_image("test_3", mask)
+
+            area_box = w * h
+            white_pixels = np.sum(mask == 255)
+            # If more than the max_percentage of the box is inside the
+            # painting, than I will not consider this box as valid
+            if area_box - white_pixels >= area_box * max_percentage:
+                people_bounding_boxes.remove(box)
+    return people_bounding_boxes
 
 
 if __name__ == '__main__':
@@ -1426,6 +1472,8 @@ if __name__ == '__main__':
     # videos_dir_name = '009'
     # filename = "IMG_2646_0018.jpg"  # wall inverted and cutted painting
     # filename = "VID_20180529_113001_0001.jpg"
+    # filename = "VID_20180529_112553_0003.jpg"  # painting with error people detection
+    # filename = "VID_20180529_112553_0000.jpg"
 
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
@@ -1482,7 +1530,7 @@ if __name__ == '__main__':
             print_next_step(generator, "Mean Shift Segmentation:")
             start_time = time.time()
             spatial_radius = 7  # 8 # 5 #8 or 7
-            color_radius = 15  # 40 #40 #35 or 15
+            color_radius = 13  # 40 #40 #35 or 15
             maximum_pyramid_level = 1  # 1
             img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
             exe_time_mean_shift_segmentation = time.time() - start_time
@@ -1667,12 +1715,23 @@ if __name__ == '__main__':
                 # ----------------------------
                 print_next_step(generator, "YOLO People Detection:")
                 start_time = time.time()
-                img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img_original)
+                img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img_original.copy())
+                show_image('people_before_cleaning', img_people_detected, height=405, width=720)
+                # Step BOX: Clean bounding box to avoid overlap with painting
+                max_percentage = 0.9
+                people_bounding_boxes = clean_people_bounding_box(
+                    img_original,
+                    paintings_recognized,
+                    people_bounding_boxes,
+                    max_percentage=max_percentage
+                )
+                img_people_detected = draw_people_bounding_box(img_original, people_bounding_boxes)
                 # img_people_detected = img_original
+
                 exe_time_people_detection = time.time() - start_time
                 total_time += exe_time_people_detection
                 print("\ttime: {:.3f} s".format(exe_time_people_detection))
-                show_image('people_detection', img_people_detected, height=405, width=720)
+                show_image('people_after_cleaning', img_people_detected, height=405, width=720)
 
                 # Step 18: Draw information about Paintings found
                 # ----------------------------

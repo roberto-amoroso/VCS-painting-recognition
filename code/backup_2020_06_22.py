@@ -871,12 +871,14 @@ def match_features_orb(src_img, dst_img, max_matches=50):
     # image (i.e. painting)
     matcher = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True)
     matches = matcher.match(src_des, dst_des)
-    matches_value = np.inf
+    matches_value = 0.
     if len(matches) > 0:
         matches_value = np.mean([i.distance for i in sorted(matches, key=lambda x: x.distance)[:max_matches]])
 
     # Show matches
-    draw_params = dict(singlePointColor=None, flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT)
+    draw_params = dict(  # draw matches in green color
+        singlePointColor=None,
+        flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT)
     matches_img = cv2.drawMatches(src_img, src_kp, dst_img, dst_kp, matches, None, **draw_params)
     show_image("matches_img", matches_img, wait_key=False)
     # cv2.waitKey(0)
@@ -1039,13 +1041,13 @@ def painting_db_lookup(img, corners, paintings_db, max_matches=40, match_db_imag
 
     matches_rank = np.flip(np.sort(matches_rank, order='val_matches'))
 
-    limit = -np.inf if not histo_mode else 0
-
     # If there is a best match, then return it
-    if matches_rank[0][1] > limit:
+    if matches_rank[0][1] != 0:
         return matches_rank
+    # Otherwise, return the id of painting having the most similar histogram
     else:
-        return -1
+        return painting_db_lookup(img, corners, paintings_db, max_matches, match_db_image=match_db_image,
+                                  histo_mode=True)
 
 
 def recognize_painting(img, mask, contours, paintings_db):
@@ -1111,8 +1113,8 @@ def recognize_painting(img, mask, contours, paintings_db):
         # ----------------------------
         print_next_step(generator, "Canny Edge detection:")
         start_time = time.time()
-        threshold1 = 70  # 50
-        threshold2 = 140  # 100
+        threshold1 = 50  # 50
+        threshold2 = 100  # 100
         edges = canny_edge_detection(blurred_mask, threshold1, threshold2)
         exe_time_canny = time.time() - start_time
         print("\ttime: {:.3f} s".format(exe_time_canny))
@@ -1125,7 +1127,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         probabilistic_mode = False
         rho = 1
         theta = np.pi / 180
-        threshold = 45  # 50 or 30 or 40 or 0
+        threshold = 50  # 50 or 30 or 40 or 0
         ratio_percentage = 0.10
         lines = find_hough_lines(
             img=edges,
@@ -1208,7 +1210,6 @@ def recognize_painting(img, mask, contours, paintings_db):
 
             # Step 14: Painting DB lookup
             # ----------------------------
-            histo_mode = False  # If true execute histo matching when ORB fails
             print_next_step(generator, "Painting DB lookup")
             start_time = time.time()
             max_matches = 30  # 40
@@ -1220,41 +1221,30 @@ def recognize_painting(img, mask, contours, paintings_db):
                 max_matches=max_matches,
                 match_db_image=match_db_image
             )
-            if matches_rank == -1 and histo_mode:
-                matches_rank = painting_db_lookup(
-                    sub_img,
-                    corners,
-                    paintings_db,
-                    max_matches=max_matches,
-                    match_db_image=match_db_image,
-                    histo_mode=histo_mode
-                )
-            if matches_rank == -1:
-                recognized_painting = Painting()
-            else:
-                painting_id = matches_rank[0][0]
-                exe_db_lookup = time.time() - start_time
-                print("\n# Painting DB lookup total time: {:.3f} s".format(exe_db_lookup))
-                if painting_id is not None:
-                    recognized_painting = paintings_db[painting_id]
-                    # Manage case when I find duplicated painting in the current video frame
-                    i = 1
-                    while recognized_painting in paintings_recognized:
-                        # At each iteration I select the next painting that had the highest number of matches
-                        painting_id = matches_rank[i][0]
-                        i += 1
+            painting_id = matches_rank[0][0]
+            exe_db_lookup = time.time() - start_time
+            print("\n# Painting DB lookup total time: {:.3f} s".format(exe_db_lookup))
+            if painting_id is not None and painting_id != -1:
+                recognized_painting = paintings_db[painting_id]
 
-                        if i == matches_rank.size:
-                            recognized_painting = copy(paintings_db[painting_id])
-                            break
-                        else:
-                            recognized_painting = paintings_db[painting_id]
+                i = 1
+                # Manage case when I find duplicated painting in the current video frame
+                while recognized_painting in paintings_recognized:
+                    # At each iteration I select the next painting that had the highest number of matches
+                    painting_id = matches_rank[i][0]
+                    i += 1
 
-                    show_image("prediction", recognized_painting.image)
-            recognized_painting.frame_contour = contour
-            recognized_painting.points = translate_points(max_contour, [x, y])
-            recognized_painting.corners = translate_points(corners, [x, y])
-            paintings_recognized.append(recognized_painting)
+                    if i == matches_rank.size:
+                        recognized_painting = copy(paintings_db[painting_id])
+                        break
+                    else:
+                        recognized_painting = paintings_db[painting_id]
+
+                show_image("prediction", recognized_painting.image)
+                recognized_painting.frame_contour = contour
+                recognized_painting.points = translate_points(max_contour, [x, y])
+                recognized_painting.corners = translate_points(corners, [x, y])
+                paintings_recognized.append(recognized_painting)
         else:
             print("# Error in corners found")
 

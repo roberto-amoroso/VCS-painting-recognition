@@ -4,11 +4,11 @@ class Painting:
     """
 
     def __init__(self,
-                 image,
-                 title,
-                 author,
-                 room,
-                 filename,
+                 image=None,
+                 title=None,
+                 author=None,
+                 room=None,
+                 filename=None,
                  frame_contour=None,
                  points=None,
                  corners=None):

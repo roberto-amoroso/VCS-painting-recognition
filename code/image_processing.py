@@ -702,6 +702,9 @@ def find_painting_corners(img, max_number_corners=4, corner_quality=0.001, min_d
     - https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_features_harris/py_features_harris.html
     """
 
+    h = img.shape[0]
+    w = img.shape[1]
+
     corners = cv2.goodFeaturesToTrack(
         img,
         max_number_corners,
@@ -709,14 +712,12 @@ def find_painting_corners(img, max_number_corners=4, corner_quality=0.001, min_d
         min_distance
     )
 
-    corners = np.int32(order_points(corners[:, 0]))
-
     return corners
 
 
 def check_corners_area(img, contour, corners, min_percentage=0.8):
     """
-    Check if the corners of the image cover at least the min_percentage of the contour
+    Check if the corners of the image are 4 and cover at least the min_percentage of the contour
     area of the painting in the image. Otherwise this means there was a problem
     (e.g. image not squarish) and we return as corners the (tl, tr, br, bl)
     points of the image.
@@ -742,10 +743,17 @@ def check_corners_area(img, contour, corners, min_percentage=0.8):
     h = img.shape[0]
     w = img.shape[1]
 
-    contour_area = cv2.contourArea(contour)
-    corners_area = calculate_polygon_area(corners)
+    default_corners = True
 
-    if contour_area * area_percentage_min > corners_area:
+    if corners is not None and corners.shape[0] == 4:
+        corners = np.int32(order_points(corners[:, 0]))
+        corners_area = calculate_polygon_area(corners)
+        contour_area = cv2.contourArea(contour)
+
+        if corners_area > contour_area * area_percentage_min:
+            default_corners = False
+
+    if default_corners:
         corners = np.float32([
             [0, 0],
             [w - 1, 0],
@@ -1200,73 +1208,70 @@ def recognize_painting(img, mask, contours, paintings_db):
             # Checking corners to avoid problem (read function descr. for info)
             min_percentage = 0.90  # 0.8 or 0.85
             corners = check_corners_area(sub_img, contour, corners, min_percentage)
-            # TODO: add area value control
             exe_corner_detection = time.time() - start_time
             print("\ttime: {:.3f} s".format(exe_corner_detection))
 
-        # If we found painting corners, then we execute DB lookup
-        if corners is not None and corners.shape[0] == 4:
-            painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
-            draw_corners(painting_corners, corners)
-            show_image('painting_corners', painting_corners)
+        # Draw painting corners
+        painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
+        draw_corners(painting_corners, corners)
+        show_image('painting_corners', painting_corners)
 
-            # Step 14: Painting DB lookup
-            # ----------------------------
-            histo_mode = False  # If true execute histo matching when ORB fails
-            print_next_step(generator, "Painting DB lookup")
-            start_time = time.time()
-            max_matches = 30  # 40
-            match_db_image = False  # False
+        # Step 14: Painting DB lookup
+        # ----------------------------
+        histo_mode = False  # If true execute histo matching when ORB fails
+        print_next_step(generator, "Painting DB lookup")
+        start_time = time.time()
+        max_matches = 30  # 40
+        match_db_image = False  # False
+        matches_rank = painting_db_lookup(
+            sub_img,
+            corners,
+            paintings_db,
+            max_matches=max_matches,
+            match_db_image=match_db_image
+        )
+        if matches_rank is None and histo_mode:
             matches_rank = painting_db_lookup(
                 sub_img,
                 corners,
                 paintings_db,
                 max_matches=max_matches,
-                match_db_image=match_db_image
+                match_db_image=match_db_image,
+                histo_mode=histo_mode
             )
-            if matches_rank is None and histo_mode:
-                matches_rank = painting_db_lookup(
-                    sub_img,
-                    corners,
-                    paintings_db,
-                    max_matches=max_matches,
-                    match_db_image=match_db_image,
-                    histo_mode=histo_mode
-                )
-            if matches_rank is None:
-                recognized_painting = Painting()
-            else:
-                painting_id = matches_rank[0][0]
-                exe_db_lookup = time.time() - start_time
-                print("\n# Painting DB lookup total time: {:.3f} s".format(exe_db_lookup))
-                if painting_id is not None:
-                    recognized_painting = paintings_db[painting_id]
-                    # Manage case when I find duplicated painting in the current video frame
-                    i = 1
-                    while recognized_painting in paintings_recognized:
-                        # At each iteration I select the next painting that had the highest number of matches
-                        painting_id = matches_rank[i][0]
-                        i += 1
-
-                        if i == matches_rank.size:
-                            recognized_painting = copy(paintings_db[painting_id])
-                            break
-                        else:
-                            recognized_painting = paintings_db[painting_id]
-
-                    show_image("prediction", recognized_painting.image)
-            recognized_painting.frame_contour = contour
-            recognized_painting.points = translate_points(max_contour, [x, y])
-            recognized_painting.corners = translate_points(corners, [x, y])
-            paintings_recognized.append(recognized_painting)
+        if matches_rank is None:
+            recognized_painting = Painting()
         else:
-            print("# Error in corners found")
+            painting_id = matches_rank[0][0]
+            exe_db_lookup = time.time() - start_time
+            print("\n# Painting DB lookup total time: {:.3f} s".format(exe_db_lookup))
+            if painting_id is not None:
+                recognized_painting = paintings_db[painting_id]
+                # Manage case when I find duplicated painting in the current video frame
+                i = 1
+                while recognized_painting in paintings_recognized:
+                    # At each iteration I select the next painting that had the highest number of matches
+                    painting_id = matches_rank[i][0]
+                    i += 1
+
+                    if i == matches_rank.size:
+                        recognized_painting = copy(paintings_db[painting_id])
+                        break
+                    else:
+                        recognized_painting = paintings_db[painting_id]
+
+                show_image("prediction", recognized_painting.image)
+        recognized_painting.frame_contour = contour
+        recognized_painting.points = translate_points(max_contour, [x, y])
+        recognized_painting.corners = translate_points(corners, [x, y])
+        paintings_recognized.append(recognized_painting)
 
         # cv2.waitKey(0)
+
     return paintings_recognized
 
 
-def draw_paintings_info(img, paintings):
+def draw_paintings_info(img, paintings, scale_factor):
     """Draws all information about paintings found in the image.
 
     Parameters
@@ -1275,6 +1280,8 @@ def draw_paintings_info(img, paintings):
         the input image
     paintings: list
         list of painting found in the image
+    scale_factor: float
+        scale factor for which the original image was scaled
 
     Returns
     -------
@@ -1294,12 +1301,12 @@ def draw_paintings_info(img, paintings):
     w = img_copy.shape[1]
 
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 0.5
+    font_scale = 0.5 * scale_factor
     font_color = (0, 0, 0)
     line_thickness = 2
 
     for painting in paintings:
-        corner_points = np.int32(painting.corners)
+        corner_points = np.int32(painting.corners * scale_factor)
 
         if painting.title is not None:
             # Draw the title of the painting
@@ -1448,7 +1455,7 @@ if __name__ == '__main__':
 
     photos_path = 'dataset/photos'
     recognized_painting_path = 'dataset/recognized_paintings'
-    videos_dir_name = '014'  # '013' or '009' or '014'
+    videos_dir_name = '013'  # 'test' or '013' or '009' or '014'
     filename = None
     # filename = '20180529_112417_ok_0031.jpg'
     # filename = '20180529_112417_ok_0026.jpg'
@@ -1474,6 +1481,8 @@ if __name__ == '__main__':
     # filename = "VID_20180529_113001_0001.jpg"
     # filename = "VID_20180529_112553_0003.jpg"  # painting with error people detection
     # filename = "VID_20180529_112553_0000.jpg"
+    # filename = "20180529_112417_ok_0004.jpg"
+    filename = "20180529_112417_ok_0004.jpg"
 
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
@@ -1481,7 +1490,7 @@ if __name__ == '__main__':
     paintings_db = create_paintings_db(painting_db_path, painting_data_path)
     total_time = 0
 
-    dst_dir = os.path.join(recognized_painting_path, videos_dir_name)
+    dst_dir = os.path.join(recognized_painting_path, videos_dir_name, "resize")
     if not os.path.exists(dst_dir):
         os.makedirs(dst_dir)
         print('Created the directory "{}"'.format(dst_dir))
@@ -1514,14 +1523,10 @@ if __name__ == '__main__':
 
             height_scaled = np.min((h_img, height))
             width_scaled = np.min((w_img, width))
-            # img_original = cv2.resize(img_original, (width_scaled, height_scaled), cv2.INTER_CUBIC)
+            img = cv2.resize(img_original, (width_scaled, height_scaled), cv2.INTER_CUBIC)
 
-            print(f"Image shape: {img_original.shape}")
-            show_image('image_original', img_original, height=405, width=720)
-
-            # TODO: if auto-adjust will be in the `recognize_painting` function, than remove the following assigment
-            # and change the name of `img_original` in `img`
-            img = img_original
+            print(f"Image shape: {img.shape}")
+            show_image('image_original', img, height=405, width=720)
 
             # for radius in range(5, 9):
             #     for color in range(35, 36, 5):
@@ -1529,8 +1534,8 @@ if __name__ == '__main__':
             # ----------------------------
             print_next_step(generator, "Mean Shift Segmentation:")
             start_time = time.time()
-            spatial_radius = 7  # 8 # 5 #8 or 7
-            color_radius = 13  # 40 #40 #35 or 15
+            spatial_radius = 8  # 8 # 5 #8 or 7
+            color_radius = 40  # 40 #40 #35 or 15
             maximum_pyramid_level = 1  # 1
             img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
             exe_time_mean_shift_segmentation = time.time() - start_time
@@ -1542,7 +1547,7 @@ if __name__ == '__main__':
             # ----------------------------
             print_next_step(generator, "Mask the Wall:")
             start_time = time.time()
-            color_difference = 2  # 2 # 1
+            color_difference = 1  # 2 # 1
             x_samples = 8  # 8 or 16
             wall_mask = find_largest_segment(img_mss, color_difference, x_samples)
             exe_time_mask_largest_segment = time.time() - start_time
@@ -1715,17 +1720,17 @@ if __name__ == '__main__':
                 # ----------------------------
                 print_next_step(generator, "YOLO People Detection:")
                 start_time = time.time()
-                img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img_original.copy())
+                img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img.copy())
                 show_image('people_before_cleaning', img_people_detected, height=405, width=720)
                 # Step BOX: Clean bounding box to avoid overlap with painting
                 max_percentage = 0.9
                 people_bounding_boxes = clean_people_bounding_box(
-                    img_original,
+                    img,
                     paintings_recognized,
                     people_bounding_boxes,
                     max_percentage=max_percentage
                 )
-                img_people_detected = draw_people_bounding_box(img_original, people_bounding_boxes)
+                img_people_detected = draw_people_bounding_box(img_original, people_bounding_boxes, scale_factor)
                 # img_people_detected = img_original
 
                 exe_time_people_detection = time.time() - start_time
@@ -1737,10 +1742,11 @@ if __name__ == '__main__':
                 # ----------------------------
                 print_next_step(generator, "Draw paintings information:")
                 start_time = time.time()
-                final_frame = draw_paintings_info(img_people_detected, paintings_recognized)
+                final_frame = draw_paintings_info(img_people_detected, paintings_recognized, scale_factor)
                 exe_time_draw_info = time.time() - start_time
                 total_time += exe_time_draw_info
                 print("\ttime: {:.3f} s".format(exe_time_draw_info))
+                print("# Final frame shape: ", final_frame.shape)
                 show_image('final_frame', final_frame, height=405, width=720)
                 # cv2.imshow('final_frame', final_frame)
             else:

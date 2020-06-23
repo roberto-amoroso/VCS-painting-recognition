@@ -21,12 +21,13 @@ def print_next_step(generator, title):
     # pass
 
 
-def draw_people_bounding_box(img, people_bounding_boxes):
+def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
     """
     Draws the bounding box of people detected in the image.
     """
     colors = pkl.load(open("yolo/pallete", "rb"))
     for box in people_bounding_boxes:
+        box = np.array(box) * scale_factor
         x, y, w, h = box
 
         label = "Person"
@@ -44,12 +45,12 @@ def draw_people_bounding_box(img, people_bounding_boxes):
 
 
 def show_image(title, img, height=None, width=None, wait_key=True):
-    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    # if height is not None and width is not None:
-    #     cv2.resizeWindow(title, width, height)
-    # cv2.imshow(title, img)
-    # if wait_key:
-    #     cv2.waitKey(0)
+    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    if height is not None and width is not None:
+        cv2.resizeWindow(title, width, height)
+    cv2.imshow(title, img)
+    if wait_key:
+        cv2.waitKey(0)
     pass
 
 

@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (MiKTeX 2.9.7380 64-bit)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: report.aux
+The style file: ieee_fullname.bst
+Database file #1: egbib.bib
+You've used 4 entries,
+            2120 wiz_defined-function locations,
+            531 strings with 4627 characters,
+and the built_in function-call counts, 1486 in all, are:
+= -- 150
+> -- 67
+< -- 0
++ -- 28
+- -- 22
+* -- 126
+:= -- 251
+add.period$ -- 12
+call.type$ -- 4
+change.case$ -- 23
+chr.to.int$ -- 0
+cite$ -- 4
+duplicate$ -- 44
+empty$ -- 113
+format.name$ -- 22
+if$ -- 296
+int.to.chr$ -- 0
+int.to.str$ -- 4
+missing$ -- 4
+newline$ -- 23
+num.names$ -- 8
+pop$ -- 15
+preamble$ -- 1
+purify$ -- 19
+quote$ -- 0
+skip$ -- 29
+stack$ -- 0
+substring$ -- 134
+swap$ -- 4
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 16
+warning$ -- 0
+while$ -- 16
+width$ -- 5
+write$ -- 46

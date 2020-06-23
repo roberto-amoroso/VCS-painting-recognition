@@ -1,0 +1,29 @@
+\begin{thebibliography}{1}\itemsep=-1pt
+
+\bibitem{fathy1995image}
+Mahmood Fathy and Mohammed~Yakoob Siyal.
+\newblock An image detection technique based on morphological edge detection
+  and background differencing for real-time traffic analysis.
+\newblock {\em Pattern Recognition Letters}, 16(12):1321--1330, 1995.
+
+\bibitem{hambly2001supercosmos}
+NC Hambly, MJ Irwin, and HT MacGillivray.
+\newblock The supercosmos sky survey—ii. image detection, parametrization,
+  classification and photometry.
+\newblock {\em Monthly Notices of the Royal Astronomical Society},
+  326(4):1295--1314, 2001.
+
+\bibitem{martinel2013robust}
+Niki Martinel, Christian Micheloni, and Gian~Luca Foresti.
+\newblock Robust painting recognition and registration for mobile augmented
+  reality.
+\newblock {\em IEEE Signal Processing Letters}, 20(11):1022--1025, 2013.
+
+\bibitem{rui1999image}
+Yong Rui, Thomas~S Huang, and Shih-Fu Chang.
+\newblock Image retrieval: Current techniques, promising directions, and open
+  issues.
+\newblock {\em Journal of visual communication and image representation},
+  10(1):39--62, 1999.
+
+\end{thebibliography}

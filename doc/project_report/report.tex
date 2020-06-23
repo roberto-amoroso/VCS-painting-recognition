@@ -1,0 +1,97 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Include other packages here, before hyperref.
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex.  (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\usepackage[breaklinks=true,bookmarks=false]{hyperref}
+
+\cvprfinalcopy % *** Uncomment this line for the final submission
+
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\begin{document}
+
+%%%%%%%%% TITLE
+\title{VCS 2020: Locate and Recognize Paintings and People}
+
+\author{Roberto Amoroso\\
+University of Modena and Reggio Emilia\\
+{\tt\small 219620@studenti.unimore.it}
+}
+
+\maketitle
+%\thispagestyle{empty}
+
+%%%%%%%%% ABSTRACT
+\begin{abstract}
+   We propose a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, we created a Python program that is able to locate and recognize paintings and people present in a video or single image. For the part relating to the paintings, we used the OpenCV library, while to carry out the people detection operation we used YOLO, a real-time object detection system.
+\end{abstract}
+
+%%%%%%%%% BODY TEXT
+\section{Introduction}
+Localizzare un dipinto, calcolare la traformazione che consente di rettificare l'immagine e poi confrontare l'immagine ottenuta con quelle memorizza in un datase, sono tutte operaioni nontrivial. 
+
+Le tecniche comuni di image processing soffrono di alcuni problemi (illuminazione, scale changes, distorsione, etc.) che diventano ancora più rilevanti nel caso di moving cameras, le quali a loro volta introducono ulteriori effetti indesiderati, e.g. blur, noise, motion. 
+In aggiunta a ciò, l'esposione dei dipinti in esibizioni e mostre aggiunge problemi di riflessione delle luci, image exposure and image saturation.
+
+Negli ultimi anni, sono stati sviluppati molti lavori che investigano i problemi di image detection \cite{fathy1995image,hambly2001supercosmos}, recognition \cite{martinel2013robust} and retieval \cite{rui1999image}. Molti di questi lavori, match le appearance features di un dipinto against a large database of location-tagged images.
+
+
+Il problema consiste nel localizzare e riconoscere dipinti e persone in un museo o galleria d'arte.
+Ogni dipinto localizzato viene confrontato con un database di immagini di dipinti a nostra disposizione, così da ricavare tutte le informazioni ad esso correlate.
+
+%------------------------------------------------------------------------
+\section{Related Work}
+-- TODO --
+Inserisci informazioni riguardo a ciascuno dei punti obbligatori che hai sviluppato
+
+%------------------------------------------------------------------------
+\section{Methods}
+-- TODO --
+%------------------------------------------------------------------------
+\subsection{Data Collection and Preparation}
+-- TODO --
+%------------------------------------------------------------------------
+\subsection{Painting Detection}
+-- TODO --
+%------------------------------------------------------------------------
+\subsection{Painting Rectification}
+-- TODO --
+%------------------------------------------------------------------------
+\subsection{Painting Retieval}
+-- TODO --
+%------------------------------------------------------------------------
+\subsection{People Detection}
+-- TODO --
+%------------------------------------------------------------------------
+\subsection{People and Painting Localization}
+-- TODO --
+
+%------------------------------------------------------------------------
+\section{Results}
+-- TODO --
+Mostra i risultati complessivi e dove l'approccio fallisce quando non vengono rispettate le premesse e i presupposti fatti precedentemente (vedi ad esempio il flooding della parete).
+
+%------------------------------------------------------------------------
+\section{Conclusions}
+-- TODO --
+
+{\small
+\bibliographystyle{ieee_fullname}
+\bibliography{egbib}
+}
+
+\end{document}

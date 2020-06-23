@@ -20,12 +20,12 @@ def print_next_step(generator, title):
 
 
 def show_image(title, img, height=None, width=None, wait_key=True):
-    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    # if height is not None and width is not None:
-    #     cv2.resizeWindow(title, width, height)
-    # cv2.imshow(title, img)
-    # if wait_key:
-    #     cv2.waitKey(0)
+    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    if height is not None and width is not None:
+        cv2.resizeWindow(title, width, height)
+    cv2.imshow(title, img)
+    if wait_key:
+        cv2.waitKey(0)
     pass
 
 
@@ -61,6 +61,30 @@ def draw_corners(img, corners):
     for i in corners:
         x, y = i.ravel()
         cv2.circle(img, (x, y), 3, 255, -1)
+
+
+def calculate_polygon_area(points):
+    """
+    Calculates the area of a polygon given its points, ordered clockwise,
+    using Shoelace formula (https://en.wikipedia.org/wiki/Shoelace_formula).
+    For example, in the case of 4 points, they should be sorted as follows:
+     top-left, top-right, bottom-right, bottom-left
+
+    Parameters
+    ----------
+    points: ndarray
+        a Numpy array of value (x, y)
+    Returns
+    -------
+    float
+        the are of the polygon
+    """
+    area = 0.
+    if points is not None:
+        x = points[:, 0]
+        y = points[:, 1]
+        area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+    return area
 
 
 def order_points(pts):

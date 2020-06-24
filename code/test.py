@@ -43,9 +43,9 @@ if __name__ == '__main__':
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
 
-    for spatial in range(5, 11):
-        for color in range(10, 41, 5):
-            for col_diff in range(1, 3):
+    for spatial in range(7, 9):
+        for color in range(11, 17, 1):
+            for col_diff in range(2, 3):
 
                 total_time = 0
 

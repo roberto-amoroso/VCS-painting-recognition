@@ -1382,34 +1382,36 @@ def draw_paintings_info(img, paintings, scale_factor):
     if len(possible_rooms) > 0:
         major_room = max(possible_rooms, key=possible_rooms.count)
         room = f"Room: {major_room}"
+    else:
+        room = "Room: --"
 
-        # Draw the room of the painting
-        font_color = (0, 0, 0)
-        room_width, room_height = cv2.getTextSize(
-            room,
-            font,
-            font_scale,
-            line_thickness
-        )[0]
-        xb_room = int(w / 2 - room_width / 2)
-        yb_room = int(h - 20)
+    # Draw the room of the painting
+    font_color = (0, 0, 0)
+    room_width, room_height = cv2.getTextSize(
+        room,
+        font,
+        font_scale,
+        line_thickness
+    )[0]
+    xb_room = int(w / 2 - room_width / 2)
+    yb_room = int(h - 20)
 
-        bottom_left_corner_of_room = (xb_room, yb_room)
+    bottom_left_corner_of_room = (xb_room, yb_room)
 
-        cv2.rectangle(
-            img_copy,
-            (xb_room - 15, yb_room - room_height - 15),
-            (xb_room + room_width + 15, h - 5),
-            (255, 255, 255),
-            -1
-        )
-        cv2.putText(img_copy,
-                    room,
-                    bottom_left_corner_of_room,
-                    font,
-                    font_scale,
-                    font_color,
-                    line_thickness)
+    cv2.rectangle(
+        img_copy,
+        (xb_room - 15, yb_room - room_height - 15),
+        (xb_room + room_width + 15, h - 5),
+        (255, 255, 255),
+        -1
+    )
+    cv2.putText(img_copy,
+                room,
+                bottom_left_corner_of_room,
+                font,
+                font_scale,
+                font_color,
+                line_thickness)
 
     return img_copy
 
@@ -1467,7 +1469,7 @@ if __name__ == '__main__':
 
     photos_path = 'dataset/photos'
     recognized_painting_path = 'dataset/recognized_paintings'
-    videos_dir_name = '014'  # 'test' or '013' or '009' or '014'
+    videos_dir_name = 'test'  # 'test' or '013' or '009' or '014'
     filename = None
     # filename = '20180529_112417_ok_0031.jpg'
     # filename = '20180529_112417_ok_0026.jpg'
@@ -1480,7 +1482,7 @@ if __name__ == '__main__':
     # filename = "VID_20180529_112517_0005.jpg"
     # filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
     # filename = "VID_20180529_112739_0004.jpg"  # Wall inverted
-    filename = "VID_20180529_112627_0000.jpg"  # Wall correct
+    # filename = "VID_20180529_112627_0000.jpg"  # Wall correct
     # filename = "VID_20180529_112517_0002.jpg"  # strange case
     # filename = "VID_20180529_112553_0005.jpg"
     # filename = "IMG_2646_0004.jpg"
@@ -1546,8 +1548,8 @@ if __name__ == '__main__':
             # ----------------------------
             print_next_step(generator, "Mean Shift Segmentation:")
             start_time = time.time()
-            spatial_radius = 7  # 8 # 5 #8 or 7
-            color_radius = 13  # 40 #40 #35 or 15
+            spatial_radius = 8  # 8 # 8 # 5 #8 or 7
+            color_radius = 15  # 15 # 40 #40 #35 or 15
             maximum_pyramid_level = 1  # 1
             img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
             exe_time_mean_shift_segmentation = time.time() - start_time

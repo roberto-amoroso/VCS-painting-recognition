@@ -27,14 +27,14 @@ def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
     """
     colors = pkl.load(open("yolo/pallete", "rb"))
     for box in people_bounding_boxes:
-        box = np.array(box) * scale_factor
+        box = np.int32(np.array(box) * scale_factor)
         x, y, w, h = box
 
         label = "Person"
         color = random.choice(colors)
         cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
 
-        font_scale = 1.5
+        font_scale = 1.5 * scale_factor
         line_thickness = 2
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, font_scale, line_thickness)[0]
         c2 = x + t_size[0] + 3, y + t_size[1] + 4

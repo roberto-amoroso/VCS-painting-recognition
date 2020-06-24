@@ -610,7 +610,6 @@ def extend_image_lines(img, lines, probabilistic_mode, color_value=255):
 
     length = np.max((h, w))
 
-    # TODO: improve the loop and remove redundancy
     for line in lines:
         line = line[0]
         if probabilistic_mode:
@@ -635,7 +634,7 @@ def extend_image_lines(img, lines, probabilistic_mode, color_value=255):
             x0 = a * rho
             y0 = b * rho
 
-            length = 4000
+            length = 40000
 
             pt1 = (int(x0 + length * (-b)), int(y0 + length * (a)))
             pt2 = (int(x0 - length * (-b)), int(y0 - length * (a)))
@@ -959,7 +958,8 @@ def histo_matching(src_img, dst_img):
     return hist_comparison
 
 
-def painting_db_lookup(img, corners, paintings_db, max_matches=40, match_db_image=False, histo_mode=False):
+def painting_db_lookup(img, corners, paintings_db, max_matches=40, threshold=0.92, match_db_image=False,
+                       histo_mode=False):
     """Lookup the DB for a specific painting using ORB or histogram matching.
 
     Parameters
@@ -972,6 +972,10 @@ def painting_db_lookup(img, corners, paintings_db, max_matches=40, match_db_imag
         list of all `Painting` object that populate the DB.
     max_matches: int
         maximum number of the best (lower distance) matches found that we consider
+    threshold: float
+        rejects matches if the ratio between the best and the second-best match is
+        below the `threshold`. Credits:
+         https://stackoverflow.com/questions/17967950/improve-matching-of-feature-points-with-opencv
     match_db_image: bool
         define if:
         - rectify `img` one time using aspect ratio (True)
@@ -1030,8 +1034,7 @@ def painting_db_lookup(img, corners, paintings_db, max_matches=40, match_db_imag
             print_next_step(generator, "Match features using ORB")
             start_time = time.time()
             # max_distance = 40
-            # Negate to keep the same logic also for histo_mode
-            match_size = -match_features_orb(rectified_img, painting, max_matches)
+            match_size = match_features_orb(rectified_img, painting, max_matches)
             exe_time_orb = time.time() - start_time
             print("\ttime: {:.3f} s".format(exe_time_orb))
         else:
@@ -1045,12 +1048,19 @@ def painting_db_lookup(img, corners, paintings_db, max_matches=40, match_db_imag
 
         matches_rank = np.append(matches_rank, np.array([(id, match_size)], dtype=dtype))
 
-    matches_rank = np.flip(np.sort(matches_rank, order='val_matches'))
+    matches_rank = np.sort(matches_rank, order='val_matches')
 
-    limit = -np.inf if not histo_mode else 0
+    good_match_found = False
 
-    # If there is a best match, then return it
-    if matches_rank[0][1] > limit:
+    if histo_mode:
+        matches_rank = np.flip(matches_rank)
+        if matches_rank[0][1] > 0:
+            good_match_found = True
+    else:
+        if matches_rank[0][1] < np.inf and matches_rank[0][1] < matches_rank[1][1] * threshold:
+            good_match_found = True
+
+    if good_match_found:
         return matches_rank
     else:
         return None
@@ -1133,7 +1143,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         probabilistic_mode = False
         rho = 1
         theta = np.pi / 180
-        threshold = 45  # 50 or 30 or 40 or 0
+        threshold = 50  # 50 or 30 or 40 or 0
         ratio_percentage = 0.10
         lines = find_hough_lines(
             img=edges,
@@ -1219,6 +1229,7 @@ def recognize_painting(img, mask, contours, paintings_db):
         # Step 14: Painting DB lookup
         # ----------------------------
         histo_mode = False  # If true execute histo matching when ORB fails
+        threshold = 0.92
         print_next_step(generator, "Painting DB lookup")
         start_time = time.time()
         max_matches = 30  # 40
@@ -1227,6 +1238,7 @@ def recognize_painting(img, mask, contours, paintings_db):
             sub_img,
             corners,
             paintings_db,
+            threshold=threshold,
             max_matches=max_matches,
             match_db_image=match_db_image
         )
@@ -1455,7 +1467,7 @@ if __name__ == '__main__':
 
     photos_path = 'dataset/photos'
     recognized_painting_path = 'dataset/recognized_paintings'
-    videos_dir_name = '013'  # 'test' or '013' or '009' or '014'
+    videos_dir_name = '014'  # 'test' or '013' or '009' or '014'
     filename = None
     # filename = '20180529_112417_ok_0031.jpg'
     # filename = '20180529_112417_ok_0026.jpg'
@@ -1468,7 +1480,7 @@ if __name__ == '__main__':
     # filename = "VID_20180529_112517_0005.jpg"
     # filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
     # filename = "VID_20180529_112739_0004.jpg"  # Wall inverted
-    # filename = "VID_20180529_112627_0000.jpg"  # Wall correct
+    filename = "VID_20180529_112627_0000.jpg"  # Wall correct
     # filename = "VID_20180529_112517_0002.jpg"  # strange case
     # filename = "VID_20180529_112553_0005.jpg"
     # filename = "IMG_2646_0004.jpg"
@@ -1482,7 +1494,7 @@ if __name__ == '__main__':
     # filename = "VID_20180529_112553_0003.jpg"  # painting with error people detection
     # filename = "VID_20180529_112553_0000.jpg"
     # filename = "20180529_112417_ok_0004.jpg"
-    filename = "20180529_112417_ok_0004.jpg"
+    # filename = "20180529_112417_ok_0004.jpg"
 
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
@@ -1512,7 +1524,7 @@ if __name__ == '__main__':
 
             # ---------------------------------
             # RESIZING: resize to work only with HD resolution images
-            # TODO: if apply resizing, put color_differenze = 1 in largest segment
+            # WARNINGS: if apply resizing, put color_differenze = 1 in largest segment
             # ---------------------------------
             height = 720
             width = 1280
@@ -1534,8 +1546,8 @@ if __name__ == '__main__':
             # ----------------------------
             print_next_step(generator, "Mean Shift Segmentation:")
             start_time = time.time()
-            spatial_radius = 8  # 8 # 5 #8 or 7
-            color_radius = 40  # 40 #40 #35 or 15
+            spatial_radius = 7  # 8 # 5 #8 or 7
+            color_radius = 13  # 40 #40 #35 or 15
             maximum_pyramid_level = 1  # 1
             img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
             exe_time_mean_shift_segmentation = time.time() - start_time
@@ -1547,7 +1559,7 @@ if __name__ == '__main__':
             # ----------------------------
             print_next_step(generator, "Mask the Wall:")
             start_time = time.time()
-            color_difference = 1  # 2 # 1
+            color_difference = 2  # 2 # 1
             x_samples = 8  # 8 or 16
             wall_mask = find_largest_segment(img_mss, color_difference, x_samples)
             exe_time_mask_largest_segment = time.time() - start_time
@@ -1608,10 +1620,8 @@ if __name__ == '__main__':
             cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
             show_image('image_contours_1', img_contours, height=405, width=720)
 
-            # TODO: test if keep or remove
             # Add a white border to manage cases when `find_largest_segment`
             # works the opposite way (wall black and painting white)
-
             thickness = 1
             wall_mask_inverted_2 = cv2.rectangle(wall_mask_inverted, (0, 0), (w_img - 1, h_img - 1), 255, thickness)
             show_image("wall_mask_inverted_2", wall_mask_inverted_2, height=405, width=720)

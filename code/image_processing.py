@@ -1740,19 +1740,19 @@ if __name__ == '__main__':
                     people_bounding_boxes,
                     max_percentage=max_percentage
                 )
-                img_people_detected = draw_people_bounding_box(img_original, people_bounding_boxes, scale_factor)
-                # img_people_detected = img_original
-
                 exe_time_people_detection = time.time() - start_time
                 total_time += exe_time_people_detection
                 print("\ttime: {:.3f} s".format(exe_time_people_detection))
                 show_image('people_after_cleaning', img_people_detected, height=405, width=720)
 
-                # Step 18: Draw information about Paintings found
+                # Step 18: Draw information about Paintings and People found
                 # ----------------------------
-                print_next_step(generator, "Draw paintings information:")
+                print_next_step(generator, "Draw paintings and people information:")
                 start_time = time.time()
-                final_frame = draw_paintings_info(img_people_detected, paintings_recognized, scale_factor)
+                # First draw the info on the paintings...
+                final_frame = draw_paintings_info(img_original, paintings_recognized, scale_factor)
+                # ...and then the info on the people, so as to respect the prospect.
+                final_frame = draw_people_bounding_box(final_frame, people_bounding_boxes, scale_factor)
                 exe_time_draw_info = time.time() - start_time
                 total_time += exe_time_draw_info
                 print("\ttime: {:.3f} s".format(exe_time_draw_info))

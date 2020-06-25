@@ -1,51 +1,12 @@
-# Testing MODE ON
-from yolo.people_detection import PeopleDetection
-from model.painting import Painting
-import pandas as pd
-from utils import print_next_step, step_generator, show_image, draw_lines, draw_corners, order_points, translate_points, \
-    calculate_polygon_area, draw_people_bounding_box
+"""
+This module contains generic image processing functions that can also be used
+for applications other than Painting Detection.
+"""
+
 import cv2
 import numpy as np
-import os
-import time
-from copy import copy
-import matplotlib.pyplot as plt
 
-generator = step_generator()
-
-
-def create_segmented_image(img, contours, scale_factor=1.):
-    """
-    Create an image the the contours are white filled and the rest is black.
-
-    Parameters
-    ----------
-    img: ndarray
-        input image necessary to the shape
-    contours: list
-        list of contours. Each individual contour is a Numpy array
-        of (x,y) coordinates of boundary points of the object.
-    scale_factor: float
-        used to scale contours in case the image has been resized
-        before finding contours.
-
-    Returns
-    -------
-    ndarray
-        the segmented image
-    """
-
-    h = img.shape[0]
-    w = img.shape[1]
-
-    segmented = np.zeros((h, w), dtype=np.uint8)
-
-    if scale_factor != 1:
-        contours = [np.int32(i) for i in np.array(contours) * scale_factor]
-
-    cv2.drawContours(segmented, contours, -1, 255, cv2.FILLED)
-
-    return segmented
+from draw import draw_lines
 
 
 def automatic_brightness_and_contrast(image, clip_hist_percent=1):
@@ -117,147 +78,6 @@ def automatic_brightness_and_contrast(image, clip_hist_percent=1):
 
     new_img = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
     return new_img, alpha, beta
-
-
-def create_paintings_db(db_path, data_path):
-    """Creates a list of all paintings in the DB and their info.
-
-    Parameters
-    ----------
-    db_path: str
-        path of the directory containing all painting files.
-    data_path: str
-        path of the '.csv' file containing all paintings info.
-
-    Returns
-    -------
-    list
-        list of `Painting` objects, describing all the paintings that populate
-        the DB.
-    """
-    paintings_db = []
-    df_painting_data = pd.read_csv(data_path)
-    for subdir, dirs, files in os.walk(db_path):
-        db_dir_name = subdir.replace('/', '\\').split('\\')[-1]
-
-        print('Opened directory "{}"'.format(db_dir_name))
-
-        for painting_file in files:
-            image = cv2.imread(os.path.join(db_path, painting_file))
-            painting_info = df_painting_data.loc[df_painting_data['Image'] == painting_file].iloc[0]
-            title = painting_info['Title']
-            author = painting_info['Author']
-            room = painting_info['Room']
-            painting = Painting(
-                image,
-                title,
-                author,
-                room,
-                painting_file
-            )
-            paintings_db.append(painting)
-    return paintings_db
-
-
-def mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level):
-    """Groups pixels together by colour and location.
-
-    This function takes an image and mean-shift parameters and returns a version
-    of the image that has had mean shift segmentation performed on it.
-
-    Mean shift segmentation clusters nearby pixels with similar pixel values
-    sets them all to have the value of the local maxima of pixel value.
-
-    Parameters
-    ----------
-    img: ndarray
-        image to apply the Mean Shift Segmentation
-    spatial_radius: int
-        The spatial window radius
-    color_radius: int
-        The color window radius
-    maximum_pyramid_level: int
-        Maximum level of the pyramid for the segmentation
-
-    Returns
-    -------
-    ndarray
-        filtered “posterized” image with color gradients and fine-grain
-        texture flattened
-
-    Notes
-    -------
-    For details visit:
-    - https://docs.opencv.org/2.4/modules/imgproc/doc/filtering.html#pyrmeanshiftfiltering
-    - https://docs.opencv.org/master/d7/d00/tutorial_meanshift.html
-
-    """
-
-    dst_img = cv2.pyrMeanShiftFiltering(img, spatial_radius, color_radius, maximum_pyramid_level)
-    return dst_img
-
-
-def find_largest_segment(img, color_difference=1, x_samples=8, skip_white=False):
-    """Create a mask using the largest segment (this segment will be white).
-
-    This is done by setting every pixel that is not the same color of the wall
-    to have a value of 0 and every pixel has a value within a euclidean distance
-    of `color_difference` to the wall's pixel value to have a value of 255.
-
-    Parameters
-    ----------
-    img: ndarray
-        image to apply masking
-    color_difference: int
-        euclidean distance between wall's pixel and the rest of the image
-    x_samples : int
-        numer of samples that will be tested orizontally in the image
-
-    Returns
-    -------
-    ndarray
-        Returns a version of the image where the wall is white and the rest of
-        the image is black.
-    """
-
-    h, w, chn = img.shape
-    color_difference = (color_difference,) * 3
-
-    # in that way for smaller images the stride will be lower
-    stride = int(w / x_samples)
-
-    mask = np.zeros((h + 2, w + 2), dtype=np.uint8)
-    wall_mask = mask
-    largest_segment = 0
-    for y in range(0, h, stride):
-        for x in range(0, w, stride):
-            if mask[y + 1, x + 1] == 0 or skip_white:
-                mask[:] = 0
-                # Fills a connected component with the given color.
-                # For details visit:
-                # https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html?highlight=floodfill#floodfill
-                rect = cv2.floodFill(
-                    image=img.copy(),
-                    mask=mask,
-                    seedPoint=(x, y),
-                    newVal=0,
-                    loDiff=color_difference,
-                    upDiff=color_difference,
-                    flags=4 | (255 << 8),
-                )
-
-                # For details visit:
-                # https://docs.opencv.org/master/d7/d1b/group__imgproc__misc.html#gae8a4a146d1ca78c626a53577199e9c57
-
-                # Next operation is not necessary if flag is equal to `4 | ( 255 << 8 )`
-                # _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
-                segment_size = mask.sum()
-                if segment_size > largest_segment:
-                    largest_segment = segment_size
-                    wall_mask = mask[1:-1, 1:-1].copy()
-    #                     show_image('rect[2]', mask, height=405, width=720)
-    # cv2.waitKey(0)
-    return wall_mask
 
 
 def image_dilation(img, kernel_size):
@@ -435,104 +255,7 @@ def find_image_contours(img, mode, method):
     return contours, hierarchy
 
 
-def extract_candidate_painting_contours(img, contours, hierarchy, find_min_area_rect=False, width_min=100,
-                                        height_min=100, area_percentage_min=0.6, remove_overlapping=False):
-    """Find the contours that are candidated to be possible paintings.
-
-    Returns the list of the contours that meet the following criteria:
-    - not spanning the entire image
-    - their bounding rectangles are bigger than `height_min` * `width_min`
-    - take up more than `area_percentage_min` of their bounding rectangle
-
-
-    If some paintings do not fall under these criteria, they may not be
-    categorised as paintings.
-
-    Parameters
-    ----------
-    img: ndarray
-        the input image
-    contours: list
-        list of contours to check
-    hierarchy: ndarray
-        Representation of relationship between contours. OpenCV represents it as
-        an array of four values :
-            [Next, Previous, First_Child, Parent]
-    find_min_area_rect: bool
-        determines whether to use `cv2.boundingRect(contour)` (False) or `cv2.minAreaRect(contour)` (True)
-    width_min: int
-        min width of the bounding rectangle a painting
-    height_min: int
-        min height of the bounding rectangle a painting
-    area_percentage_min: float
-        min area of the bounding rectangle that must be occupied by the contour area
-    remove_overlapping: bool
-        determine if remove or not overlapping contours
-
-    Returns
-    -------
-    list
-        Returns the list of the contours that meet the criteria described above
-
-    Notes
-    -----
-    For details visit:
-    - https://docs.opencv.org/trunk/dd/d49/tutorial_py_contour_features.html
-    - https://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=boundingrect#boundingrect
-    - https://stackoverflow.com/questions/42453605/how-does-cv2-boundingrect-function-of-opencv-work
-    - https://docs.opencv.org/trunk/d9/d8b/tutorial_py_contours_hierarchy.html
-    """
-    img_copy = img.copy()
-    h_img, w_img, _ = img.shape
-    area_img = h_img * w_img
-    area_rect_min = height_min * width_min
-    candidate_painting_contours = []
-
-    if contours:
-        hierarchy = [list(h) for h in hierarchy[0]]
-        candidate_painting_hierarchy = []
-        for h, contour in enumerate(contours):
-            if find_min_area_rect:
-                rect = cv2.minAreaRect(contour)
-                x_center, y_center = rect[0]
-                w_rect, h_rect = rect[1]
-                rotation_angle = rect[2]
-                box = cv2.boxPoints(rect)
-                box = np.int0(box)
-                cv2.drawContours(img_copy, [box], 0, (0, 0, 255), 2)
-            else:
-                x, y, w_rect, h_rect = cv2.boundingRect(contour)
-                # Draw rectangles on the image [MUST be a COPY of the image]
-                img_copy = cv2.rectangle(img_copy, (x, y), (x + w_rect, y + h_rect), (0, 255, 0), 2)
-
-            # show_image('image_rectangles', img_copy, height=405, width=720)
-
-            area_rect = h_rect * w_rect
-            if area_img * 0.95 > area_rect >= area_rect_min and cv2.contourArea(contour) >= (
-                    area_rect * area_percentage_min):
-                candidate_painting_contours.append(contour)
-                candidate_painting_hierarchy.append(list(hierarchy[h]))
-
-        # Remove overlapping contours
-        if remove_overlapping:
-            for i, h in reversed(list(enumerate(candidate_painting_hierarchy))):
-                # If at least one of the child of the current contour is a
-                # candidate contour, then I remove the current contour
-                # if h[2] != -1 and list(hierarchy[h[2]]) in candidate_painting_hierarchy:
-                #     del candidate_painting_contours[i]
-                if h[2] != -1:
-                    # create a list of indices in candidate_painting_hierarchy
-                    # of the childs of the current contour
-                    contour_idx = hierarchy.index(h)
-                    childs = [c for c in hierarchy if c[3] == contour_idx and c in candidate_painting_hierarchy]
-
-                    if len(childs) > 0:
-                        del candidate_painting_contours[i]
-
-    show_image('image_rectangles', img_copy, height=405, width=720)
-    return candidate_painting_contours
-
-
+#
 def canny_edge_detection(img, threshold1, threshold2):
     """Finds edges in an image using the Canny algorithm.
 
@@ -639,7 +362,9 @@ def extend_image_lines(img, lines, probabilistic_mode, color_value=255):
     - https://answers.opencv.org/question/2966/how-do-the-rho-and-theta-values-work-in-houghlines/#:~:text=rho%20is%20the%20distance%20from,are%20called%20rho%20and%20theta.
     """
 
-    h, w = img.shape
+    h = img.shape[0]
+    w = img.shape[1]
+
     mask = np.zeros((h, w), dtype=np.uint8)
 
     length = np.max((h, w))
@@ -678,34 +403,7 @@ def extend_image_lines(img, lines, probabilistic_mode, color_value=255):
     return mask
 
 
-def isolate_painting(mask):
-    """Isolate painting from the mask of the image
-
-    Parameters
-    ----------
-    mask: ndarray
-        mask of the same size of the image. The painting should be white, the background black
-
-    Returns
-    -------
-    list
-        Largest contour found. Each contour is stored as a list of all the
-        contours in the image. Each individual contour is a Numpy array
-        of (x,y) coordinates of boundary points of the object.
-
-    """
-    contours_mode = cv2.RETR_TREE
-    contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
-    painting_contours, _ = find_image_contours(invert_image(mask), contours_mode, contours_method)
-
-    # largest_contour = painting_contours[0]
-    # for contour in painting_contours[1:]:
-    #     largest_contour = contour if contour.shape[0] > largest_contour.shape[0] else largest_contour
-
-    return max(painting_contours, key=cv2.contourArea)
-
-
-def find_painting_corners(img, max_number_corners=4, corner_quality=0.001, min_distance=20):
+def find_corners(img, max_number_corners=4, corner_quality=0.001, min_distance=20):
     """Perform Shi-Tomasi Corner detection.
 
     Perform Shi-Tomasi Corner detection to return the corners found in the image.
@@ -725,7 +423,8 @@ def find_painting_corners(img, max_number_corners=4, corner_quality=0.001, min_d
     Returns
     -------
     ndarray
-        Returns a NumPy array of the most prominent corners in the image, in the form (x,y).
+        Returns a NumPy array of the most prominent corners in the image, in the
+        form (x,y).
 
     Notes
     -----
@@ -734,9 +433,6 @@ def find_painting_corners(img, max_number_corners=4, corner_quality=0.001, min_d
     - https://docs.opencv.org/master/d4/d8c/tutorial_py_shi_tomasi.html
     - https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_feature2d/py_features_harris/py_features_harris.html
     """
-
-    h = img.shape[0]
-    w = img.shape[1]
 
     corners = cv2.goodFeaturesToTrack(
         img,
@@ -748,1094 +444,168 @@ def find_painting_corners(img, max_number_corners=4, corner_quality=0.001, min_d
     return corners
 
 
-def check_corners_area(img, contour, corners, min_percentage=0.8):
-    """
-    Check if the corners of the image are 4 and cover at least the min_percentage of the contour
-    area of the painting in the image. Otherwise this means there was a problem
-    (e.g. image not squarish) and we return as corners the (tl, tr, br, bl)
-    points of the image.
+def mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level):
+    """Groups pixels together by colour and location.
+
+    This function takes an image and mean-shift parameters and returns a version
+    of the image that has had mean shift segmentation performed on it.
+
+    Mean shift segmentation clusters nearby pixels with similar pixel values
+    sets them all to have the value of the local maxima of pixel value.
 
     Parameters
     ----------
     img: ndarray
-        the input image
-    contour: list
-        contour of the painting in the image
-    corners: ndarray
-        a Numpy array of value (x, y)
-    min_percentage: float
-        min_percentage of the contour area of the painting in the image that must be
-        covered by the area of the polygon identified by the corners.
+        image to apply the Mean Shift Segmentation
+    spatial_radius: int
+        The spatial window radius
+    color_radius: int
+        The color window radius
+    maximum_pyramid_level: int
+        Maximum level of the pyramid for the segmentation
 
     Returns
     -------
     ndarray
-        checked corners as a Numpy array of value (x, y)
+        filtered “posterized” image with color gradients and fine-grain
+        texture flattened
+
+    Notes
+    -------
+    For details visit:
+    - https://docs.opencv.org/2.4/modules/imgproc/doc/filtering.html#pyrmeanshiftfiltering
+    - https://docs.opencv.org/master/d7/d00/tutorial_meanshift.html
+
+    """
+
+    dst_img = cv2.pyrMeanShiftFiltering(img, spatial_radius, color_radius, maximum_pyramid_level)
+    return dst_img
+
+
+def find_largest_segment(img, color_difference=1, x_samples=8):
+    """Create a mask using the largest segment (this segment will be white).
+
+    This is done by setting every pixel that is not the same color of the wall
+    to have a value of 0 and every pixel has a value within a euclidean distance
+    of `color_difference` to the wall's pixel value to have a value of 255.
+
+    Parameters
+    ----------
+    img: ndarray
+        image to apply masking
+    color_difference: int
+        euclidean distance between wall's pixel and the rest of the image
+    x_samples : int
+        numer of samples that will be tested orizontally in the image
+
+    Returns
+    -------
+    ndarray
+        Returns a version of the image where the wall is white and the rest of
+        the image is black.
+    """
+
+    h, w, chn = img.shape
+    color_difference = (color_difference,) * 3
+
+    # in that way for smaller images the stride will be lower
+    stride = int(w / x_samples)
+
+    mask = np.zeros((h + 2, w + 2), dtype=np.uint8)
+    wall_mask = mask
+    largest_segment = 0
+    for y in range(0, h, stride):
+        for x in range(0, w, stride):
+            if mask[y + 1, x + 1] == 0:
+                mask[:] = 0
+                # Fills a connected component with the given color.
+                # For details visit:
+                # https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html?highlight=floodfill#floodfill
+                rect = cv2.floodFill(
+                    image=img.copy(),
+                    mask=mask,
+                    seedPoint=(x, y),
+                    newVal=0,
+                    loDiff=color_difference,
+                    upDiff=color_difference,
+                    flags=4 | (255 << 8),
+                )
+
+                # For details visit:
+                # https://docs.opencv.org/master/d7/d1b/group__imgproc__misc.html#gae8a4a146d1ca78c626a53577199e9c57
+
+                # Next operation is not necessary if flag is equal to `4 | ( 255 << 8 )`
+                # _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
+                segment_size = mask.sum()
+                if segment_size > largest_segment:
+                    largest_segment = segment_size
+                    wall_mask = mask[1:-1, 1:-1].copy()
+    #                     show_image('rect[2]', mask, height=405, width=720)
+    # cv2.waitKey(0)
+    return wall_mask
+
+
+def create_segmented_image(img, contours, scale_factor=1.):
+    """
+    Create an image the the contours are white filled and the rest is black.
+
+    Parameters
+    ----------
+    img: ndarray
+        input image necessary to the shape
+    contours: list
+        list of contours. Each individual contour is a Numpy array
+        of (x,y) coordinates of boundary points of the object.
+    scale_factor: float
+        used to scale contours in case the image has been resized
+        before finding contours.
+
+    Returns
+    -------
+    ndarray
+        the segmented image
     """
 
     h = img.shape[0]
     w = img.shape[1]
 
-    default_corners = True
+    segmented = np.zeros((h, w), dtype=np.uint8)
 
-    if corners is not None and corners.shape[0] == 4:
-        corners = np.int32(order_points(corners[:, 0]))
-        corners_area = calculate_polygon_area(corners)
-        contour_area = cv2.contourArea(contour)
+    if scale_factor != 1:
+        contours = [np.int32(i) for i in np.array(contours) * scale_factor]
 
-        if corners_area > contour_area * area_percentage_min:
-            default_corners = False
+    cv2.drawContours(segmented, contours, -1, 255, cv2.FILLED)
 
-    if default_corners:
-        corners = np.float32([
-            [0, 0],
-            [w - 1, 0],
-            [w - 1, h - 1],
-            [0, h - 1]
-        ])
+    return segmented
 
-    return corners
 
+def image_resize(img, width, height, interpolation=cv2.INTER_CUBIC):
+    """Resize the input image to the given size.
 
-def painting_rectification(src_img, corners, dst_img=None):
-    """Executes Painting Rectification through an Affine Transformation.
-
-
-    Returns a rectified version of the `src_img`. If The 'dst_img' is not None,
-    the 'corners' of the `src_img` are translated to the corners of the
-    'dst_img'. If The 'dst_img' is None the 'corners' of the `src_img` are
-    used to calculate the aspect ratio of `src_img` and then rectify it using
-    this information.
-
-    Parameters
-    -------
-    src_img: ndarray
-        source image to apply the transformation
-    dst_img: ndarray
-        destination image, the image used to transform the perspective of `src_img`
-        After transform, `src_img` will have the same perspective as `dst_img`.
-    corners: ndarray
-        the NumPy array of the image corners
-
-    Returns
-    -------
-    ndarray
-        Returns an image that is like `src_img` but with the same perspective
-        and shape as `dst_img`.
-
-    Notes
-    -----
-    For details visit:
-    - https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#warpperspective
-    - https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html?highlight=findhomography#findhomography
-    - https://www.pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
-    """
-
-    # Source and destination points for the affine transformation
-    src_points = corners
-    (tl, tr, br, bl) = src_points
-
-    if dst_img is not None:
-        h_dst = dst_img.shape[0]
-        w_dst = dst_img.shape[1]
-    else:
-        # compute the width of the new image, which will be the
-        # maximum distance between bottom-right and bottom-left
-        # x-coordiates or the top-right and top-left x-coordinates
-        widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
-        widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
-        w_dst = np.max((int(widthA), int(widthB))).clip(min=1)
-
-        # compute the height of the new image, which will be the
-        # maximum distance between the top-right and bottom-right
-        # y-coordinates or the top-left and bottom-left y-coordinates
-        heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
-        heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
-        h_dst = np.max((int(heightA), int(heightB))).clip(min=1)
-
-    # now that we have the dimensions of the new image, construct
-    # the set of destination points to obtain a "birds eye view",
-    # (i.e. top-down view) of the image, again specifying points
-    # in the top-left, top-right, bottom-right, and bottom-left
-    # order
-    dst_points = np.float32([
-        [0, 0],
-        [w_dst - 1, 0],
-        [w_dst - 1, h_dst - 1],
-        [0, h_dst - 1]
-    ])
-
-    # Find perspective transformation
-    retval, mask = cv2.findHomography(src_points, dst_points)
-
-    # Apply perspective transformation to the image
-    im_warped = cv2.warpPerspective(src_img, retval, (w_dst, h_dst), cv2.RANSAC)
-
-    return im_warped
-
-
-def match_features_orb(src_img, dst_img, max_matches=50):
-    """Find the matches between two images.
-
-    Find the matches between two images using ORB to find Keypoints.
-
-    Parameters
-    ----------
-    src_img: ndarray
-        source image
-    dst_img: ndarray
-        destination image
-    max_matches: int
-        maximum number of the best (lower distance) matches found that we consider
-    Returns
-    -------
-    float
-        Returns the average distance value considering only the best (lower distance)
-        `max_matches` matches.
-
-    Notes
-    -----
-    For details visit
-    - https://docs.opencv.org/3.4.0/d3/da1/classcv_1_1BFMatcher.html#ac6418c6f87e0e12a88979ea57980c020
-    """
-    orb = cv2.ORB_create()
-
-    src_kp = orb.detect(src_img, None)
-    src_kp, src_des = orb.compute(src_img, src_kp)
-    show_image("src_kp", cv2.drawKeypoints(src_img, src_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
-
-    dst_kp = orb.detect(dst_img, None)
-    dst_kp, dst_des = orb.compute(dst_img, dst_kp)
-    show_image("dst_kp", cv2.drawKeypoints(dst_img, dst_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
-
-    # Find matches between the features in the source image and the destination
-    # image (i.e. painting)
-    matcher = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True)
-    matches = matcher.match(src_des, dst_des)
-    matches_value = np.inf
-    if len(matches) > 0:
-        matches_value = np.mean([i.distance for i in sorted(matches, key=lambda x: x.distance)[:max_matches]])
-
-    # Show matches
-    draw_params = dict(singlePointColor=None, flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT)
-    matches_img = cv2.drawMatches(src_img, src_kp, dst_img, dst_kp, matches, None, **draw_params)
-    show_image("matches_img", matches_img, wait_key=False)
-    # cv2.waitKey(0)
-
-    return matches_value
-
-
-def histo_matching(src_img, dst_img):
-    """Histogram Comparison of two images.
-
-    Parameters
-    ----------
-    src_img: ndarray
-        first image to compare
-    dst_img: ndarray
-        second image to compare
-
-    Returns
-    -------
-    float
-        Returns the value of the Histogram Comparison of two images using the
-        Intersection method.
-
-    Notes
-    -----
-    For details visit:
-    - https://docs.opencv.org/3.4/d8/dc8/tutorial_histogram_comparison.html
-    - https://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html
-    - https://docs.opencv.org/3.4/d8/dbc/tutorial_histogram_calculation.html
-    - https://docs.opencv.org/3.4/d6/dc7/group__imgproc__hist.html#ga6ca1876785483836f72a77ced8ea759a
-    """
-
-    # Convert image from BGR to HSV
-    src_img = cv2.cvtColor(src_img, cv2.COLOR_BGR2HSV)
-    dst_img = cv2.cvtColor(dst_img, cv2.COLOR_BGR2HSV)
-
-    # Set number of bins for hue and saturation
-    hue_bins = 50
-    sat_bins = 60
-    hist_size = [hue_bins, sat_bins]
-
-    # Set ranges for hue and saturation
-    hue_range = [0, 180]
-    sat_range = [0, 256]
-    hist_range = hue_range + sat_range
-
-    # Use the 0-th and 1-st channels of the histograms for the comparison
-    channels = [0, 1]
-
-    # Create histograms
-    src_hist = cv2.calcHist(
-        [src_img],
-        channels,
-        None,
-        hist_size,
-        hist_range,
-        accumulate=False
-    )
-    cv2.normalize(src_hist, src_hist, 0, 1, cv2.NORM_MINMAX)
-
-    dst_hist = cv2.calcHist(
-        [dst_img],
-        channels,
-        None,
-        hist_size,
-        hist_range,
-        accumulate=False
-    )
-    cv2.normalize(dst_hist, dst_hist, 0, 1, cv2.NORM_MINMAX)
-
-    hist_comparison = cv2.compareHist(src_hist, dst_hist, cv2.HISTCMP_INTERSECT)
-    return hist_comparison
-
-
-def painting_db_lookup(img, corners, paintings_db, max_matches=40, threshold=0.92, match_db_image=False,
-                       histo_mode=False):
-    """Lookup the DB for a specific painting using ORB or histogram matching.
-
-    Parameters
-    ----------
-    img: ndarray
-        the input image.
-    corners: ndarray
-        a NumPy array of the corners in `img`, in the form (x,y).
-    paintings_db: list
-        list of all `Painting` object that populate the DB.
-    max_matches: int
-        maximum number of the best (lower distance) matches found that we consider
-    threshold: float
-        rejects matches if the ratio between the best and the second-best match is
-        below the `threshold`. Credits:
-         https://stackoverflow.com/questions/17967950/improve-matching-of-feature-points-with-opencv
-    match_db_image: bool
-        define if:
-        - rectify `img` one time using aspect ratio (True)
-        - rectify `img` for every painting in `paintings_db`
-    histo_mode: bool
-        indicate which method use for the matching:
-        - True = Histogram Matching.
-        - False = ORB matching.
-
-    Returns
-    -------
-    ndarray
-        Returns a NumPy array of tuple (id, num_matches), where id is the
-        identification number of the current painting of the DB and
-        num_matches is the amount of matches that `img` has with the current
-        painting. The array is sorted in descending order of the number of
-        matches.
-
-    Notes
-    -----
-    For details visit:
-    - https://docs.opencv.org/3.4/d1/d89/tutorial_py_orb.html
-    - https://numpy.org/doc/1.18/reference/generated/numpy.sort.html
-    """
-
-    dtype = [('painting_id', int), ('val_matches', float)]
-    matches_rank = np.array([], dtype=dtype)
-
-    if not match_db_image:
-        # Step 15: Rectify Painting
-        # ----------------------------
-        print_next_step(generator, "Rectify Painting")
-        start_time = time.time()
-        rectified_img = painting_rectification(img, corners)
-        exe_time_rectification = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_rectification))
-        show_image('image_rectified', rectified_img)
-
-    for id, painting_obj in enumerate(paintings_db):
-        painting = painting_obj.image
-        show_image('image_db', painting, wait_key=False)
-
-        if match_db_image:
-            # Step 15: Rectify Painting
-            # ----------------------------
-            print_next_step(generator, "Rectify Painting")
-            start_time = time.time()
-            rectified_img = painting_rectification(img, corners, painting)
-            exe_time_rectification = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_rectification))
-            show_image('image_rectified', rectified_img, wait_key=False)
-
-        if not histo_mode:
-            # Step 16: Match features using ORB
-            # ----------------------------
-            print_next_step(generator, "Match features using ORB")
-            start_time = time.time()
-            # max_distance = 40
-            match_size = match_features_orb(rectified_img, painting, max_matches)
-            exe_time_orb = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_orb))
-        else:
-            # Step 17: Match features using HISTOGRAMS
-            # ----------------------------
-            print_next_step(generator, "Match features using HISTOGRAMS")
-            start_time = time.time()
-            match_size = histo_matching(rectified_img, painting)
-            exe_time_histo = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_histo))
-
-        matches_rank = np.append(matches_rank, np.array([(id, match_size)], dtype=dtype))
-
-    matches_rank = np.sort(matches_rank, order='val_matches')
-
-    good_match_found = False
-
-    if histo_mode:
-        matches_rank = np.flip(matches_rank)
-        if matches_rank[0][1] > 0:
-            good_match_found = True
-    else:
-        if matches_rank[0][1] < np.inf and matches_rank[0][1] < matches_rank[1][1] * threshold:
-            good_match_found = True
-
-    if good_match_found:
-        return matches_rank
-    else:
-        return None
-
-
-def recognize_painting(img, mask, contours, paintings_db):
-    """Recognizes a painting from each frame contour.
-
-    Parameters
-    ----------
-    img: ndarray
-        the input image.
-    mask: ndarray
-        the mask of the image in which the wall is black and the possible
-        paintings are white.
-    contours: list
-        the list of the contours of possible paintings found in the image.
-    paintings_db: list
-        list of all `Painting` object that populate the DB.
-
-    Returns
-    -------
-    list
-        Returns a list of all painting recognized in the input image `img`.
-
-    """
-    paintings_recognized = []
-    for contour in contours:
-        x, y, w_rect, h_rect = cv2.boundingRect(contour)
-
-        sub_img = img[y:y + h_rect, x:x + w_rect]
-        sub_mask = mask[y:y + h_rect, x:x + w_rect]
-
-        # If the mask has more black pixels than white, I invert the mask
-        if np.sum(sub_mask == 0) > np.sum(sub_mask == 255):
-            sub_mask = invert_image(sub_mask)
-
-        print_next_step(generator, "# Showing sub image")
-        show_image('image_sub_img', sub_img)
-        print_next_step(generator, "# Showing sub mask")
-        show_image('image_sub_mask', sub_mask)
-
-        # Step 0: Adjust automatically brightness and contrast of the image
-        # ----------------------------
-        print_next_step(generator, "Adjust brightness and contrast:")
-        start_time = time.time()
-        img_auto_adjusted, alpha, beta = automatic_brightness_and_contrast(sub_img)
-        print(f"\talpha: {alpha}")
-        print(f"\tbeta: {beta}")
-        exe_time_auto_adjust = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_auto_adjust))
-        show_image('auto_adjusted', img_auto_adjusted)
-
-        sub_img = img_auto_adjusted
-
-        # -----------------------
-        # BORDER:
-        # Add a black pixel of border in order to avoid problem
-        # when you will try find edge of painting touching the border.
-        # You can also use the `borderType=` parameter of `cv2.erode`
-        # -----------------------
-        thickness = 1
-        blurred_mask = cv2.rectangle(sub_mask, (0, 0), (w_rect - 1, h_rect - 1), 0, thickness)
-
-        # Step 9: Canny Edge detection to get the outline of the frame
-        # ----------------------------
-        print_next_step(generator, "Canny Edge detection:")
-        start_time = time.time()
-        threshold1 = 70  # 50
-        threshold2 = 140  # 100
-        edges = canny_edge_detection(blurred_mask, threshold1, threshold2)
-        exe_time_canny = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_canny))
-        show_image('image_mask_canny', edges)
-
-        # Step 10: Hough Lines to find vertical and horizontal edges of the paintings
-        # ----------------------------
-        print_next_step(generator, "Hough Lines:")
-        start_time = time.time()
-        probabilistic_mode = False
-        rho = 1
-        theta = np.pi / 180
-        threshold = 50  # 50 or 30 or 40 or 0
-        ratio_percentage = 0.10
-        lines = find_hough_lines(
-            img=edges,
-            probabilistic_mode=probabilistic_mode,
-            rho=rho,
-            theta=theta,
-            threshold=threshold,
-            ratio_percentage=ratio_percentage
-        )
-        exe_time_hough = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_hough))
-
-        if lines is None:
-            print("# No lines found.")
-            # I can't find lines in special situation, e.g the painting is not squared (rounded, octagonal, ...)
-            # In this case the corners are the tl, tr, br, bl point of `sub_img` and the contour is the original one
-            corners = np.float32([
-                [0, 0],
-                [w_rect - 1, 0],
-                [w_rect - 1, h_rect - 1],
-                [0, h_rect - 1]
-            ])
-            max_contour = contour
-        else:
-            # Step 11: Create mask from painting edges
-            # ----------------------------
-            print_next_step(generator, "Create mask from painting edges:")
-            start_time = time.time()
-            color_value = 255
-            extended_lines_mask = extend_image_lines(sub_mask, lines, probabilistic_mode, color_value)
-            exe_time_paint_mask = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_paint_mask))
-            show_image('image_paint_mask', extended_lines_mask)
-
-            # Step 12: Isolate Painting from mask
-            # ----------------------------
-            print_next_step(generator, "Isolate Painting from mask:")
-            start_time = time.time()
-            max_contour = isolate_painting(extended_lines_mask)
-            exe_time_painting_contour = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_painting_contour))
-            # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-            painting_contour = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
-            cv2.drawContours(painting_contour, [max_contour], 0, 255, cv2.FILLED)
-            # If `cv2.drawContours` doesn't work, use `cv2.fillPoly`
-            # cv2.fillPoly(painting_contour, pts=[painting_contour], color=255)
-            show_image('painting_contours', painting_contour)
-
-            # -----------------------
-            # BORDER
-            # -----------------------
-            thickness = 1
-            painting_contour = cv2.rectangle(painting_contour, (0, 0), (w_rect - 1, h_rect - 1), 0, thickness)
-
-            # Step 13: Corner Detection of the painting
-            # ----------------------------
-            print_next_step(generator, "Corner Detection")
-            start_time = time.time()
-            max_number_corners = 4
-            corner_quality = 0.001
-            min_distance = 10  # 20
-            corners = find_painting_corners(
-                painting_contour,
-                max_number_corners=max_number_corners,
-                corner_quality=corner_quality,
-                min_distance=min_distance
-            )
-            # painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
-            # draw_corners(painting_corners, corners)
-            # show_image('painting_corners', painting_corners)
-
-            # Checking corners to avoid problem (read function descr. for info)
-            min_percentage = 0.90  # 0.8 or 0.85
-            corners = check_corners_area(sub_img, contour, corners, min_percentage)
-            exe_corner_detection = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_corner_detection))
-
-        # Draw painting corners
-        painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
-        draw_corners(painting_corners, corners)
-        show_image('painting_corners', painting_corners)
-
-        # Step 14: Painting DB lookup
-        # ----------------------------
-        histo_mode = False  # If true execute histo matching when ORB fails
-        threshold = 0.92
-        print_next_step(generator, "Painting DB lookup")
-        start_time = time.time()
-        max_matches = 30  # 40
-        match_db_image = False  # False
-        matches_rank = painting_db_lookup(
-            sub_img,
-            corners,
-            paintings_db,
-            threshold=threshold,
-            max_matches=max_matches,
-            match_db_image=match_db_image
-        )
-        if matches_rank is None and histo_mode:
-            matches_rank = painting_db_lookup(
-                sub_img,
-                corners,
-                paintings_db,
-                max_matches=max_matches,
-                match_db_image=match_db_image,
-                histo_mode=histo_mode
-            )
-        if matches_rank is None:
-            recognized_painting = Painting()
-        else:
-            painting_id = matches_rank[0][0]
-            exe_db_lookup = time.time() - start_time
-            print("\n# Painting DB lookup total time: {:.3f} s".format(exe_db_lookup))
-            if painting_id is not None:
-                recognized_painting = paintings_db[painting_id]
-                # Manage case when I find duplicated painting in the current video frame
-                i = 1
-                while recognized_painting in paintings_recognized:
-                    # At each iteration I select the next painting that had the highest number of matches
-                    painting_id = matches_rank[i][0]
-                    i += 1
-
-                    if i == matches_rank.size:
-                        recognized_painting = copy(paintings_db[painting_id])
-                        break
-                    else:
-                        recognized_painting = paintings_db[painting_id]
-
-                show_image("prediction", recognized_painting.image)
-        recognized_painting.frame_contour = contour
-        recognized_painting.points = translate_points(max_contour, [x, y])
-        recognized_painting.corners = translate_points(corners, [x, y])
-        paintings_recognized.append(recognized_painting)
-
-        # cv2.waitKey(0)
-
-    return paintings_recognized
-
-
-def draw_paintings_info(img, paintings, scale_factor):
-    """Draws all information about paintings found in the image.
+    Resize the input image to the given size using the given interpolation
+    method.
 
     Parameters
     ----------
     img: ndarray
         the input image
-    paintings: list
-        list of painting found in the image
-    scale_factor: float
-        scale factor for which the original image was scaled
+    width: int
+        width of the target resized image
+    height: int
+        height of the target resized image
+    interpolation: int
+        interpolation method
 
     Returns
     -------
-    ndarray
-        a copy of the input image on which all the information of
-        the paintings found in it were drawn.
-
-    Notes
-    -----
-    For details visit:
-    - https://docs.opencv.org/3.4/d6/d6e/group__imgproc__draw.html
-    - https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
+    tuple
+        (ndarray, float) = (the resized image, the scale factor)
     """
 
-    img_copy = img.copy()
-    h = img_copy.shape[0]
-    w = img_copy.shape[1]
-
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 0.5 * scale_factor
-    font_color = (0, 0, 0)
-    line_thickness = 2
-
-    for painting in paintings:
-        corner_points = np.int32(painting.corners * scale_factor)
-
-        if painting.title is not None:
-            # Draw the title of the painting
-            title = f"{painting.filename} - {painting.title}"
-
-            # Find position of text above painting
-            top = np.min(corner_points[:, 1])
-            bottom = np.max(corner_points[:, 1])
-            left = np.min(corner_points[:, 0])
-            right = np.max(corner_points[:, 0])
-
-            title_width, title_height = cv2.getTextSize(
-                title,
-                font,
-                font_scale,
-                line_thickness
-            )[0]
-
-            xb_title = int(left + (right - left) / 2 - title_width / 2)
-            yb_title = int(top - title_height)
-
-            # Check if the painting title is inside the video frame
-            if yb_title - title_height < 0:
-                yb_title = int(top + title_height + 15)
-
-            cv2.rectangle(
-                img_copy,
-                (xb_title - 15, yb_title - title_height - 15),
-                (xb_title + title_width + 15, yb_title + 15),
-                (255, 255, 255),
-                -1
-            )
-
-            bottom_left_corner_of_title = (xb_title, yb_title)
-
-            # TODO: manage special character (like "ù") printed as "??"
-            cv2.putText(img_copy,
-                        title,
-                        bottom_left_corner_of_title,
-                        font,
-                        font_scale,
-                        font_color,
-                        line_thickness)
-
-        # Draw painting outline
-        tl = tuple(corner_points[0])
-        tr = tuple(corner_points[1])
-        bl = tuple(corner_points[3])
-        br = tuple(corner_points[2])
-        cv2.line(img_copy, tl, tr, (0, 0, 255), 5)
-        cv2.line(img_copy, tr, br, (0, 0, 255), 5)
-        cv2.line(img_copy, br, bl, (0, 0, 255), 5)
-        cv2.line(img_copy, bl, tl, (0, 0, 255), 5)
-
-        show_image("partial_final_frame", img_copy, height=405, width=720)
-
-        # cv2.waitKey(0)
-
-    # Choose the room of the actual video frame by majority
-    possible_rooms = [p.room for p in paintings if p.room is not None]
-    if len(possible_rooms) > 0:
-        major_room = max(possible_rooms, key=possible_rooms.count)
-        room = f"Room: {major_room}"
-    else:
-        room = "Room: --"
-
-    # Draw the room of the painting
-    font_color = (0, 0, 0)
-    room_width, room_height = cv2.getTextSize(
-        room,
-        font,
-        font_scale,
-        line_thickness
-    )[0]
-    xb_room = int(w / 2 - room_width / 2)
-    yb_room = int(h - 20)
-
-    bottom_left_corner_of_room = (xb_room, yb_room)
-
-    cv2.rectangle(
-        img_copy,
-        (xb_room - 15, yb_room - room_height - 15),
-        (xb_room + room_width + 15, h - 5),
-        (255, 255, 255),
-        -1
-    )
-    cv2.putText(img_copy,
-                room,
-                bottom_left_corner_of_room,
-                font,
-                font_scale,
-                font_color,
-                line_thickness)
-
-    return img_copy
-
-
-def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percentage=0.9):
-    """
-    Remove all the people bounding boxes which overlap more than
-    `max_percentage` with one of the detected paintings.
-
-    Parameters
-    ----------
-    img: ndarray
-        the input image. Necessary to show the size of the mask to create.
-    paintings: list
-        list of painting detected
-    people_bounding_boxes: list
-        list of people bounding boxes
-    max_percentage: float
-        maximum percentage of overlap between the bounding box and one of
-        the paintings
-
-    Returns
-    -------
-    list
-        the list of the valid people bounding boxes
-    """
-
-    h_img = img.shape[0]
-    w_img = img.shape[1]
-    clean_boxes = people_bounding_boxes[:]
-
-    for painting in paintings:
-        for box in people_bounding_boxes:
-            x, y, w, h = box
-            corner_points = np.int32(painting.corners)
-
-            mask = np.zeros((h_img, w_img), dtype=np.uint8)
-            # show_image("test_1", mask)
-            mask[y:y + h, x:x + w] = 255
-            # show_image("test_2", mask)
-            cv2.fillPoly(mask, pts=[corner_points], color=0)
-            # show_image("test_3", mask)
-
-            area_box = w * h
-            white_pixels = np.sum(mask == 255)
-            # If more than the max_percentage of the box is inside the
-            # painting, than I will not consider this box as valid
-            if area_box - white_pixels >= area_box * max_percentage:
-                clean_boxes.remove(box)
-
-        if len(clean_boxes) <= 0:
-            break
-
-    return clean_boxes
-
-
-if __name__ == '__main__':
-
-    # YOLO People Detector
-    people_detector = PeopleDetection()
-
-    photos_path = 'dataset/photos'
-    recognized_painting_path = 'dataset/recognized_paintings'
-    videos_dir_name = 'test'  # 'test' or '013' or '009' or '014'
-    filename = None
-    # filename = '20180529_112417_ok_0031.jpg'
-    # filename = '20180529_112417_ok_0026.jpg'
-    # filename = 'IMG_2653_0002.jpg'
-    # filename = 'IMG_2657_0006.jpg'
-    # filename = 'IMG_2659_0012.jpg'  # CRITIC
-    # filename = 'IMG_2659_0006.jpg'
-    # filename = 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
-    # filename = "VID_20180529_112517_0004.jpg"
-    # filename = "VID_20180529_112517_0005.jpg"
-    # filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
-    # filename = "VID_20180529_112739_0004.jpg"  # Wall inverted
-    # filename = "VID_20180529_112627_0000.jpg"  # Wall correct
-    # filename = "VID_20180529_112517_0002.jpg"  # strange case
-    # filename = "VID_20180529_112553_0005.jpg"
-    # filename = "IMG_2646_0004.jpg"
-    # filename = "IMG_2646_0003.jpg" # overlapping contours
-    # filename = "IMG_2646_0006.jpg"  # overlapping contours
-    # filename = "20180206_114604_0000.jpg"  # people
-    # filename = "VID_20180529_112553_0004.jpg"  # wall inverted and cutted painting
-    # videos_dir_name = '009'
-    # filename = "IMG_2646_0018.jpg"  # wall inverted and cutted painting
-    # filename = "VID_20180529_113001_0001.jpg"
-    # filename = "VID_20180529_112553_0003.jpg"  # painting with error people detection
-    # filename = "VID_20180529_112553_0000.jpg"
-    # filename = "20180529_112417_ok_0004.jpg"
-    # filename = "20180529_112417_ok_0004.jpg"
-    # filename = "VID_20180529_112739_0007.jpg"
-    # filename = "VID_20180529_112739_0007.jpg"
-    # filename = "VIRB0402_0009.jpg"
-
-    painting_db_path = "./paintings_db"
-    painting_data_path = "./data/data.csv"
-
-    paintings_db = create_paintings_db(painting_db_path, painting_data_path)
-    total_time = 0
-
-    dst_dir = os.path.join(recognized_painting_path, videos_dir_name, "resize")
-    if not os.path.exists(dst_dir):
-        os.makedirs(dst_dir)
-        print('Created the directory "{}"'.format(dst_dir))
-    else:
-        print('The directory "{}" already exists'.format(dst_dir))
-
-    for subdir, dirs, files in os.walk(os.path.join(photos_path, videos_dir_name)):
-        for photo in files:
-            if filename is not None:
-                img_path = os.path.join(photos_path, videos_dir_name, filename)
-            else:
-                img_path = os.path.join(subdir, photo)
-
-            print("\n#", "-" * 30)
-            print(f"# Processing imag: {img_path}")
-            print("#", "-" * 30, "\n")
-
-            img_original = cv2.imread(img_path, cv2.IMREAD_COLOR)
-
-            # ---------------------------------
-            # RESIZING: resize to work only with HD resolution images
-            # WARNINGS: if apply resizing, put color_differenze = 1 in largest segment
-            # ---------------------------------
-            height = 720
-            width = 1280
-
-            h_img, w_img, c_img = img_original.shape
-
-            scale_factor = h_img / height
-
-            height_scaled = np.min((h_img, height))
-            width_scaled = np.min((w_img, width))
-            img = cv2.resize(img_original, (width_scaled, height_scaled), cv2.INTER_CUBIC)
-
-            print(f"Image shape: {img.shape}")
-            show_image('image_original', img, height=405, width=720)
-
-            # for radius in range(5, 9):
-            #     for color in range(35, 36, 5):
-            # Step 1: Perform mean shift segmentation on the image
-            # ----------------------------
-            print_next_step(generator, "Mean Shift Segmentation:")
-            start_time = time.time()
-            spatial_radius = 7  # 8 # 8 # 5 #8 or 7
-            color_radius = 40  # 15 # 40 #40 #35 or 15
-            maximum_pyramid_level = 1  # 1
-            img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
-            exe_time_mean_shift_segmentation = time.time() - start_time
-            total_time += exe_time_mean_shift_segmentation
-            print("\ttime: {:.3f} s".format(exe_time_mean_shift_segmentation))
-            show_image('image_mean_shift_segmentation', img_mss, height=405, width=720)
-
-            # Step 2: Get a mask of just the wall in the gallery
-            # ----------------------------
-            print_next_step(generator, "Mask the Wall:")
-            start_time = time.time()
-            color_difference = 1  # 2 # 1
-            x_samples = 8  # 8 or 16
-            wall_mask = find_largest_segment(img_mss, color_difference, x_samples)
-            exe_time_mask_largest_segment = time.time() - start_time
-            total_time += exe_time_mask_largest_segment
-            print("\ttime: {:.3f} s".format(exe_time_mask_largest_segment))
-            show_image(f'image_mask_largest_segment', wall_mask, height=405,
-                       width=720)
-
-            # Step 3: Dilate and Erode the wall mask to remove noise
-            # ----------------------------
-            # IMPORTANT: We have not yet inverted the mask, therefore making
-            # dilation at this stage is equivalent to erosion and vice versa
-            # (we dilate the white pixels that are those of the wall).
-            # ----------------------------
-            print_next_step(generator, "Dilate and Erode:")
-            kernel_size = 20  # 18 or 20
-            start_time = time.time()
-            dilated_wall_mask = image_dilation(wall_mask, kernel_size)
-            exe_time_dilation = time.time() - start_time
-            total_time += exe_time_dilation
-            show_image('image_dilation', dilated_wall_mask, height=405, width=720)
-
-            start_time = time.time()
-            eroded_wall_mask = image_erosion(dilated_wall_mask, kernel_size)
-            exe_time_erosion = time.time() - start_time
-            total_time += exe_time_erosion
-            print("\ttime: {:.3f} s".format(exe_time_dilation + exe_time_dilation))
-            show_image('image_erosion', eroded_wall_mask, height=405, width=720)
-
-            # Step 4: Invert the wall mask
-            # ----------------------------
-            print_next_step(generator, "Invert Wall Mask:")
-            start_time = time.time()
-            wall_mask_inverted = invert_image(eroded_wall_mask)
-            exe_time_invertion = time.time() - start_time
-            total_time += exe_time_invertion
-            print("\ttime: {:.3f} s".format(exe_time_invertion))
-            show_image('image_inversion', wall_mask_inverted, height=405, width=720)
-
-            # ----------------------------
-            # Connected Components Analysis:
-            #   Perform connected components on the inverted wall mask to find the
-            #   non-wall components
-            # ----------------------------
-
-            # Step 5: Find all contours
-            # ----------------------------
-            print_next_step(generator, "Find Contours:")
-            start_time = time.time()
-            contours_mode = cv2.RETR_TREE
-            contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
-            contours_1, hierarchy_1 = find_image_contours(wall_mask_inverted, contours_mode, contours_method)
-            exe_time_contours = time.time() - start_time
-            total_time += exe_time_contours
-            print("\ttime: {:.3f} s".format(exe_time_contours))
-            # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-            img_contours = img.copy()
-            cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
-            show_image('image_contours_1', img_contours, height=405, width=720)
-
-            # Add a white border to manage cases when `find_largest_segment`
-            # works the opposite way (wall black and painting white)
-            thickness = 1
-            wall_mask_inverted_2 = cv2.rectangle(wall_mask_inverted, (0, 0), (w_img - 1, h_img - 1), 255, thickness)
-            show_image("wall_mask_inverted_2", wall_mask_inverted_2, height=405, width=720)
-
-            # Step 5: Find all contours
-            # ----------------------------
-            print_next_step(generator, "Find Contours:")
-            start_time = time.time()
-            contours_mode = cv2.RETR_TREE
-            contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
-            contours_2, hierarchy_2 = find_image_contours(wall_mask_inverted_2, contours_mode, contours_method)
-            exe_time_contours = time.time() - start_time
-            total_time += exe_time_contours
-            print("\ttime: {:.3f} s".format(exe_time_contours))
-            # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-            img_contours = img.copy()
-            cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
-            show_image('image_contours_2', img_contours, height=405, width=720)
-
-            remove_overlapping = False
-            error_in_wall_mask = False
-            if len(contours_2) >= len(contours_1):
-                contours = contours_2
-                hierarchy = hierarchy_2
-                remove_overlapping = True
-                # Fix the wall mask considering the one before the inversion
-                wall_mask_inverted = eroded_wall_mask
-                error_in_wall_mask = True
-            else:
-                contours = contours_1
-                hierarchy = hierarchy_1
-
-            # # Print every contour step-by-step
-            # for contour in contours:
-            #     cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
-            #     show_image('image_contours', img_contours, height=405, width=720)
-
-            # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-            img_contours = img.copy()
-            cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
-            show_image('image_contours', img_contours, height=405, width=720)
-
-            # Step 6: Refine list of components found
-            # ----------------------------
-            print_next_step(generator, "Refine Components found:")
-            start_time = time.time()
-            find_min_area_rect = True  # True
-            width_min = 150
-            height_min = 150
-            area_percentage_min = 0.6
-            candidate_painting_contours = extract_candidate_painting_contours(
-                img=img,
-                contours=contours,
-                hierarchy=hierarchy,
-                find_min_area_rect=find_min_area_rect,
-                width_min=width_min,
-                height_min=height_min,
-                area_percentage_min=area_percentage_min,
-                remove_overlapping=remove_overlapping
-            )
-            exe_time_contours_refined = time.time() - start_time
-            total_time += exe_time_contours_refined
-            print("\ttime: {:.3f} s".format(exe_time_contours_refined))
-            img_refined_contours = img.copy()
-            cv2.drawContours(img_refined_contours, candidate_painting_contours, -1, (0, 255, 0), 3)
-            show_image('image_refined_contours', img_refined_contours, height=405, width=720)
-
-            # Step SEGMENTATION: create a segmented image where only the candidate contours are white, in order to
-            #                    remove unwanted object and make the following operation (erosion/dilation) faster
-            # -----------------------
-            segmented_img_original = create_segmented_image(img_original, candidate_painting_contours, scale_factor)
-            # print("Segmented original shape: ", segmented_img_original.shape)
-            # show_image('segmented_img_original', segmented_img_original, height=405, width=720)
-            segmented_img = create_segmented_image(wall_mask_inverted, candidate_painting_contours)
-            print("Segmented resized shape: ", segmented_img.shape)
-            show_image('segmented_img', segmented_img, height=405, width=720)
-
-            # -----------------------
-            # PADDING: add black padding to avoid unwanted "adherent" effects at the border when do erosion
-            # -----------------------
-            thickness = 1
-            segmented_img = cv2.copyMakeBorder(segmented_img, thickness, thickness, thickness, thickness,
-                                               cv2.BORDER_CONSTANT, None, 0)
-
-            # Step 7: Erode components to remove unwanted objects connected to the frame
-            #         If there was an error in the wall mask (is inverted) then apply Dilation
-            # ----------------------------
-            print_next_step(generator, "Erode Components:")
-            start_time = time.time()
-            kernel_size = 20  # 23 or 40
-            if not error_in_wall_mask:
-                cleaned_wall_mask = image_erosion(segmented_img, kernel_size)
-            else:
-                kernel_size = 30
-                cleaned_wall_mask = image_dilation(segmented_img, kernel_size)
-                cleaned_wall_mask = image_erosion(cleaned_wall_mask, kernel_size)
-            exe_time_mask_erosion = time.time() - start_time
-            total_time += exe_time_mask_erosion
-            print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
-            show_image('image_mask_cleaned', cleaned_wall_mask, height=405, width=720)
-
-            # Step 8: Blur using Median Filter to smooth the lines of the frame
-            # ----------------------------
-            print_next_step(generator, "Blur with Median Filter:")
-            start_time = time.time()
-            blur_size = 31  # 15
-            blurred_mask = image_blurring(cleaned_wall_mask, blur_size)
-            exe_time_blurring = time.time() - start_time
-            total_time += exe_time_blurring
-            print("\ttime: {:.3f} s".format(exe_time_blurring))
-            show_image('image_mask_blurred', blurred_mask, height=405, width=720)
-
-            # ----------------------------
-            # Recognize Painting:
-            # for each frame contour, recognise a painting from it
-            # ----------------------------
-            start_time = time.time()
-            paintings_recognized = recognize_painting(img, blurred_mask, candidate_painting_contours, paintings_db)
-            exe_time_recognizing = time.time() - start_time
-            total_time += exe_time_recognizing
-            print("\n# Recognizing paintings total time: {:.3f} s".format(exe_time_recognizing))
-
-            if len(paintings_recognized) > 0:
-
-                # Step YOLO: People Detection
-                # ----------------------------
-                print_next_step(generator, "YOLO People Detection:")
-                start_time = time.time()
-                img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img.copy())
-                show_image('people_before_cleaning', img_people_detected, height=405, width=720)
-                # Step BOX: Clean bounding box to avoid overlap with painting
-                max_percentage = 0.85
-                people_bounding_boxes = clean_people_bounding_box(
-                    img,
-                    paintings_recognized,
-                    people_bounding_boxes,
-                    max_percentage=max_percentage
-                )
-                exe_time_people_detection = time.time() - start_time
-                total_time += exe_time_people_detection
-                print("\ttime: {:.3f} s".format(exe_time_people_detection))
-
-                # Step 18: Draw information about Paintings and People found
-                # ----------------------------
-                print_next_step(generator, "Draw paintings and people information:")
-                start_time = time.time()
-                # First draw the info on the paintings...
-                final_frame = draw_paintings_info(img_original, paintings_recognized, scale_factor)
-                # ...and then the info on the people, so as to respect the prospect.
-                final_frame = draw_people_bounding_box(final_frame, people_bounding_boxes, scale_factor)
-                exe_time_draw_info = time.time() - start_time
-                total_time += exe_time_draw_info
-                print("\ttime: {:.3f} s".format(exe_time_draw_info))
-                print("# Final frame shape: ", final_frame.shape)
-                show_image('final_frame', final_frame, height=405, width=720)
-                # cv2.imshow('final_frame', final_frame)
-            else:
-                final_frame = img_original
-
-            if filename is not None:
-                break
-
-            save_path = os.path.join(dst_dir, photo)
-            cv2.imwrite(save_path, final_frame)
-
-    print()
-    print("-" * 30)
-    print("Total execution time: {:.3f} s".format(total_time))
-
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-#
+    h_img, w_img, c_img = img.shape
+    scale_factor = h_img / height
+    height_scaled = np.min((h_img, height))
+    width_scaled = np.min((w_img, width))
+    resized_img = cv2.resize(img, (width_scaled, height_scaled), interpolation)
+
+    return resized_img, scale_factor

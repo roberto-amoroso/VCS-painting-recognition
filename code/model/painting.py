@@ -9,9 +9,11 @@ class Painting:
                  author=None,
                  room=None,
                  filename=None,
+                 bounding_box=None,
                  frame_contour=None,
                  points=None,
                  corners=None):
+        # It will contain the DB image or the rectified sub-image (up-scaled if necessary)
         self.image = image
         self.title = title
         self.author = author
@@ -20,3 +22,4 @@ class Painting:
         self.frame_contour = frame_contour
         self.points = points
         self.corners = corners
+        self.bounding_box = bounding_box

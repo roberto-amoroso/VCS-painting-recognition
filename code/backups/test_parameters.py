@@ -1,5 +1,5 @@
 from image_processing import mean_shift_segmentation, find_largest_segment, image_dilation, image_erosion, invert_image
-from utils import print_next_step, step_generator, show_image, draw_lines, draw_corners, order_points, translate_points, \
+from math_utils import print_next_step, step_generator, show_image, draw_lines, draw_corners, order_points, translate_points, \
     calculate_polygon_area, draw_people_bounding_box
 import cv2
 import numpy as np
@@ -9,8 +9,8 @@ import time
 generator = step_generator()
 
 if __name__ == '__main__':
-    photos_path = 'dataset/photos'
-    recognized_painting_path = 'dataset/recognized_paintings'
+    photos_path = '../dataset/photos'
+    recognized_painting_path = '../dataset/recognized_paintings'
     videos_dir_name = 'test'
     filename = None
     # filename = '20180529_112417_ok_0031.jpg'
@@ -41,8 +41,8 @@ if __name__ == '__main__':
     # filename = "20180529_112417_ok_0004.jpg"
 
 
-    painting_db_path = "./paintings_db"
-    painting_data_path = "./data/data.csv"
+    painting_db_path = "../paintings_db"
+    painting_data_path = "../data/data.csv"
 
     for spatial in range(7, 9):
         for color in range(11, 17, 1):

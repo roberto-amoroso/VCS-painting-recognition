@@ -40,6 +40,7 @@ if __name__ == '__main__':
     # filename = "20180529_112417_ok_0004.jpg"
     # filename = "20180529_112417_ok_0004.jpg"
 
+
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
 

@@ -14,40 +14,6 @@ import matplotlib.pyplot as plt
 generator = step_generator()
 
 
-def create_segmented_image(img, contours, scale_factor=1.):
-    """
-    Create an image the the contours are white filled and the rest is black.
-
-    Parameters
-    ----------
-    img: ndarray
-        input image necessary to the shape
-    contours: list
-        list of contours. Each individual contour is a Numpy array
-        of (x,y) coordinates of boundary points of the object.
-    scale_factor: float
-        used to scale contours in case the image has been resized
-        before finding contours.
-
-    Returns
-    -------
-    ndarray
-        the segmented image
-    """
-
-    h = img.shape[0]
-    w = img.shape[1]
-
-    segmented = np.zeros((h, w), dtype=np.uint8)
-
-    if scale_factor != 1:
-        contours = [np.int32(i) for i in np.array(contours) * scale_factor]
-
-    cv2.drawContours(segmented, contours, -1, 255, cv2.FILLED)
-
-    return segmented
-
-
 def automatic_brightness_and_contrast(image, clip_hist_percent=1):
     """Adjust automatically brightness and contrast of the image.
 
@@ -1475,8 +1441,6 @@ def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percent
 
     h_img = img.shape[0]
     w_img = img.shape[1]
-    clean_boxes = people_bounding_boxes[:]
-
     for painting in paintings:
         for box in people_bounding_boxes:
             x, y, w, h = box
@@ -1494,12 +1458,8 @@ def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percent
             # If more than the max_percentage of the box is inside the
             # painting, than I will not consider this box as valid
             if area_box - white_pixels >= area_box * max_percentage:
-                clean_boxes.remove(box)
-
-        if len(clean_boxes) <= 0:
-            break
-
-    return clean_boxes
+                people_bounding_boxes.remove(box)
+    return people_bounding_boxes
 
 
 if __name__ == '__main__':
@@ -1509,7 +1469,7 @@ if __name__ == '__main__':
 
     photos_path = 'dataset/photos'
     recognized_painting_path = 'dataset/recognized_paintings'
-    videos_dir_name = 'test'  # 'test' or '013' or '009' or '014'
+    videos_dir_name = '014'  # 'test' or '013' or '009' or '014'
     filename = None
     # filename = '20180529_112417_ok_0031.jpg'
     # filename = '20180529_112417_ok_0026.jpg'
@@ -1522,7 +1482,7 @@ if __name__ == '__main__':
     # filename = "VID_20180529_112517_0005.jpg"
     # filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
     # filename = "VID_20180529_112739_0004.jpg"  # Wall inverted
-    # filename = "VID_20180529_112627_0000.jpg"  # Wall correct
+    filename = "VID_20180529_112627_0000.jpg"  # Wall correct
     # filename = "VID_20180529_112517_0002.jpg"  # strange case
     # filename = "VID_20180529_112553_0005.jpg"
     # filename = "IMG_2646_0004.jpg"
@@ -1537,9 +1497,6 @@ if __name__ == '__main__':
     # filename = "VID_20180529_112553_0000.jpg"
     # filename = "20180529_112417_ok_0004.jpg"
     # filename = "20180529_112417_ok_0004.jpg"
-    # filename = "VID_20180529_112739_0007.jpg"
-    # filename = "VID_20180529_112739_0007.jpg"
-    # filename = "VIRB0402_0009.jpg"
 
     painting_db_path = "./paintings_db"
     painting_data_path = "./data/data.csv"
@@ -1591,8 +1548,8 @@ if __name__ == '__main__':
             # ----------------------------
             print_next_step(generator, "Mean Shift Segmentation:")
             start_time = time.time()
-            spatial_radius = 7  # 8 # 8 # 5 #8 or 7
-            color_radius = 40  # 15 # 40 #40 #35 or 15
+            spatial_radius = 8  # 8 # 8 # 5 #8 or 7
+            color_radius = 15  # 15 # 40 #40 #35 or 15
             maximum_pyramid_level = 1  # 1
             img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
             exe_time_mean_shift_segmentation = time.time() - start_time
@@ -1604,7 +1561,7 @@ if __name__ == '__main__':
             # ----------------------------
             print_next_step(generator, "Mask the Wall:")
             start_time = time.time()
-            color_difference = 1  # 2 # 1
+            color_difference = 2  # 2 # 1
             x_samples = 8  # 8 or 16
             wall_mask = find_largest_segment(img_mss, color_difference, x_samples)
             exe_time_mask_largest_segment = time.time() - start_time
@@ -1687,14 +1644,10 @@ if __name__ == '__main__':
             show_image('image_contours_2', img_contours, height=405, width=720)
 
             remove_overlapping = False
-            error_in_wall_mask = False
             if len(contours_2) >= len(contours_1):
                 contours = contours_2
                 hierarchy = hierarchy_2
                 remove_overlapping = True
-                # Fix the wall mask considering the one before the inversion
-                wall_mask_inverted = eroded_wall_mask
-                error_in_wall_mask = True
             else:
                 contours = contours_1
                 hierarchy = hierarchy_1
@@ -1734,46 +1687,30 @@ if __name__ == '__main__':
             cv2.drawContours(img_refined_contours, candidate_painting_contours, -1, (0, 255, 0), 3)
             show_image('image_refined_contours', img_refined_contours, height=405, width=720)
 
-            # Step SEGMENTATION: create a segmented image where only the candidate contours are white, in order to
-            #                    remove unwanted object and make the following operation (erosion/dilation) faster
-            # -----------------------
-            segmented_img_original = create_segmented_image(img_original, candidate_painting_contours, scale_factor)
-            # print("Segmented original shape: ", segmented_img_original.shape)
-            # show_image('segmented_img_original', segmented_img_original, height=405, width=720)
-            segmented_img = create_segmented_image(wall_mask_inverted, candidate_painting_contours)
-            print("Segmented resized shape: ", segmented_img.shape)
-            show_image('segmented_img', segmented_img, height=405, width=720)
-
             # -----------------------
             # PADDING: add black padding to avoid unwanted "adherent" effects at the border when do erosion
             # -----------------------
             thickness = 1
-            segmented_img = cv2.copyMakeBorder(segmented_img, thickness, thickness, thickness, thickness,
-                                               cv2.BORDER_CONSTANT, None, 0)
+            wall_mask_inverted = cv2.copyMakeBorder(wall_mask_inverted, thickness, thickness, thickness, thickness,
+                                                    cv2.BORDER_CONSTANT, None, 0)
 
             # Step 7: Erode components to remove unwanted objects connected to the frame
-            #         If there was an error in the wall mask (is inverted) then apply Dilation
             # ----------------------------
             print_next_step(generator, "Erode Components:")
             start_time = time.time()
             kernel_size = 20  # 23 or 40
-            if not error_in_wall_mask:
-                cleaned_wall_mask = image_erosion(segmented_img, kernel_size)
-            else:
-                kernel_size = 30
-                cleaned_wall_mask = image_dilation(segmented_img, kernel_size)
-                cleaned_wall_mask = image_erosion(cleaned_wall_mask, kernel_size)
+            eroded_mask = image_erosion(wall_mask_inverted, kernel_size)
             exe_time_mask_erosion = time.time() - start_time
             total_time += exe_time_mask_erosion
             print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
-            show_image('image_mask_cleaned', cleaned_wall_mask, height=405, width=720)
+            show_image('image_mask_eroded', eroded_mask, height=405, width=720)
 
             # Step 8: Blur using Median Filter to smooth the lines of the frame
             # ----------------------------
             print_next_step(generator, "Blur with Median Filter:")
             start_time = time.time()
             blur_size = 31  # 15
-            blurred_mask = image_blurring(cleaned_wall_mask, blur_size)
+            blurred_mask = image_blurring(eroded_mask, blur_size)
             exe_time_blurring = time.time() - start_time
             total_time += exe_time_blurring
             print("\ttime: {:.3f} s".format(exe_time_blurring))
@@ -1798,7 +1735,7 @@ if __name__ == '__main__':
                 img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img.copy())
                 show_image('people_before_cleaning', img_people_detected, height=405, width=720)
                 # Step BOX: Clean bounding box to avoid overlap with painting
-                max_percentage = 0.85
+                max_percentage = 0.9
                 people_bounding_boxes = clean_people_bounding_box(
                     img,
                     paintings_recognized,
@@ -1808,6 +1745,7 @@ if __name__ == '__main__':
                 exe_time_people_detection = time.time() - start_time
                 total_time += exe_time_people_detection
                 print("\ttime: {:.3f} s".format(exe_time_people_detection))
+                show_image('people_after_cleaning', img_people_detected, height=405, width=720)
 
                 # Step 18: Draw information about Paintings and People found
                 # ----------------------------

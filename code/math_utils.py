@@ -1,9 +1,7 @@
-import cv2
+"""
+Module containing mathematical utility functions.
+"""
 import numpy as np
-from scipy.spatial import distance as dist
-import os
-import pickle as pkl
-import random
 
 
 def calculate_polygon_area(points):

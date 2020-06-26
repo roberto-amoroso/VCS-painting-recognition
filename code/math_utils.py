@@ -85,5 +85,4 @@ def translate_points(points, translation):
     """
     Returns the points translated according to translation.
     """
-
     return points + translation

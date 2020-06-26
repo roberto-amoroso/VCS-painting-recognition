@@ -2,9 +2,9 @@
 Module containing functions to perform Painting Detection.
 """
 
-from draw import show_image, print_next_step, draw_corners
+from draw import draw_corners, draw_lines
 from image_processing import image_dilation, image_erosion, invert_image, find_image_contours, image_blurring, \
-    automatic_brightness_and_contrast, canny_edge_detection, find_hough_lines, extend_image_lines, find_corners, \
+    canny_edge_detection, find_hough_lines, extend_image_lines, find_corners, \
     mean_shift_segmentation, find_largest_segment, create_segmented_image
 from math_utils import order_points, calculate_polygon_area, translate_points
 from model.painting import Painting
@@ -91,7 +91,7 @@ def check_corners_area(img, contour, corners, min_percentage=0.8):
     return corners
 
 
-def extract_candidate_painting_contours(img, contours, hierarchy, find_min_area_rect=False, width_min=100,
+def extract_candidate_painting_contours(img, contours, hierarchy, show_image, find_min_area_rect=False, width_min=100,
                                         height_min=100, area_percentage_min=0.6, remove_overlapping=False):
     """Find the contours that are candidated to be possible paintings.
 
@@ -114,6 +114,8 @@ def extract_candidate_painting_contours(img, contours, hierarchy, find_min_area_
         Representation of relationship between contours. OpenCV represents it as
         an array of four values :
             [Next, Previous, First_Child, Parent]
+    show_image: function
+        function used to show image of the intermediate results
     find_min_area_rect: bool
         determines whether to use `cv2.boundingRect(contour)` (False) or `cv2.minAreaRect(contour)` (True)
     width_min: int
@@ -189,16 +191,28 @@ def extract_candidate_painting_contours(img, contours, hierarchy, find_min_area_
     return candidate_painting_contours
 
 
-def detect_paintings(img, generator):
-    """
-    TODO
+def detect_paintings(img, generator, show_image, print_next_step, print_time):
+    """Detect Paintings in the image using OpenCV functions.
+
     Parameters
     ----------
-    img
-    generator
+    img: ndarray
+        the input image
+    generator: generator
+        generator function used to take track of the current step number
+        and print useful information during processing.
+    show_image: function
+        function used to show image of the intermediate results
+    print_next_step:function
+        function used to print info about current processing step
+    print_time: function
+        function used to print info about execution time
 
     Returns
     -------
+    list
+        a list containing one `Painting` object for each
+        painting detected in the input image.
 
     """
     h_img, w_img, c_img = img.shape
@@ -211,8 +225,7 @@ def detect_paintings(img, generator):
     color_radius = 15  # 15 # 40 #40 #35 or 15
     maximum_pyramid_level = 1  # 1
     img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
-    exe_time_mean_shift_segmentation = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_mean_shift_segmentation))
+    print_time(start_time)
     show_image('image_mean_shift_segmentation', img_mss, height=405, width=720)
 
     # Step 2: Get a mask of just the wall in the gallery
@@ -222,8 +235,7 @@ def detect_paintings(img, generator):
     color_difference = 2  # 2 # 1
     x_samples = 8  # 8 or 16
     wall_mask = find_largest_segment(img_mss, color_difference, x_samples)
-    exe_time_mask_largest_segment = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_mask_largest_segment))
+    print_time(start_time)
     show_image(f'image_mask_largest_segment', wall_mask, height=405, width=720)
 
     # Step 3: Dilate and Erode the wall mask to remove noise
@@ -241,8 +253,7 @@ def detect_paintings(img, generator):
 
     start_time = time.time()
     eroded_wall_mask = image_erosion(dilated_wall_mask, kernel_size)
-    exe_time_erosion = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_dilation + exe_time_dilation))
+    print_time(start_time)
     show_image('image_erosion', eroded_wall_mask, height=405, width=720)
 
     # Step 4: Invert the wall mask
@@ -250,8 +261,7 @@ def detect_paintings(img, generator):
     print_next_step(generator, "Invert Wall Mask:")
     start_time = time.time()
     wall_mask_inverted = invert_image(eroded_wall_mask)
-    exe_time_invertion = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_invertion))
+    print_time(start_time)
     show_image('image_inversion', wall_mask_inverted, height=405, width=720)
 
     # ----------------------------
@@ -267,8 +277,7 @@ def detect_paintings(img, generator):
     contours_mode = cv2.RETR_TREE
     contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
     contours_1, hierarchy_1 = find_image_contours(wall_mask_inverted, contours_mode, contours_method)
-    exe_time_contours = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_contours))
+    print_time(start_time)
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
     img_contours = img.copy()
     cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
@@ -287,8 +296,7 @@ def detect_paintings(img, generator):
     contours_mode = cv2.RETR_TREE
     contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
     contours_2, hierarchy_2 = find_image_contours(wall_mask_inverted_2, contours_mode, contours_method)
-    exe_time_contours = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_contours))
+    print_time(start_time)
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
     img_contours = img.copy()
     cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
@@ -329,14 +337,14 @@ def detect_paintings(img, generator):
         img=img,
         contours=contours,
         hierarchy=hierarchy,
+        show_image=show_image,
         find_min_area_rect=find_min_area_rect,
         width_min=width_min,
         height_min=height_min,
         area_percentage_min=area_percentage_min,
         remove_overlapping=remove_overlapping
     )
-    exe_time_contours_refined = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_contours_refined))
+    print_time(start_time)
     img_refined_contours = img.copy()
     cv2.drawContours(img_refined_contours, candidate_painting_contours, -1, (0, 255, 0), 3)
     show_image('image_refined_contours', img_refined_contours, height=405, width=720)
@@ -345,7 +353,6 @@ def detect_paintings(img, generator):
     #                    remove unwanted object and make the following operation (erosion/dilation) faster
     # -----------------------
     segmented_img = create_segmented_image(wall_mask_inverted, candidate_painting_contours)
-    print("Segmented resized shape: ", segmented_img.shape)
     show_image('segmented_img', segmented_img, height=405, width=720)
 
     # -----------------------
@@ -367,8 +374,7 @@ def detect_paintings(img, generator):
         kernel_size = 30
         cleaned_wall_mask = image_dilation(segmented_img, kernel_size)
         cleaned_wall_mask = image_erosion(cleaned_wall_mask, kernel_size)
-    exe_time_mask_erosion = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_mask_erosion))
+    print_time(start_time)
     show_image('image_mask_cleaned', cleaned_wall_mask, height=405, width=720)
 
     # Remove padding
@@ -380,8 +386,7 @@ def detect_paintings(img, generator):
     start_time = time.time()
     blur_size = 31  # 15
     blurred_mask = image_blurring(cleaned_wall_mask, blur_size)
-    exe_time_blurring = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_blurring))
+    print_time(start_time)
     show_image('image_mask_blurred', blurred_mask, height=405, width=720)
 
     # ----------------------------
@@ -396,9 +401,7 @@ def detect_paintings(img, generator):
         sub_img = img[y:y + h_rect, x:x + w_rect]
         sub_mask = blurred_mask[y:y + h_rect, x:x + w_rect]
 
-        print_next_step(generator, "# Showing sub image")
         show_image('image_sub_img', sub_img)
-        print_next_step(generator, "# Showing sub mask")
         show_image('image_sub_mask', sub_mask)
 
         # -----------------------
@@ -417,8 +420,7 @@ def detect_paintings(img, generator):
         threshold1 = 70  # 50
         threshold2 = 140  # 100
         edges = canny_edge_detection(pad_sub_mask, threshold1, threshold2)
-        exe_time_canny = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_canny))
+        print_time(start_time)
         show_image('image_mask_canny', edges)
 
         # Step 10: Hough Lines to find vertical and horizontal edges of the paintings
@@ -438,11 +440,11 @@ def detect_paintings(img, generator):
             threshold=threshold,
             ratio_percentage=ratio_percentage
         )
-        exe_time_hough = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_hough))
+        print_time(start_time)
+        img_lines = draw_lines(edges, lines, probabilistic_mode)
+        show_image("Detected Lines (in red)", img_lines)
 
         if lines is None:
-            print("# No lines found.")
             # I can't find lines in special situation, e.g the painting is not squared (rounded, octagonal, ...)
             # In this case the corners are the tl, tr, br, bl point of `sub_img` and the contour is the original one
             corners = np.float32([
@@ -459,8 +461,7 @@ def detect_paintings(img, generator):
             start_time = time.time()
             color_value = 255
             extended_lines_mask = extend_image_lines(sub_mask, lines, probabilistic_mode, color_value)
-            exe_time_paint_mask = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_paint_mask))
+            print_time(start_time)
             show_image('image_paint_mask', extended_lines_mask)
 
             # Step 12: Isolate Painting from mask
@@ -468,8 +469,7 @@ def detect_paintings(img, generator):
             print_next_step(generator, "Isolate Painting from mask:")
             start_time = time.time()
             painting_contour = isolate_painting(extended_lines_mask)
-            exe_time_painting_contour = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_painting_contour))
+            print_time(start_time)
             # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
             img_painting_contour = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
             cv2.drawContours(img_painting_contour, [painting_contour], 0, 255, cv2.FILLED)
@@ -485,7 +485,7 @@ def detect_paintings(img, generator):
 
             # Step 13: Corner Detection of the painting
             # ----------------------------
-            print_next_step(generator, "Corner Detection")
+            print_next_step(generator, "Corner Detection:")
             start_time = time.time()
             max_number_corners = 4
             corner_quality = 0.001
@@ -503,8 +503,7 @@ def detect_paintings(img, generator):
             # Checking corners to avoid problem (read function descr. for info)
             min_percentage = 0.70  # 0.8 or 0.85 or 0.6 TODO: find a good value
             corners = check_corners_area(sub_img, contour, corners, min_percentage)
-            exe_corner_detection = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_corner_detection))
+            print_time(start_time)
 
         # Draw painting corners
         painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)

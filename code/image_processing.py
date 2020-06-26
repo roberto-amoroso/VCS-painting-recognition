@@ -326,9 +326,6 @@ def find_hough_lines(img, probabilistic_mode=False, rho=1, theta=np.pi / 180, th
     else:
         lines = cv2.HoughLines(img, rho, theta, threshold, None, 0, 0)
 
-    # TODO: manage in a better way the draws of lines
-    draw_lines(img, lines, probabilistic_mode)
-
     return lines
 
 

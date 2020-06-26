@@ -1,37 +1,59 @@
 import cv2
 import numpy as np
-from scipy.spatial import distance as dist
-import os
 import pickle as pkl
 import random
+import time
+import matplotlib.pyplot as plt
+
+def print_nicer(msg):
+    """
+    Print the message in a nicer way.
+    """
+    print("\n#", "-" * 30)
+    print(f"# {msg}")
+
+
+def print_time_info(start_time, msg=None, time_accumulator=None):
+    """
+    Print the time elapsed from `start_time` until now.
+    """
+    exe_time = time.time() - start_time
+    if time_accumulator:
+        time_accumulator += exe_time
+    if msg:
+        print_nicer(msg)
+    print("\ttime: {:.4f} s".format(exe_time))
 
 
 def step_generator():
+    """
+    Generator returning an incremented counter at every call.
+    """
     start = 1
     while True:
         yield start
         start += 1
 
 
-def print_next_step(generator, title):
-    # if title == "Hough Lines:":
+def print_next_step_info(generator, title):
+    """
+    Print processing information at every call.
+    """
     step = next(generator)
     print(f"\n# Step {step}: {title}")
     # print("-" * 30)
-    # pass
 
 
-def show_image(title, img, height=None, width=None, wait_key=True):
+def show_image_window(title, img, height=None, width=None, wait_key=True):
     """
     Create a window showing the given image with the given title.
     """
-    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    # if height is not None and width is not None:
-    #     cv2.resizeWindow(title, width, height)
-    # cv2.imshow(title, img)
-    # if wait_key:
-    #     cv2.waitKey(0)
-    pass
+    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    if height is not None and width is not None:
+        cv2.resizeWindow(title, width, height)
+    cv2.imshow(title, img)
+    if wait_key:
+        cv2.waitKey(0)
 
 
 def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
@@ -58,6 +80,11 @@ def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
 
 
 def draw_lines(img, lines, probabilistic_mode=True):
+    """
+    Draw Hough lines on the received image. The lines could
+    be obained with or without the Probabilistic version of the
+    Hough algorithm.
+    """
     # Draw the lines:
     # copy edges to the images that will display the results in BGR
     cdst = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -81,8 +108,7 @@ def draw_lines(img, lines, probabilistic_mode=True):
                 pt2 = (int(x0 - lenght * (-b)), int(y0 - lenght * (a)))
                 cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
 
-    show_image("Detected Lines (in red) - {} Hough Line Transform".format(
-        "Probabilistic" if probabilistic_mode else "Standard"), cdst, wait_key=False)
+    return cdst
 
 
 def draw_corners(img, corners):
@@ -94,7 +120,7 @@ def draw_corners(img, corners):
         cv2.circle(img, (x, y), 3, 255, -1)
 
 
-def draw_paintings_info(img, paintings, scale_factor):
+def draw_paintings_info(img, paintings, people_room, scale_factor):
     """Draws all information about paintings found in the image.
 
     Parameters
@@ -103,6 +129,8 @@ def draw_paintings_info(img, paintings, scale_factor):
         the input image
     paintings: list
         list of painting found in the image
+    people_room: int or None
+        number of the room where the paintings and people are located
     scale_factor: float
         scale factor for which the original image was scaled
 
@@ -184,15 +212,12 @@ def draw_paintings_info(img, paintings, scale_factor):
         cv2.line(img_copy, br, bl, (0, 0, 255), 5)
         cv2.line(img_copy, bl, tl, (0, 0, 255), 5)
 
-        show_image("partial_final_frame", img_copy, height=405, width=720)
+        # show_image("partial_final_frame", img_copy, height=405, width=720)
 
         # cv2.waitKey(0)
 
-    # Choose the room of the actual video frame by majority
-    possible_rooms = [p.room for p in paintings if p.room is not None]
-    if len(possible_rooms) > 0:
-        major_room = max(possible_rooms, key=possible_rooms.count)
-        room = f"Room: {major_room}"
+    if people_room is not None:
+        room = f"Room: {people_room}"
     else:
         room = "Room: --"
 

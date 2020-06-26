@@ -1,7 +1,6 @@
 """
-Module containing functions to perform People Detection and Localization.
+Module containing functions to perform People Detection.
 """
-from draw import show_image, print_next_step
 
 import time
 import cv2
@@ -60,23 +59,36 @@ def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percent
     return clean_boxes
 
 
-def locale_people():
-    #TODO
-    pass
+def detect_people(img, people_detector, paintings_detected, generator, show_image, print_next_step, print_time,
+                  max_percentage=0.9):
+    """Detect people in the image and predict a ROI around each person.
 
-
-def detect_people(img, people_detector, paintings_detected, generator, max_percentage=0.9):
-    """
-    TODO
     Parameters
     ----------
-    img
-    people_detector
-    paintings_detected
+    img: ndarray
+        the input image
+    people_detector: object
+        `PeopleDetection` object using YOLOv3 to detect people in the image
+    paintings_detected: list
+        a list containing one `Painting` object for each
+        painting detected in the input image.
+    generator: generator
+        generator function used to take track of the current step number
+        and print useful information during processing.
+    show_image: function
+        function used to show image of the intermediate results
+    print_next_step:function
+        function used to print info about current processing step
+    print_time: function
+        function used to print info about execution time
+    max_percentage: float
+        maximum percentage of overlap between the bounding box and one of
+        the paintings
 
     Returns
     -------
-
+    list
+        the list of the valid people bounding boxes
     """
 
     # Step YOLO: People Detection
@@ -94,8 +106,6 @@ def detect_people(img, people_detector, paintings_detected, generator, max_perce
         people_bounding_boxes,
         max_percentage=max_percentage
     )
-
-    exe_time_people_detection = time.time() - start_time
-    print("\ttime: {:.3f} s".format(exe_time_people_detection))
+    print_time(start_time)
 
     return people_bounding_boxes

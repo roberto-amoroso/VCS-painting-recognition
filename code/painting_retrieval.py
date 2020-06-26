@@ -2,7 +2,6 @@
 Module containing functions to perform Painting Retrieval.
 """
 
-from draw import show_image, print_next_step
 from image_processing import automatic_brightness_and_contrast
 from math_utils import translate_points
 from painting_rectification import rectify_painting
@@ -83,11 +82,11 @@ def match_features_orb(src_img, dst_img, max_matches=50):
 
     src_kp = orb.detect(src_img, None)
     src_kp, src_des = orb.compute(src_img, src_kp)
-    show_image("src_kp", cv2.drawKeypoints(src_img, src_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
+    # show_image("src_kp", cv2.drawKeypoints(src_img, src_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
 
     dst_kp = orb.detect(dst_img, None)
     dst_kp, dst_des = orb.compute(dst_img, dst_kp)
-    show_image("dst_kp", cv2.drawKeypoints(dst_img, dst_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
+    # show_image("dst_kp", cv2.drawKeypoints(dst_img, dst_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
 
     # Find matches between the features in the source image and the destination
     # image (i.e. painting)
@@ -100,7 +99,7 @@ def match_features_orb(src_img, dst_img, max_matches=50):
     # Show matches
     draw_params = dict(singlePointColor=None, flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT)
     matches_img = cv2.drawMatches(src_img, src_kp, dst_img, dst_kp, matches, None, **draw_params)
-    show_image("matches_img", matches_img, wait_key=False)
+    # show_image("matches_img", matches_img, wait_key=False)
     # cv2.waitKey(0)
 
     return matches_value
@@ -173,8 +172,8 @@ def histo_matching(src_img, dst_img):
     return hist_comparison
 
 
-def painting_db_lookup(img, corners, paintings_db, generator, max_matches=40, threshold=0.92, match_db_image=False,
-                       histo_mode=False):
+def painting_db_lookup(img, corners, paintings_db, generator, show_image, print_next_step, print_time, max_matches=40,
+                       threshold=0.92, match_db_image=False, histo_mode=False):
     """Lookup the DB for a specific painting using ORB or histogram matching.
 
     Parameters
@@ -187,6 +186,12 @@ def painting_db_lookup(img, corners, paintings_db, generator, max_matches=40, th
         list of all `Painting` object that populate the DB.
     generator: generator
         generator used to print useful information during processing
+    show_image: function
+        function used to show image of the intermediate results
+    print_next_step:function
+        function used to print info about current processing step
+    print_time: function
+        function used to print info about execution time
     max_matches: int
         maximum number of the best (lower distance) matches found that we consider
     threshold: float
@@ -224,44 +229,40 @@ def painting_db_lookup(img, corners, paintings_db, generator, max_matches=40, th
     if not match_db_image:
         # Step 15: Rectify Painting
         # ----------------------------
-        print_next_step(generator, "Rectify Painting")
+        print_next_step(generator, "Rectify Painting:")
         start_time = time.time()
         rectified_img = rectify_painting(img, corners)
-        exe_time_rectification = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_rectification))
+        print_time(start_time)
         show_image('image_rectified', rectified_img)
 
     for id, painting_obj in enumerate(paintings_db):
         painting = painting_obj.image
-        show_image('image_db', painting, wait_key=False)
+        # show_image('image_db', painting, wait_key=False)
 
         if match_db_image:
             # Step 15: Rectify Painting
             # ----------------------------
-            print_next_step(generator, "Rectify Painting")
+            print_next_step(generator, "Rectify Painting:")
             start_time = time.time()
             rectified_img = rectify_painting(img, corners, painting)
-            exe_time_rectification = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_rectification))
-            show_image('image_rectified', rectified_img, wait_key=False)
+            print_time(start_time)
+            show_image('image_rectified', rectified_img, wait_key=True)
 
         if not histo_mode:
             # Step 16: Match features using ORB
             # ----------------------------
-            print_next_step(generator, "Match features using ORB")
+            print_next_step(generator, "Match features using ORB:")
             start_time = time.time()
             # max_distance = 40
             match_size = match_features_orb(rectified_img, painting, max_matches)
-            exe_time_orb = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_orb))
+            print_time(start_time)
         else:
             # Step 17: Match features using HISTOGRAMS
             # ----------------------------
-            print_next_step(generator, "Match features using HISTOGRAMS")
+            print_next_step(generator, "Match features using HISTOGRAMS:")
             start_time = time.time()
             match_size = histo_matching(rectified_img, painting)
-            exe_time_histo = time.time() - start_time
-            print("\ttime: {:.3f} s".format(exe_time_histo))
+            print_time(start_time)
 
         matches_rank = np.append(matches_rank, np.array([(id, match_size)], dtype=dtype))
 
@@ -283,23 +284,38 @@ def painting_db_lookup(img, corners, paintings_db, generator, max_matches=40, th
         return None
 
 
-def retrieve_paintings(img, paintings_detected, paintings_db, generator):
-    """
-    TODO
+def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_image, print_next_step, print_time):
+    """Match each detected painting to the paintings DB.
+
     Parameters
     ----------
-    img
-    paintings_detected
-    paintings_db
-    generator
+    img: ndarray
+        the input image (i.e. a video frame)
+    paintings_detected: list
+        a list containing one `Painting` object for each
+        painting detected in the input image.
+    paintings_db: list
+        a list containing one `Painting` object for each
+        painting in the DB.
+    generator: generator
+        generator function used to take track of the current step number
+        and print useful information during processing.
+    show_image: function
+        function used to show image of the intermediate results
+    print_next_step:function
+        function used to print info about current processing step
+    print_time: function
+        function used to print info about execution time
 
     Returns
     -------
     None
-
+        add painting DB info (e.g. title, author, room, etc.) to the paintings
+        in the `paintings_detected` list
     """
     paintings_retieved = []
-    for painting in paintings_detected:
+    for i, painting in enumerate(paintings_detected):
+        print('\tProcessing painting #%d/%d\r' % (i + 1, len(paintings_detected)))
 
         # ATTENTION: remember the translation applied at the end of painting
         # detention process
@@ -313,10 +329,9 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator):
         print_next_step(generator, "Adjust brightness and contrast:")
         start_time = time.time()
         img_auto_adjusted, alpha, beta = automatic_brightness_and_contrast(sub_img)
-        print(f"\talpha: {alpha}")
-        print(f"\tbeta: {beta}")
-        exe_time_auto_adjust = time.time() - start_time
-        print("\ttime: {:.3f} s".format(exe_time_auto_adjust))
+        # print(f"\talpha: {alpha}")
+        # print(f"\tbeta: {beta}")
+        print_time(start_time)
         show_image('auto_adjusted', img_auto_adjusted)
 
         sub_img = img_auto_adjusted
@@ -325,15 +340,18 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator):
         # ----------------------------
         histo_mode = False  # If true execute histo matching when ORB fails
         threshold = 0.92
-        print_next_step(generator, "Painting DB lookup")
+        print_next_step(generator, "Painting DB lookup:")
         start_time = time.time()
         max_matches = 30  # 40
-        match_db_image = False  # False
+        match_db_image = True  # False
         matches_rank = painting_db_lookup(
             sub_img,
             corners,
             paintings_db,
             generator=generator,
+            show_image=show_image,
+            print_next_step=print_next_step,
+            print_time=print_time,
             threshold=threshold,
             max_matches=max_matches,
             match_db_image=match_db_image
@@ -344,14 +362,15 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator):
                 corners,
                 paintings_db,
                 generator=generator,
+                show_image=show_image,
+                print_next_step=print_next_step,
+                print_time=print_time,
                 max_matches=max_matches,
                 match_db_image=match_db_image,
                 histo_mode=histo_mode
             )
         if matches_rank is not None:
             painting_id = matches_rank[0][0]
-            exe_db_lookup = time.time() - start_time
-            print("\n# Painting DB lookup total time: {:.3f} s".format(exe_db_lookup))
             # Manage case when I find duplicated painting in the current video frame
             if painting_id is not None and painting_id not in paintings_retieved:
                 paintings_retieved.append(painting_id)

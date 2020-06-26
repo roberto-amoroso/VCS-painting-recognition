@@ -62,7 +62,6 @@ def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
     """
     colors = pkl.load(open("yolo/pallete", "rb"))
     for box in people_bounding_boxes:
-        box = np.int32(np.array(box) * scale_factor)
         x, y, w, h = box
 
         label = "Person"
@@ -157,7 +156,7 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
     line_thickness = 2
 
     for painting in paintings:
-        corner_points = np.int32(painting.corners * scale_factor)
+        corner_points = painting.corners
 
         if painting.title is not None:
             # Draw the title of the painting

@@ -172,7 +172,7 @@ def histo_matching(src_img, dst_img):
     return hist_comparison
 
 
-def painting_db_lookup(img, corners, paintings_db, generator, show_image, print_next_step, print_time, max_matches=40,
+def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step, print_time, max_matches=40,
                        threshold=0.92, match_db_image=False, histo_mode=False):
     """Lookup the DB for a specific painting using ORB or histogram matching.
 
@@ -180,8 +180,6 @@ def painting_db_lookup(img, corners, paintings_db, generator, show_image, print_
     ----------
     img: ndarray
         the input image.
-    corners: ndarray
-        a NumPy array of the corners in `img`, in the form (x,y).
     paintings_db: list
         list of all `Painting` object that populate the DB.
     generator: generator
@@ -226,14 +224,7 @@ def painting_db_lookup(img, corners, paintings_db, generator, show_image, print_
     dtype = [('painting_id', int), ('val_matches', float)]
     matches_rank = np.array([], dtype=dtype)
 
-    if not match_db_image:
-        # Step 15: Rectify Painting
-        # ----------------------------
-        print_next_step(generator, "Rectify Painting:")
-        start_time = time.time()
-        rectified_img = rectify_painting(img, corners)
-        print_time(start_time)
-        show_image('image_rectified', rectified_img)
+    rectified_img = img
 
     for id, painting_obj in enumerate(paintings_db):
         painting = painting_obj.image
@@ -244,9 +235,25 @@ def painting_db_lookup(img, corners, paintings_db, generator, show_image, print_
             # ----------------------------
             print_next_step(generator, "Rectify Painting:")
             start_time = time.time()
+            corners = np.float32([
+                [0, 0],
+                [img.shape[1] - 1, 0],
+                [img.shape[1] - 1, img.shape[0] - 1],
+                [0, img.shape[0] - 1]
+            ])
             rectified_img = rectify_painting(img, corners, painting)
             print_time(start_time)
             show_image('image_rectified', rectified_img, wait_key=True)
+
+            # Step AUTO-ADJUST: Adjust automatically brightness and contrast of the image
+            # ----------------------------
+            print_next_step(generator, "Adjust brightness and contrast:")
+            start_time = time.time()
+            rectified_img, alpha, beta = automatic_brightness_and_contrast(rectified_img)
+            # print(f"\talpha: {alpha}")
+            # print(f"\tbeta: {beta}")
+            print_time(start_time)
+            show_image('auto_adjusted', rectified_img)
 
         if not histo_mode:
             # Step 16: Match features using ORB
@@ -284,7 +291,8 @@ def painting_db_lookup(img, corners, paintings_db, generator, show_image, print_
         return None
 
 
-def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_image, print_next_step, print_time):
+def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_image, print_next_step, print_time,
+                       match_db_image=False):
     """Match each detected painting to the paintings DB.
 
     Parameters
@@ -306,6 +314,10 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_im
         function used to print info about current processing step
     print_time: function
         function used to print info about execution time
+    match_db_image: bool
+        define if:
+        - False: rectify each painting one time using aspect ratio
+        - True: rectify each painting for every painting in `paintings_db`
 
     Returns
     -------
@@ -317,12 +329,7 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_im
     for i, painting in enumerate(paintings_detected):
         print('\tProcessing painting #%d/%d\r' % (i + 1, len(paintings_detected)))
 
-        # ATTENTION: remember the translation applied at the end of painting
-        # detention process
-        x, y, w_rect, h_rect = painting.bounding_box
-        corners = translate_points(painting.corners, -np.array([x, y]))
-
-        sub_img = img[y:y + h_rect, x:x + w_rect]
+        sub_img = painting.image
 
         # Step AUTO-ADJUST: Adjust automatically brightness and contrast of the image
         # ----------------------------
@@ -343,10 +350,8 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_im
         print_next_step(generator, "Painting DB lookup:")
         start_time = time.time()
         max_matches = 30  # 40
-        match_db_image = True  # False
         matches_rank = painting_db_lookup(
             sub_img,
-            corners,
             paintings_db,
             generator=generator,
             show_image=show_image,
@@ -359,7 +364,6 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_im
         if matches_rank is None and histo_mode:
             matches_rank = painting_db_lookup(
                 sub_img,
-                corners,
                 paintings_db,
                 generator=generator,
                 show_image=show_image,

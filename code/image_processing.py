@@ -542,7 +542,7 @@ def find_largest_segment(img, color_difference=1, x_samples=8):
     return wall_mask
 
 
-def create_segmented_image(img, contours, scale_factor=1.):
+def create_segmented_image(img, contours):
     """
     Create an image the the contours are white filled and the rest is black.
 
@@ -553,9 +553,6 @@ def create_segmented_image(img, contours, scale_factor=1.):
     contours: list
         list of contours. Each individual contour is a Numpy array
         of (x,y) coordinates of boundary points of the object.
-    scale_factor: float
-        used to scale contours in case the image has been resized
-        before finding contours.
 
     Returns
     -------
@@ -567,9 +564,6 @@ def create_segmented_image(img, contours, scale_factor=1.):
     w = img.shape[1]
 
     segmented = np.zeros((h, w), dtype=np.uint8)
-
-    if scale_factor != 1:
-        contours = [np.int32(i) for i in np.array(contours) * scale_factor]
 
     cv2.drawContours(segmented, contours, -1, 255, cv2.FILLED)
 

@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 
-def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percentage):
+def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percentage, scale_factor=1.):
     """
     Remove all the people bounding boxes which overlap more than
     `max_percentage` with one of the detected paintings.
@@ -23,6 +23,8 @@ def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percent
     max_percentage: float
         maximum percentage of overlap between the bounding box and one of
         the paintings
+    scale_factor: float
+        scale factor for which the original image was scaled
 
     Returns
     -------
@@ -37,7 +39,7 @@ def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percent
     for painting in paintings:
         for box in people_bounding_boxes:
             x, y, w, h = box
-            corner_points = np.int32(painting.corners)
+            corner_points = np.int32(painting.corners / scale_factor)
 
             mask = np.zeros((h_img, w_img), dtype=np.uint8)
             # show_image("test_1", mask)
@@ -60,7 +62,7 @@ def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percent
 
 
 def detect_people(img, people_detector, paintings_detected, generator, show_image, print_next_step, print_time,
-                  max_percentage=0.9):
+                  scale_factor=1, max_percentage=0.9):
     """Detect people in the image and predict a ROI around each person.
 
     Parameters
@@ -81,6 +83,8 @@ def detect_people(img, people_detector, paintings_detected, generator, show_imag
         function used to print info about current processing step
     print_time: function
         function used to print info about execution time
+    scale_factor: float
+        scale factor for which the original image was scaled
     max_percentage: float
         maximum percentage of overlap between the bounding box and one of
         the paintings
@@ -106,6 +110,9 @@ def detect_people(img, people_detector, paintings_detected, generator, show_imag
         people_bounding_boxes,
         max_percentage=max_percentage
     )
+
+    people_bounding_boxes = np.int32(np.array(people_bounding_boxes) * scale_factor)
+
     print_time(start_time)
 
     return people_bounding_boxes

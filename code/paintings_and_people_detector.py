@@ -130,24 +130,30 @@ if __name__ == '__main__':
             show_image_main('image_resized', img, height=405, width=720)
 
             # ----------------------
-            # PAINTING DETECTION and SEGMENTATION
+            # PAINTING DETECTION
             # ----------------------
-            print_nicer("PAINTING DETECTION and SEGMENTATION - START")
+            print_nicer("PAINTING DETECTION - START")
             start_time = time.time()
             paintings_detected = detect_paintings(
                 img,
                 generator,
                 show_image,
                 print_next_step,
-                print_time
+                print_time,
+                scale_factor=scale_factor
             )
+            print_time_info(start_time, "PAINTING DETECTION - END")
+
+            # ----------------------
+            # PAINTING SEGMENTATION
+            # ----------------------
+            print_nicer("PAINTING SEGMENTATION - START")
             painting_contours = [p.frame_contour for p in paintings_detected]
             segmented_img_original = create_segmented_image(
                 img_original,
-                painting_contours,
-                scale_factor
+                painting_contours
             )
-            print_time_info(start_time, "PAINTING DETECTION and SEGMENTATION - END")
+            print_time_info(start_time, "PAINTING SEGMENTATION - END")
             print("\tSegmented shape: ", segmented_img_original.shape)
             show_image_main('segmented_img_original', segmented_img_original, height=405, width=720)
 
@@ -157,15 +163,15 @@ if __name__ == '__main__':
             print_nicer("PAINTING RECTIFICATION - START")
             start_time = time.time()
             for i, painting in enumerate(paintings_detected):
-                x, y, w_rect, h_rect = np.int32(painting.bounding_box * scale_factor)
+                x, y, w_rect, h_rect = painting.bounding_box
                 sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
-                corners = np.int32(translate_points(painting.corners * scale_factor, -np.array([x, y])))
+                corners = translate_points(painting.corners, -np.array([x, y]))
                 painting.image = rectify_painting(sub_img_original, corners)
             print_time_info(start_time, "PAINTING RECTIFICATION - END")
 
             if show_image_main == show_image_window:
                 for i, painting in enumerate(paintings_detected):
-                    x, y, w_rect, h_rect = np.int32(painting.bounding_box * scale_factor)
+                    x, y, w_rect, h_rect = painting.bounding_box
                     sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
                     show_image_main(f"sub_img_original_{i}", sub_img_original)
                     show_image_main(f"painting_rectified_{i}", painting.image)
@@ -174,6 +180,7 @@ if __name__ == '__main__':
             # PAINTING RETRIEVAL
             # ----------------------
             print_nicer("PAINTING RETRIEVAL - START")
+            match_db_image = False
             start_time = time.time()
             retrieve_paintings(
                 img,
@@ -182,7 +189,8 @@ if __name__ == '__main__':
                 generator,
                 show_image,
                 print_next_step,
-                print_time
+                print_time,
+                match_db_image=match_db_image
             )
             print_time_info(start_time, "PAINTING RETRIEVAL - END")
 
@@ -202,6 +210,7 @@ if __name__ == '__main__':
                     show_image,
                     print_next_step,
                     print_time,
+                    scale_factor=scale_factor,
                     max_percentage=max_percentage
                 )
                 print_time_info(start_time, "PEOPLE DETECTION - END")

@@ -191,7 +191,7 @@ def extract_candidate_painting_contours(img, contours, hierarchy, show_image, fi
     return candidate_painting_contours
 
 
-def detect_paintings(img, generator, show_image, print_next_step, print_time):
+def detect_paintings(img, generator, show_image, print_next_step, print_time, scale_factor=1.):
     """Detect Paintings in the image using OpenCV functions.
 
     Parameters
@@ -207,6 +207,8 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time):
         function used to print info about current processing step
     print_time: function
         function used to print info about execution time
+    scale_factor: float
+        scale factor for which the original image was scaled
 
     Returns
     -------
@@ -221,7 +223,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time):
     # ----------------------------
     print_next_step(generator, "Mean Shift Segmentation:")
     start_time = time.time()
-    spatial_radius = 8  # 8 # 8 # 5 #8 or 7
+    spatial_radius = 7  # 8 # 8 # 5 #8 or 7
     color_radius = 15  # 15 # 40 #40 #35 or 15
     maximum_pyramid_level = 1  # 1
     img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
@@ -513,10 +515,11 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time):
         # Create a new `Painting` object with all the information
         # about the painting detected
         detected_painting = Painting()
-        detected_painting.bounding_box = np.int32([x, y, w_rect, h_rect])
-        detected_painting.frame_contour = contour
-        detected_painting.points = translate_points(painting_contour, [x, y])
-        detected_painting.corners = translate_points(corners, [x, y])
+        detected_painting.bounding_box = np.int32(np.array([x, y, w_rect, h_rect]) * scale_factor)
+        x, y, w_rect, h_rect = detected_painting.bounding_box
+        detected_painting.frame_contour = np.int32(contour * scale_factor)
+        detected_painting.points = translate_points(np.int32(painting_contour * scale_factor), [x, y])
+        detected_painting.corners = translate_points(np.int32(corners * scale_factor), [x, y])
         paintings_detected.append(detected_painting)
 
         # cv2.waitKey(0)

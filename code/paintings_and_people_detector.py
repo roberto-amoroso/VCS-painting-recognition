@@ -79,12 +79,13 @@ if __name__ == '__main__':
     # ----------------------
     # TESTING TODO remove it
     # ----------------------
-    input_filename = "dataset/photos/test/"
+    input_filename = args.input_filename
+    # input_filename = "dataset/photos/test/"
     # input_filename += 'IMG_2659_0012.jpg'  # CRITIC
     # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
     # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
-    input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
+    # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
     # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
     # input_filename += "IMG_2646_0003.jpg"  # overlapping contours
     # input_filename += "IMG_2646_0006.jpg"  # overlapping contours
@@ -98,6 +99,11 @@ if __name__ == '__main__':
     # ---------------------
     script_time_start = time.time()
     total_time = 0
+
+    # ------------------------------------------------------------------------------
+    # Check if input file is valid
+    # -----------------------------
+    media, media_type = check_media_file(input_filename)
 
     # ------------------------------------------------------------------------------
     # Managing verbosity
@@ -116,11 +122,6 @@ if __name__ == '__main__':
         show_image = lambda *a, **k: None
     else:
         show_image_main = show_image = lambda *a, **k: None
-
-    # ------------------------------------------------------------------------------
-    # Check if input file is valid
-    # -----------------------------
-    media, media_type = check_media_file(input_filename)
 
     # ------------------------------------------------------------------------------
     # Print a summary of the invocation arguments

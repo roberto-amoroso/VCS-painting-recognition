@@ -1,7 +1,7 @@
 """
 Module containing functions to perform Painting Retrieval.
 """
-
+from draw import print_nicer
 from image_processing import automatic_brightness_and_contrast
 from painting_rectification import rectify_painting
 from model.painting import Painting
@@ -34,7 +34,7 @@ def create_paintings_db(db_path, data_path):
     for subdir, dirs, files in os.walk(db_path):
         db_dir_name = subdir.replace('/', '\\').split('\\')[-1]
 
-        print('\n# Opened directory "{}"'.format(db_dir_name))
+        print_nicer('Loading paintings from DB')
 
         for painting_file in files:
             image = cv2.imread(os.path.join(db_path, painting_file))
@@ -50,6 +50,8 @@ def create_paintings_db(db_path, data_path):
                 painting_file
             )
             paintings_db.append(painting)
+    print(f"\tPaintings loaded:  {len(paintings_db)}")
+    print("-" * 50)
     return paintings_db
 
 
@@ -242,7 +244,7 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
             ])
             rectified_img = rectify_painting(img, corners, painting)
             print_time(start_time)
-            show_image('image_rectified', rectified_img, wait_key=True)
+            # show_image('image_rectified', rectified_img, wait_key=True)
 
             # Step AUTO-ADJUST: Adjust automatically brightness and contrast of the image
             # ----------------------------
@@ -252,7 +254,7 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
             # print(f"\talpha: {alpha}")
             # print(f"\tbeta: {beta}")
             print_time(start_time)
-            show_image('auto_adjusted', rectified_img)
+            # show_image('auto_adjusted', rectified_img)
 
         if not histo_mode:
             # Step 16: Match features using ORB
@@ -276,13 +278,14 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
 
     good_match_found = False
 
-    if histo_mode:
-        matches_rank = np.flip(matches_rank)
-        if matches_rank[0][1] > 0:
-            good_match_found = True
-    else:
-        if matches_rank[0][1] < np.inf and matches_rank[0][1] < matches_rank[1][1] * threshold:
-            good_match_found = True
+    if matches_rank.size > 0:
+        if histo_mode:
+            matches_rank = np.flip(matches_rank)
+            if matches_rank[0][1] > 0:
+                good_match_found = True
+        else:
+            if matches_rank[0][1] < np.inf and matches_rank[0][1] < matches_rank[1][1] * threshold:
+                good_match_found = True
 
     if good_match_found:
         return matches_rank
@@ -357,7 +360,7 @@ def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, 
             print_time=print_time,
             threshold=threshold,
             max_matches=max_matches,
-            match_db_image=match_db_image
+            match_db_image=match_db_image,
         )
         if matches_rank is None and histo_mode:
             matches_rank = painting_db_lookup(

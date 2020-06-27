@@ -283,13 +283,13 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
     img_contours = img.copy()
     cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
-    show_image('image_contours_1', img_contours, height=405, width=720)
+    # show_image('image_contours_1', img_contours, height=405, width=720)
 
     # Add a white border to manage cases when `find_largest_segment`
     # works the opposite way (wall black and painting white)
     thickness = 1
     wall_mask_inverted_2 = cv2.rectangle(wall_mask_inverted, (0, 0), (w_img - 1, h_img - 1), 255, thickness)
-    show_image("wall_mask_inverted_2", wall_mask_inverted_2, height=405, width=720)
+    # show_image("wall_mask_inverted_2", wall_mask_inverted_2, height=405, width=720)
 
     # Step 5: Find all contours
     # ----------------------------
@@ -302,7 +302,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
     img_contours = img.copy()
     cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
-    show_image('image_contours_2', img_contours, height=405, width=720)
+    # show_image('image_contours_2', img_contours, height=405, width=720)
 
     remove_overlapping = False
     error_in_wall_mask = False
@@ -377,7 +377,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         cleaned_wall_mask = image_dilation(segmented_img, kernel_size)
         cleaned_wall_mask = image_erosion(cleaned_wall_mask, kernel_size)
     print_time(start_time)
-    show_image('image_mask_cleaned', cleaned_wall_mask, height=405, width=720)
+    # show_image('image_mask_cleaned', cleaned_wall_mask, height=405, width=720)
 
     # Remove padding
     cleaned_wall_mask = cleaned_wall_mask[thickness:-thickness, thickness:-thickness]
@@ -444,7 +444,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         )
         print_time(start_time)
         img_lines = draw_lines(edges, lines, probabilistic_mode)
-        show_image("Detected Lines (in red)", img_lines)
+        # show_image("Detected Lines (in red)", img_lines)
 
         if lines is None:
             # I can't find lines in special situation, e.g the painting is not squared (rounded, octagonal, ...)

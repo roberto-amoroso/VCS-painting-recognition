@@ -57,19 +57,27 @@ def print_next_step_info(generator, title, same_line=False):
 def show_image_window(title, img, height=None, width=None, wait_key=True):
     """
     Create a window showing the given image with the given title.
+    NO BLOCKING: all images are shown at the end of the script execution.
     """
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     plt.figure()
     plt.axis('off')
     plt.title(title)
     plt.imshow(img_rgb)
-    # plt.show()
-    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    # if height is not None and width is not None:
-    #     cv2.resizeWindow(title, width, height)
-    # cv2.imshow(title, img)
-    # if wait_key:
-    #     cv2.waitKey(0)
+
+
+def show_image_window_blocking(title, img, height=None, width=None, wait_key=True):
+    """
+    Create a window showing the given image with the given title.
+    BLOCKING: each image is shown when it is created and a button
+    must be pressed to continue the execution (mainly used for debugging)
+    """
+    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    if height is not None and width is not None:
+        cv2.resizeWindow(title, width, height)
+    cv2.imshow(title, img)
+    if wait_key:
+        cv2.waitKey(0)
 
 
 def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):

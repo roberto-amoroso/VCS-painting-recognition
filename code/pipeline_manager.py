@@ -172,7 +172,7 @@ class PipelineManager:
             for i, painting in enumerate(paintings_detected):
                 x, y, w_rect, h_rect = painting.bounding_box
                 sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
-                self.show_image_main(f"sub_img_original_{i}", sub_img_original)
+                # self.show_image_main(f"sub_img_original_{i}", sub_img_original)
                 self.show_image_main(f"painting_rectified_{i}", painting.image)
 
     def __painting_retrieval(self, paintings_detected):

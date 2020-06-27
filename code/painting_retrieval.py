@@ -388,9 +388,9 @@ def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, 
 
         print('\n# Painting #%d/%d information:' % (i + 1, len(paintings_detected)))
         if painting.title is not None:
-            print("\ttitle: ", painting.title)
-            print("\tauthor: ", painting.author)
-            print("\troom: ", painting.room)
+            print("\ttitle:    ", painting.title)
+            print("\tauthor:   ", painting.author)
+            print("\troom:     ", painting.room)
             print("\tfilename: ", painting.filename)
         else:
             print("\t-- No DB match --")

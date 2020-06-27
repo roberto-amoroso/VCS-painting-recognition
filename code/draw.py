@@ -173,22 +173,44 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
     h = img.shape[0]
     w = img.shape[1]
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 0.5 * scale_factor
-    font_color = (0, 0, 0)
-    line_thickness = 2
+    font = cv2.FONT_HERSHEY_PLAIN
+    font_scale = 1. * scale_factor
+    font_color = (255, 255, 255)
+    line_thickness = 1
 
     for painting in paintings:
         corner_points = painting.corners
 
+        if painting.title:
+            # Color if painting is detected
+            bbox_color = (153, 51, 0)
+            # bbox_color = (5, 40, 255)
+        else:
+            # Color if painting is not detected
+            bbox_color = (255, 102, 26)
+            # bbox_color = (102, 133, 255)
+
+        # Draw painting outline first, in order to not overlap painting info
+        tl = tuple(corner_points[0])
+        tr = tuple(corner_points[1])
+        bl = tuple(corner_points[3])
+        br = tuple(corner_points[2])
+        bbox_line_thickness = 3
+        cv2.line(img, tl, tr, bbox_color, bbox_line_thickness)
+        cv2.line(img, tr, br, bbox_color, bbox_line_thickness)
+        cv2.line(img, br, bl, bbox_color, bbox_line_thickness)
+        cv2.line(img, bl, tl, bbox_color, bbox_line_thickness)
+
         if painting.title is not None:
             # Draw the title of the painting
+            # TODO remove filename info
             title = f"{painting.filename} - {painting.title}"
 
             # Find position of text above painting
             top = np.min(corner_points[:, 1])
             bottom = np.max(corner_points[:, 1])
-            left = np.min(corner_points[:, 0])
+            left = corner_points[0][0]
+            # left = np.min(corner_points[:, 0])
             right = np.max(corner_points[:, 0])
 
             title_width, title_height = cv2.getTextSize(
@@ -198,18 +220,21 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
                 line_thickness
             )[0]
 
-            xb_title = int(left + (right - left) / 2 - title_width / 2)
+            # xb_title = int(left + (right - left) / 2 - title_width / 2)
+            xb_title = int(left)
             yb_title = int(top - title_height)
+
+            padding = 5
 
             # Check if the painting title is inside the video frame
             if yb_title - title_height < 0:
-                yb_title = int(top + title_height + 15)
+                yb_title = int(top + title_height + padding)
 
             cv2.rectangle(
                 img,
-                (xb_title - 15, yb_title - title_height - 15),
-                (xb_title + title_width + 15, yb_title + 15),
-                (255, 255, 255),
+                (xb_title - padding, yb_title - title_height - padding),
+                (xb_title + title_width + padding, yb_title + padding),
+                bbox_color,
                 -1
             )
 
@@ -224,16 +249,6 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
                         font_color,
                         line_thickness)
 
-        # Draw painting outline
-        tl = tuple(corner_points[0])
-        tr = tuple(corner_points[1])
-        bl = tuple(corner_points[3])
-        br = tuple(corner_points[2])
-        cv2.line(img, tl, tr, (0, 0, 255), 5)
-        cv2.line(img, tr, br, (0, 0, 255), 5)
-        cv2.line(img, br, bl, (0, 0, 255), 5)
-        cv2.line(img, bl, tl, (0, 0, 255), 5)
-
         # show_image("partial_final_frame", img, height=405, width=720)
 
         # cv2.waitKey(0)
@@ -245,6 +260,8 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
             room = "Room: --"
 
         # Draw the room of the painting
+        font_scale = 1.5 * scale_factor
+        line_thickness = 2
         font_color = (0, 0, 0)
         room_width, room_height = cv2.getTextSize(
             room,

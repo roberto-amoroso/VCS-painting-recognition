@@ -74,6 +74,13 @@ class PipelineManager:
         # Define output filename
         self.out_filename = ntpath.basename(self.input_filename)
 
+        # ----------------------
+        # Create some stats info
+        # ----------------------
+        self.num_paintings_detected = 0
+        self.num_paintings_retrieved = 0
+        self.num_people_detected = 0
+
     def save_image(self, img):
         """
         Save the given image(s). The destination depends on the task.
@@ -127,6 +134,8 @@ class PipelineManager:
         )
         print_time_info(start_time, "PAINTING DETECTION - END")
         print("-" * 50)
+
+        self.num_paintings_detected += len(paintings_detected)
 
         return paintings_detected
 
@@ -189,6 +198,10 @@ class PipelineManager:
         print_time_info(start_time, "PAINTING RETRIEVAL - END")
         print("-" * 50)
 
+        for p in paintings_detected:
+            if p.title is not None:
+                self.num_paintings_retrieved += 1
+
     def __people_detection(self, img, paintings_detected, scale_factor):
         """
         Execute People Detection on the input image.
@@ -209,6 +222,8 @@ class PipelineManager:
         )
         print_time_info(start_time, "PEOPLE DETECTION - END")
         print("-" * 50)
+
+        self.num_paintings_detected += len(people_bounding_boxes)
 
         return people_bounding_boxes
 

@@ -45,11 +45,11 @@ def main(args):
     # match_db_image = args.match_db_image
     # histo_mode = args.histo_mode
 
-    verbosity_print = 1
-    verbosity_image = 1
+    verbosity_print = 0
+    verbosity_image = 0
     task = Task(5)
-    match_db_image = True
-    histo_mode = True
+    match_db_image = False
+    histo_mode = False
     frame_occurrence = 30
     painting_db_path = "paintings_db/"
     painting_data_path = "data/data.csv"
@@ -57,17 +57,17 @@ def main(args):
     # ----------------------
     # TESTING TODO remove it
     # ----------------------
-    input_filename = "dataset/photos/test/"
+    # input_filename = "dataset/photos/test/"
     # VIDEOS
-    # input_filename = "dataset/videos/002/"
+    input_filename = "dataset/videos/014/"
     # input_filename += "VID_20180529_112627.mp4"
-    # input_filename += "20180206_114604.mp4"
+    input_filename += "20180206_114604.mp4"
     # IMAGES
     # input_filename += 'IMG_2659_0012.jpg'  # CRITIC
     # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
     # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
-    input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
+    # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
     # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
     # input_filename += "IMG_2646_0003.jpg"  # overlapping contours
     # input_filename += "IMG_2646_0006.jpg"  # overlapping contours
@@ -186,7 +186,13 @@ def main(args):
     output_path = os.path.join(output_base_path, task.name)
 
     if task == Task.painting_rectification:
-        output_path = os.path.join(output_path, ntpath.basename(input_filename).split('.')[0])
+        out_path_info = output_path = os.path.join(output_path, ntpath.basename(input_filename).split('.')[0])
+    else:
+        filename, ext = ntpath.basename(input_filename).split('.')
+        ext = "." + ext if media_type == MediaType.image else ".mp4"
+        out_path_info = os.path.join(output_path, filename + ext)
+
+    out_path_info = os.path.abspath(out_path_info).replace('\\', '/')
 
     create_directory(output_path)
 
@@ -222,7 +228,7 @@ def main(args):
         print("-" * 50)
         print("# IMAGE INFO:")
         print(f"\t-Height: {img_original.shape[0]}")
-        print(f"\t-Width: {img_original.shape[1]}")
+        print(f"\t-Width:  {img_original.shape[1]}")
         print("-" * 50)
 
         pipeline_manager.run(img_original)
@@ -240,11 +246,11 @@ def main(args):
         print()
         print("-" * 50)
         print("# VIDEO INFO:")
-        print('\t-Duration: {:.2f} s'.format(duration))
-        print(f"\t-Frame count: {int(frame_count)}")
-        print(f"\t-Frames to process: {frame_process}")
-        print("\t-Input FPS: {:.2f}".format(in_fps))
-        print("\t-Output FPS: {:.2f}".format(out_fps))
+        print('\t-Duration:           {:.2f} s'.format(duration))
+        print(f"\t-Frame count:        {int(frame_count)}")
+        print(f"\t-Frames to process:  {frame_process}")
+        print("\t-Input FPS:          {:.2f}".format(in_fps))
+        print("\t-Output FPS:         {:.2f}".format(out_fps))
         print("-" * 50)
 
         success, img_original = videoCapture.read()
@@ -290,7 +296,16 @@ def main(args):
 
     print()
     print("===================   RESULT   ===================")
-    print("# Total execution time: {:.4f} s".format(time.time() - script_time_start))
+    print("# Total execution time:   {:.4f} s".format(time.time() - script_time_start))
+    print(f"# Output path:            {out_path_info}")
+    if media_type == MediaType.video:
+        print(f"# Total frames processed: {current_frame}")
+    if task != Task.people_detection:
+        print(f"# Painting detections:    {pipeline_manager.num_paintings_detected}")
+    if task.value > Task.painting_rectification.value and task != Task.people_detection:
+        print(f"# Painting retrievals:    {pipeline_manager.num_paintings_retrieved}")
+    if task.value > Task.painting_retrieval.value or task == Task.people_detection:
+        print(f"# People detections:      {pipeline_manager.num_people_detected}")
     print("=" * 50)
 
     print("\n\n")
@@ -422,7 +437,9 @@ if __name__ == '__main__':
     #     help="integer >=1 (default =1). In case the input is a video, it establishes with \n"
     #          "which occurrence to consider the frames of the video itself.\n"
     #          "Example: frame_occurrence = 30 (value recommended during debugging) means that\n"
-    #          "it considers one frame every 30.\n\n"
+    #          "it considers one frame every 30.\n"
+    #          "NOTE: for more details read the epilogue at the bottom of the page, section \n"
+    #          "'# FRAME_OCCURRENCE'\n\n"
     # )
     #
     # parser.add_argument(
@@ -468,7 +485,10 @@ if __name__ == '__main__':
     #     "--histo_mode",
     #     action="store_true",
     #     help="if present indicates that, during Painting Retrieval, the program will executes\n"
-    #          "Histogram Matching in the case ORB does not produce any match.\n\n"
+    #          "Histogram Matching in the case ORB does not produce any match.\n"
+    #          "WARNINGS: setting '--histo_mode' increases the percentage of matches with the DB,\n"
+    #          "but decreases the precision, i.e. increases the number of false positives (incorrect\n"
+    #          "matches).\n\n"
     # )
     #
     # args = parser.parse_args()

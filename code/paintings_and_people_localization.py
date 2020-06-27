@@ -4,11 +4,11 @@ Module containing functions to perform People Localization.
 import time
 
 
-def locale_people(paintings_detected, generator, show_image, print_next_step, print_time):
-    """Locale people in the image, assigning them to one room.
+def locale_paintings_and_people(paintings_detected, generator, show_image, print_next_step, print_time):
+    """Locale paintings and people in the image, assigning them to one room.
 
-    To locate the people in the image, use the information relating
-    to the room where the paintings retrieved from the image are located.
+    To locate paintings and people in the image, it uses the information about the room
+    where the paintings retrieved from the image are located.
 
     Parameters
     ----------
@@ -34,7 +34,7 @@ def locale_people(paintings_detected, generator, show_image, print_next_step, pr
 
     # Step ZORO: People Localization
     # ----------------------------
-    print_next_step(generator, "People Localization:")
+    print_next_step(generator, "People Localization")
     start_time = time.time()
     # Choose the room of the actual video frame by majority
     major_room = None

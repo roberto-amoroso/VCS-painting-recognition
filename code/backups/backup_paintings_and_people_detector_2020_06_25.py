@@ -19,7 +19,7 @@ from painting_detection import detect_paintings
 from painting_rectification import rectify_painting
 from painting_retrieval import create_paintings_db, retrieve_paintings
 from people_detection import detect_people
-from people_localization import locale_people
+from paintings_and_people_localization import locale_paintings_and_people
 from yolo.people_detection import PeopleDetection
 
 import cv2
@@ -231,7 +231,7 @@ if __name__ == '__main__':
                 # ----------------------
                 print_nicer("PEOPLE LOCALIZATION - START")
                 start_time = time.time()
-                people_room = locale_people(
+                people_room = locale_paintings_and_people(
                     paintings_detected,
                     generator,
                     show_image,

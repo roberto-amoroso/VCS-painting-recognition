@@ -69,7 +69,7 @@ def detect_people(img, people_detector, paintings_detected, generator, show_imag
     ----------
     img: ndarray
         the input image
-    people_detector: object
+    people_detector: PeopleDetector
         `PeopleDetection` object using YOLOv3 to detect people in the image
     paintings_detected: list
         a list containing one `Painting` object for each
@@ -97,19 +97,21 @@ def detect_people(img, people_detector, paintings_detected, generator, show_imag
 
     # Step YOLO: People Detection
     # ----------------------------
-    print_next_step(generator, "YOLO People Detection:")
+    print_next_step(generator, "YOLO People Detection")
     start_time = time.time()
 
     img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img.copy())
     show_image('people_before_cleaning', img_people_detected, height=405, width=720)
 
-    # Step BOX: Clean bounding box to avoid overlap with painting
-    people_bounding_boxes = clean_people_bounding_box(
-        img,
-        paintings_detected,
-        people_bounding_boxes,
-        max_percentage=max_percentage
-    )
+    # Clean people bounding boxes only if I detected paintings
+    if len(paintings_detected) > 0:
+        # Step BOX: Clean bounding box to avoid overlap with painting
+        people_bounding_boxes = clean_people_bounding_box(
+            img,
+            paintings_detected,
+            people_bounding_boxes,
+            max_percentage=max_percentage
+        )
 
     people_bounding_boxes = np.int32(np.array(people_bounding_boxes) * scale_factor)
 

@@ -13,7 +13,7 @@ Main script to execute the following operation, depending on the arguments recei
 from model.task import Task
 from model.media_type import MediaType
 from pipeline_manager import PipelineManager
-from utils import check_media_file, create_output_dir, create_directory
+from utils import check_media_file, create_output_dir
 from draw import step_generator, draw_paintings_info, draw_people_bounding_box, show_image_window, print_next_step_info, \
     print_nicer, print_time_info
 from image_processing import create_segmented_image, image_resize
@@ -27,17 +27,10 @@ from yolo.people_detection import PeopleDetection
 
 import cv2
 import os
-import ntpath
 import time
 import numpy as np
 import argparse
 import matplotlib.pyplot as plt
-import sys
-
-
-def main(args):
-    pass
-
 
 if __name__ == '__main__':
 
@@ -84,20 +77,17 @@ if __name__ == '__main__':
     # )
     #
     # args = parser.parse_args()
-    # main(args)
-    #
-    # ----- MAIN FUNCTION -----
     #
     # verbosity_print = args.verbosity_print
     # verbosity_image = args.verbosity_image
 
     verbosity_print = 0
-    verbosity_image = 1
-    task = Task(5)
-    resize = True
+    verbosity_image = 0
+    task = Task(2)
+    resize_height = 720
+    resize_width = 1280
     match_db_image = False
     histo_mode = False
-    occurrence = 45
     # ----------------------
     # TESTING TODO remove it
     # ----------------------
@@ -121,16 +111,6 @@ if __name__ == '__main__':
     # ---------------------
     script_time_start = time.time()
     total_time = 0
-
-    assert occurrence > 0, "occurrence should be >= 1"
-
-    if resize:
-        resize_height = 720
-        resize_width = 1280
-    else:
-        # None means no resizing
-        resize_height = None
-        resize_width = None
 
     # ------------------------------------------------------------------------------
     # Check if input file is valid
@@ -163,17 +143,17 @@ if __name__ == '__main__':
 
     print()
     print("-" * 50)
+
     print("# SCRIPT CONFIGURATION:")
-    print(f"\t-Task: {task.name}")
+
     print(f"\t-Filename: {input_filename}")
-    print(f"\t-Media_type: {media_type.name}")
+    print(f"\t-Media_type: ", end='')
+    if media_type == MediaType.image:
+        print(f"{MediaType.image.name}")
+    else:
+        print(f"{MediaType.video.name}")
     print(f"\t-Verbosity_print: {verbosity_print}")
     print(f"\t-Verbosity_image: {verbosity_image}")
-    if media_type == MediaType.video:
-        if occurrence > 1:
-            print(f"\t-Saving 1 frame every: {occurrence}")
-        else:
-            print('\t-Saving all frames')
 
     print("-" * 50)
 
@@ -185,8 +165,7 @@ if __name__ == '__main__':
     generator = step_generator()
 
     # YOLO People Detector
-    if task.value >= Task.people_detection.value:
-        print("\n# Creating YOLO People Detector")
+    if task == Task.people_detection:
         people_detector = PeopleDetection()
     else:
         people_detector = None
@@ -206,12 +185,11 @@ if __name__ == '__main__':
 
     # Output path info
     output_base_path = "output/"
-    output_path = os.path.join(output_base_path, task.name)
+    output_path = create_output_dir(output_base_path, task, media_type)
 
-    if task == Task.painting_rectification:
-        output_path = os.path.join(output_path, ntpath.basename(input_filename).split('.')[0])
+    output_filename = os.path.join(output_base_path, os.path.basename(input_filename))
 
-    create_directory(output_path)
+    img_original = media
 
     print("\n\n")
     print("--------------------------------------------------")
@@ -219,10 +197,7 @@ if __name__ == '__main__':
     print("--------------------------------------------------")
 
     pipeline_manager = PipelineManager(
-        input_filename,
-        output_path,
         task,
-        media_type,
         paintings_db,
         people_detector,
         resize_height,
@@ -236,45 +211,13 @@ if __name__ == '__main__':
         print_time
     )
 
-    if media_type == MediaType.image:
-        img_original = media
-        pipeline_manager.run(img_original)
-    else:
-        frame_processed = 0
-        frame_number = 0
-        videoCapture = media
-        frame_count = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
-        success, img_original = videoCapture.read()
-        if not success:
-            sys.exit("Error while processing video frames.\n")
-        height = img_original.shape[0]
-        width = img_original.shape[1]
-        video = cv2.VideoWriter(pipeline_manager.out_filename, -1, 1, (width, height))
-        while frame_number <= frame_count:
-            print(f"# Processing frame #{frame_processed + 1}/{frame_count}")
-            filename, ext = pipeline_manager.out_filename.split('.')
-            pipeline_manager.out_filename = "_".join([filename, "{:02d}".format(frame_processed)])
-            pipeline_manager.out_filename = '.'.join([pipeline_manager.out_filename, ext])
-
-            # Process current frame
-            pipeline_manager.run(img_original)
-
-            # Write elaborated frame to create a video
-            video.write(img_original)
-
-            frame_processed += 1
-            frame_number += occurrence
-            frame_number += occurrence
-            videoCapture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
-            success, img_original = videoCapture.read()
-            if not success:
-                sys.exit("Error while processing video frames.\n")
-        video.release()
+    pipeline_manager.run(img_original, input_filename)
+    cv2.imwrite(output_filename, img_original)
 
     print()
-    print("===================   RESULTS   ===================")
+    print("=" * 50)
     print("# Total execution time: {:.4f} s".format(time.time() - script_time_start))
-    print("=" * 51)
+    print("=" * 50)
 
     print("\n\n")
     print("--------------------------------------------------")

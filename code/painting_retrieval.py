@@ -3,7 +3,6 @@ Module containing functions to perform Painting Retrieval.
 """
 
 from image_processing import automatic_brightness_and_contrast
-from math_utils import translate_points
 from painting_rectification import rectify_painting
 from model.painting import Painting
 
@@ -35,7 +34,7 @@ def create_paintings_db(db_path, data_path):
     for subdir, dirs, files in os.walk(db_path):
         db_dir_name = subdir.replace('/', '\\').split('\\')[-1]
 
-        print('Opened directory "{}"'.format(db_dir_name))
+        print('\n# Opened directory "{}"'.format(db_dir_name))
 
         for painting_file in files:
             image = cv2.imread(os.path.join(db_path, painting_file))
@@ -233,7 +232,7 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
         if match_db_image:
             # Step 15: Rectify Painting
             # ----------------------------
-            print_next_step(generator, "Rectify Painting:")
+            print_next_step(generator, "Rectify Painting")
             start_time = time.time()
             corners = np.float32([
                 [0, 0],
@@ -247,7 +246,7 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
 
             # Step AUTO-ADJUST: Adjust automatically brightness and contrast of the image
             # ----------------------------
-            print_next_step(generator, "Adjust brightness and contrast:")
+            print_next_step(generator, "Adjust brightness and contrast")
             start_time = time.time()
             rectified_img, alpha, beta = automatic_brightness_and_contrast(rectified_img)
             # print(f"\talpha: {alpha}")
@@ -258,7 +257,7 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
         if not histo_mode:
             # Step 16: Match features using ORB
             # ----------------------------
-            print_next_step(generator, "Match features using ORB:")
+            print_next_step(generator, "Match features using ORB")
             start_time = time.time()
             # max_distance = 40
             match_size = match_features_orb(rectified_img, painting, max_matches)
@@ -266,7 +265,7 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
         else:
             # Step 17: Match features using HISTOGRAMS
             # ----------------------------
-            print_next_step(generator, "Match features using HISTOGRAMS:")
+            print_next_step(generator, "Match features using HISTOGRAMS")
             start_time = time.time()
             match_size = histo_matching(rectified_img, painting)
             print_time(start_time)
@@ -291,14 +290,12 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
         return None
 
 
-def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_image, print_next_step, print_time,
-                       match_db_image=False):
+def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, print_next_step, print_time,
+                       match_db_image=False, histo_mode=False):
     """Match each detected painting to the paintings DB.
 
     Parameters
     ----------
-    img: ndarray
-        the input image (i.e. a video frame)
     paintings_detected: list
         a list containing one `Painting` object for each
         painting detected in the input image.
@@ -318,6 +315,9 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_im
         define if:
         - False: rectify each painting one time using aspect ratio
         - True: rectify each painting for every painting in `paintings_db`
+    histo_mode: bool
+        indicates whether to perform a Histogram Matching in the case ORB
+        does not produce any match.
 
     Returns
     -------
@@ -327,13 +327,13 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_im
     """
     paintings_retieved = []
     for i, painting in enumerate(paintings_detected):
-        print('\tProcessing painting #%d/%d\r' % (i + 1, len(paintings_detected)))
+        print('\n# Processing painting #%d/%d' % (i + 1, len(paintings_detected)))
 
         sub_img = painting.image
 
         # Step AUTO-ADJUST: Adjust automatically brightness and contrast of the image
         # ----------------------------
-        print_next_step(generator, "Adjust brightness and contrast:")
+        print_next_step(generator, "Adjust brightness and contrast")
         start_time = time.time()
         img_auto_adjusted, alpha, beta = automatic_brightness_and_contrast(sub_img)
         # print(f"\talpha: {alpha}")
@@ -345,10 +345,8 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_im
 
         # Step 14: Painting DB lookup
         # ----------------------------
-        histo_mode = False  # If true execute histo matching when ORB fails
         threshold = 0.92
-        print_next_step(generator, "Painting DB lookup:")
-        start_time = time.time()
+        print_next_step(generator, "Painting DB lookup")
         max_matches = 30  # 40
         matches_rank = painting_db_lookup(
             sub_img,
@@ -384,6 +382,15 @@ def retrieve_paintings(img, paintings_detected, paintings_db, generator, show_im
                 painting.room = recognized_painting.room
                 painting.filename = recognized_painting.filename
                 show_image("prediction", recognized_painting.image)
+
+        print('\n# Painting #%d/%d information:' % (i + 1, len(paintings_detected)))
+        if painting.title is not None:
+            print("\ttitle: ", painting.title)
+            print("\tauthor: ", painting.author)
+            print("\troom: ", painting.room)
+            print("\tfilename: ", painting.filename)
+        else:
+            print("\t-- No DB match --")
 
         # cv2.waitKey(0)
 

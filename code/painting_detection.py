@@ -221,7 +221,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
     # Step 1: Perform mean shift segmentation on the image
     # ----------------------------
-    print_next_step(generator, "Mean Shift Segmentation:")
+    print_next_step(generator, "Mean Shift Segmentation")
     start_time = time.time()
     spatial_radius = 7  # 8 # 8 # 5 #8 or 7
     color_radius = 15  # 15 # 40 #40 #35 or 15
@@ -232,7 +232,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
     # Step 2: Get a mask of just the wall in the gallery
     # ----------------------------
-    print_next_step(generator, "Mask the Wall:")
+    print_next_step(generator, "Mask the Wall")
     start_time = time.time()
     color_difference = 2  # 2 # 1
     x_samples = 8  # 8 or 16
@@ -246,7 +246,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     # dilation at this stage is equivalent to erosion and vice versa
     # (we dilate the white pixels that are those of the wall).
     # ----------------------------
-    print_next_step(generator, "Dilate and Erode:")
+    print_next_step(generator, "Dilate and Erode")
     kernel_size = 20  # 18 or 20
     start_time = time.time()
     dilated_wall_mask = image_dilation(wall_mask, kernel_size)
@@ -260,7 +260,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
     # Step 4: Invert the wall mask
     # ----------------------------
-    print_next_step(generator, "Invert Wall Mask:")
+    print_next_step(generator, "Invert Wall Mask")
     start_time = time.time()
     wall_mask_inverted = invert_image(eroded_wall_mask)
     print_time(start_time)
@@ -274,7 +274,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
     # Step 5: Find all contours
     # ----------------------------
-    print_next_step(generator, "Find Contours:")
+    print_next_step(generator, "Find Contours")
     start_time = time.time()
     contours_mode = cv2.RETR_TREE
     contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
@@ -293,7 +293,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
     # Step 5: Find all contours
     # ----------------------------
-    print_next_step(generator, "Find Contours:")
+    print_next_step(generator, "Find Contours")
     start_time = time.time()
     contours_mode = cv2.RETR_TREE
     contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
@@ -329,7 +329,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
     # Step 6: Refine list of components found
     # ----------------------------
-    print_next_step(generator, "Refine Components found:")
+    print_next_step(generator, "Refine Components found")
     start_time = time.time()
     find_min_area_rect = True  # True
     width_min = 150
@@ -367,7 +367,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     # Step 7: Erode components to remove unwanted objects connected to the frame
     #         If there was an error in the wall mask (is inverted) then apply Dilation
     # ----------------------------
-    print_next_step(generator, "Erode Components:")
+    print_next_step(generator, "Erode Components")
     start_time = time.time()
     kernel_size = 20  # 23 or 40
     if not error_in_wall_mask:
@@ -384,7 +384,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
     # Step 8: Blur using Median Filter to smooth the lines of the frame
     # ----------------------------
-    print_next_step(generator, "Blur with Median Filter:")
+    print_next_step(generator, "Blur with Median Filter")
     start_time = time.time()
     blur_size = 31  # 15
     blurred_mask = image_blurring(cleaned_wall_mask, blur_size)
@@ -417,7 +417,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
         # Step 9: Canny Edge detection to get the outline of the frame
         # ----------------------------
-        print_next_step(generator, "Canny Edge detection:")
+        print_next_step(generator, "Canny Edge detection")
         start_time = time.time()
         threshold1 = 70  # 50
         threshold2 = 140  # 100
@@ -427,7 +427,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
         # Step 10: Hough Lines to find vertical and horizontal edges of the paintings
         # ----------------------------
-        print_next_step(generator, "Hough Lines:")
+        print_next_step(generator, "Hough Lines")
         start_time = time.time()
         probabilistic_mode = False
         rho = 1
@@ -459,7 +459,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         else:
             # Step 11: Create mask from painting edges
             # ----------------------------
-            print_next_step(generator, "Create mask from painting edges:")
+            print_next_step(generator, "Create mask from painting edges")
             start_time = time.time()
             color_value = 255
             extended_lines_mask = extend_image_lines(sub_mask, lines, probabilistic_mode, color_value)
@@ -468,7 +468,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
             # Step 12: Isolate Painting from mask
             # ----------------------------
-            print_next_step(generator, "Isolate Painting from mask:")
+            print_next_step(generator, "Isolate Painting from mask")
             start_time = time.time()
             painting_contour = isolate_painting(extended_lines_mask)
             print_time(start_time)
@@ -487,7 +487,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
             # Step 13: Corner Detection of the painting
             # ----------------------------
-            print_next_step(generator, "Corner Detection:")
+            print_next_step(generator, "Corner Detection")
             start_time = time.time()
             max_number_corners = 4
             corner_quality = 0.001

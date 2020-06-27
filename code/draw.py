@@ -15,7 +15,8 @@ def print_nicer(msg):
     """
     Print the message in a nicer way.
     """
-    print("\n#", "-" * 30)
+    print("\n\n")
+    print("-" * 50)
     print(f"# {msg}")
 
 
@@ -27,8 +28,8 @@ def print_time_info(start_time, msg=None, time_accumulator=None):
     if time_accumulator:
         time_accumulator += exe_time
     if msg:
-        print_nicer(msg)
-    print("\ttime: {:.4f} s".format(exe_time))
+        print(f"\n# {msg}")
+    print("\tTime: {:.4f} s".format(exe_time))
 
 
 def step_generator():
@@ -41,12 +42,15 @@ def step_generator():
         start += 1
 
 
-def print_next_step_info(generator, title):
+def print_next_step_info(generator, title, same_line=False):
     """
     Print processing information at every call.
     """
     step = next(generator)
-    print(f"\n# Step {step}: {title}")
+    if same_line:
+        print(f"\tStep {step}: {title}\r", end='')
+    else:
+        print(f"\n\tStep {step}: {title}")
     # print("-" * 30)
 
 
@@ -54,18 +58,18 @@ def show_image_window(title, img, height=None, width=None, wait_key=True):
     """
     Create a window showing the given image with the given title.
     """
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    plt.figure()
-    plt.axis('off')
-    plt.title(title)
-    plt.imshow(img_rgb)
+    # img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # plt.figure()
+    # plt.axis('off')
+    # plt.title(title)
+    # plt.imshow(img_rgb)
     # plt.show()
-    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    # if height is not None and width is not None:
-    #     cv2.resizeWindow(title, width, height)
-    # cv2.imshow(title, img)
-    # if wait_key:
-    #     cv2.waitKey(0)
+    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    if height is not None and width is not None:
+        cv2.resizeWindow(title, width, height)
+    cv2.imshow(title, img)
+    if wait_key:
+        cv2.waitKey(0)
 
 
 def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
@@ -158,9 +162,8 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
     - https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
     """
 
-    img_copy = img.copy()
-    h = img_copy.shape[0]
-    w = img_copy.shape[1]
+    h = img.shape[0]
+    w = img.shape[1]
 
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 0.5 * scale_factor
@@ -195,7 +198,7 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
                 yb_title = int(top + title_height + 15)
 
             cv2.rectangle(
-                img_copy,
+                img,
                 (xb_title - 15, yb_title - title_height - 15),
                 (xb_title + title_width + 15, yb_title + 15),
                 (255, 255, 255),
@@ -205,7 +208,7 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
             bottom_left_corner_of_title = (xb_title, yb_title)
 
             # TODO: manage special character (like "ù") printed as "??"
-            cv2.putText(img_copy,
+            cv2.putText(img,
                         title,
                         bottom_left_corner_of_title,
                         font,
@@ -218,47 +221,47 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
         tr = tuple(corner_points[1])
         bl = tuple(corner_points[3])
         br = tuple(corner_points[2])
-        cv2.line(img_copy, tl, tr, (0, 0, 255), 5)
-        cv2.line(img_copy, tr, br, (0, 0, 255), 5)
-        cv2.line(img_copy, br, bl, (0, 0, 255), 5)
-        cv2.line(img_copy, bl, tl, (0, 0, 255), 5)
+        cv2.line(img, tl, tr, (0, 0, 255), 5)
+        cv2.line(img, tr, br, (0, 0, 255), 5)
+        cv2.line(img, br, bl, (0, 0, 255), 5)
+        cv2.line(img, bl, tl, (0, 0, 255), 5)
 
-        # show_image("partial_final_frame", img_copy, height=405, width=720)
+        # show_image("partial_final_frame", img, height=405, width=720)
 
         # cv2.waitKey(0)
 
-    if people_room is not None:
-        room = f"Room: {people_room}"
-    else:
-        room = "Room: --"
+    if people_room != -1:
+        if people_room is not None:
+            room = f"Room: {people_room}"
+        else:
+            room = "Room: --"
 
-    # Draw the room of the painting
-    font_color = (0, 0, 0)
-    room_width, room_height = cv2.getTextSize(
-        room,
-        font,
-        font_scale,
-        line_thickness
-    )[0]
-    xb_room = int(w / 2 - room_width / 2)
-    yb_room = int(h - 20)
+        # Draw the room of the painting
+        font_color = (0, 0, 0)
+        room_width, room_height = cv2.getTextSize(
+            room,
+            font,
+            font_scale,
+            line_thickness
+        )[0]
+        xb_room = int(w / 2 - room_width / 2)
+        yb_room = int(h - 20)
 
-    bottom_left_corner_of_room = (xb_room, yb_room)
+        bottom_left_corner_of_room = (xb_room, yb_room)
 
-    cv2.rectangle(
-        img_copy,
-        (xb_room - 15, yb_room - room_height - 15),
-        (xb_room + room_width + 15, h - 5),
-        (255, 255, 255),
-        -1
-    )
-    cv2.putText(img_copy,
-                room,
-                bottom_left_corner_of_room,
-                font,
-                font_scale,
-                font_color,
-                line_thickness)
+        cv2.rectangle(
+            img,
+            (xb_room - 15, yb_room - room_height - 15),
+            (xb_room + room_width + 15, h - 5),
+            (255, 255, 255),
+            -1
+        )
+        cv2.putText(img,
+                    room,
+                    bottom_left_corner_of_room,
+                    font,
+                    font_scale,
+                    font_color,
+                    line_thickness)
 
-    return img_copy
-
+    return img

@@ -5,7 +5,7 @@ Class managing the order of execution of the functions necessary to perform:
     - Painting Rectification
     - Painting Retrieval
     - People Detection
-    - People Localization
+    - People and Paintings Localization
 """
 from model.media_type import MediaType
 from utils import check_media_file, create_output_dir
@@ -38,7 +38,7 @@ class PipelineManager:
     - Painting Rectification
     - Painting Retrieval
     - People Detection
-    - People Localization
+    - People and Paintings Localization
     """
 
     def __init__(self,

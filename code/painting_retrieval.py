@@ -313,8 +313,8 @@ def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, 
         function used to print info about execution time
     match_db_image: bool
         define if:
-        - False: rectify each painting one time using aspect ratio
-        - True: rectify each painting for every painting in `paintings_db`
+        - False: rectify each painting one time using a calculated aspect ratio
+        - True: rectify each painting to match the aspect ration of every painting in `paintings_db`
     histo_mode: bool
         indicates whether to perform a Histogram Matching in the case ORB
         does not produce any match.

@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-Main script to execute the following operation, depending on the arguments received:
+Main script to execute the following tasks, depending on the arguments received:
     - Painting Detection
     - Painting Segmentation
     - Painting Rectification
     - Painting Retrieval
     - People Detection
-    - People Localization
+    - People and Paintings Localization
 """
 from model.task import Task
 from model.media_type import MediaType
@@ -45,45 +45,168 @@ if __name__ == '__main__':
     # Argument Parser
     # ---------------
     # TODO: manage using arguments
-    # parser = argparse.ArgumentParser(
-    #     description="Main script to execute the following operation, depending on the arguments received:\n"
-    #                 "- Painting Detection\n"
-    #                 "- Painting Rectification\n"
-    #                 "- Painting Retrieval\n"
-    #                 "- People Detection\n"
-    #                 "- People Localization\n",
-    #     formatter_class=argparse.RawTextHelpFormatter
-    # )
-    # parser.add_argument(
-    #     "input_filename",
-    #     help="filename of the input image or video"
-    # )
-    # parser.add_argument(
-    #     "-vp",
-    #     "--verbosity_print",
-    #     type=int,
-    #     choices=[0, 1],
-    #     default=0,
-    #     help="set the verbosity of the information displayed (description of "
-    #          "the operation executed and execution time)\n"
-    #          "\t0 = ONLY main processing steps info\n"
-    #          "\t1 = ALL processing steps info"
-    # )
-    # parser.add_argument(
-    #     "-vi",
-    #     "--verbosity_image",
-    #     type=int,
-    #     choices=[0, 1, 2],
-    #     default=0,
-    #     help="set the verbosity of the images displayed\n"
-    #          "NOTE: if the input is a video, is automatically set to '0'\n"
-    #          "(in order to avoid an excessive number of images displayed on the screen).\n"
-    #          "\t0 = NO image\n"
-    #          "\t1 = ONLY main steps final images\n"
-    #          "\t2 = ALL intermediate steps images"
-    # )
-    #
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser(
+        description="Main script to execute the following tasks, depending on the value of the optional argument '-t' (or\n"
+                    "'--task'):\n"
+                    "- Painting Detection:               detects all paintings.\n"
+                    "- Painting Segmentation:            creates a segmented version of the input, where the paintings\n"
+                    "                                    and statues identified are white and the background is black.\n"
+                    "- Painting Rectification:           rectifies each painting detected, through an affine transformation\n"
+                    "- Painting Retrieval:               matches each detected and rectified painting to the paintings DB\n"
+                    "                                    found in `db_path`\n"
+                    "- People Detection:                 detects people in the input\n"
+                    "- People and Painting Localization: locates paintings and people using information found in\n"
+                    "                                    `data_filename`\n",
+        epilog="# TASKS:\n"
+               "\tGiven the mutual dependency of the tasks, to execute the i-th task, with i>1, it is necessary\n"
+               "\tthat the j-th tasks are executed first, for each j such that 0<=j<i.\n"
+               "\tFor example, if you want to perform Painting Rectification (i = 2) it is necessary that you\n"
+               "\tfirst execute Painting Segmentation (j = 1) and Painting Detection (j = 0).\n"
+               "\tThe People Detection task is an exception. It runs independently of the other tasks.\n\n"
+               "# OUTPUT:\n"
+               "\tthe program output paths are structured as follows (let's consider '--output = \"output\"'):\n\n"
+               "\t\toutput/\n"
+               "\t\t |-- painting_detection/\n"
+               "\t\t |-- painting_segmentation/\n"
+               "\t\t |-- painting_rectification/\n"
+               "\t\t |  |-- <input_filename>/\n"
+               "\t\t |-- painting_retrieval/\n"
+               "\t\t |-- people_detection/\n"
+               "\t\t |-- paintings_and_people_localization/\n\n"
+               "\tEach sub-directory will contain the output of the related task (indicated by the name of the\n"
+               "\tsub-directory itself). The output filename will be the same of the input ('input_filename').\n"
+               "\tThe type of the output follows that of the input: 'image -> image' and 'video -> video'.\n"
+               "\tThe exception is the Painting Rectification task, which produces only images as output,\n"
+               "\tspecifically one image for each individual painting detected. it is clear that the number of \n"
+               "\timages produced can be very high, especially in the case of videos. To improve the organization\n"
+               "\tand access to data, the rectified images produced are stored in a directory that has the same\n"
+               "\tas 'input_filename'. Inside this directory, the images are named as follows (the extension is\n"
+               "\tneglected):\n"
+               "\t  input = image -> '<input_filename>_NN' where NN is a progressive number assigned to each\n"
+               "\t                    painting found in the image.\n"
+               "\t  input = video -> '<input_filename>_FFFFF_NN' where NN has the same meaning as before but\n"
+               "\t                    applied to each video frame, while FFFFF is a progressive number assigned\n"
+               "\t                    to each frame of the video that is processed.\n\n"
+               "# FRAME_OCCURRENCE:\n"
+               "\tin case '--frame_occurrence' is > 1, the frame rate of the output video will be set so that it\n"
+               "\thas the same duration as the input video.\n\n"
+               "# EXAMPLE:\n"
+               "\tA full example could be:\n"
+               "\t\"$ python paintings_and_people_detector.py dataset/videos/014/VID_20180529_112627.mp4\n"
+               "\t painting_db/ data/data.csv -o output -t 5 -fo 30 -vp 1 -vi 2 --match_db_image --histo_mode\"\n\n"
+               "\tEXPLANATION:\n"
+               "\tIn this case, the input is a video and we want to perform the Painting and People Localization\n"
+               "\ttask. This implies that all tasks (0 to 5) will be performed. The video will be processed \n"
+               "\tconsidering one frame every 30 occurrences. All intermediate results will be printed, but no\n"
+               "\timage will be displayed during processing because we are working with a video and '-vi' \n"
+               "\tis automatically set equal to 0 (read '-vi' for details). The rectification of each detected\n"
+               "\tpainting will be carried out to match the aspect ratio of each image of the db. In the event \n"
+               "\tthat ORB does not produce any match, a match based on histogram will be executed. The output\n"
+               "\tis a video stored in './output/paintings_and_people_localization/VID_20180529_112627.mp4' whose\n"
+               "\tframes show the results of the various tasks performed.\n\n",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+
+    parser.add_argument(
+        "input_filename",
+        type=str,
+        help="filename of the input image or video\n\n"
+    )
+
+    parser.add_argument(
+        "db_path",
+        type=str,
+        help="path of the directory where the images that make up the DB are located\n\n"
+    )
+
+    parser.add_argument(
+        "data_filename",
+        type=str,
+        help="file containing all the information about the paintings:\n"
+             "(Title, Author, Room, Image)\n\n"
+    )
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default="output",
+        help="path used as base to determine where the outputs are stored. For details,\n"
+             "read the epilogue at the bottom, section '# OUTPUT' \n\n"
+    )
+
+    parser.add_argument(
+        "-t",
+        "--task",
+        type=int,
+        choices=list(range(6)),
+        default=5,
+        help="determines which task will be performed on the input.\n"
+             "NOTE: for details on how the tasks are performed and for some examples, read\n"
+             "the epilogue at the bottom of the page, section '# TASKS'\n"
+             "  0 = Painting Detection\n"
+             "  1 = Painting Segmentation\n"
+             "  2 = Painting Rectification\n"
+             "  3 = Painting Retrieval\n"
+             "  4 = People Detection\n"
+             "  5 = People and Paintings Localization (default)\n\n"
+    )
+
+    parser.add_argument(
+        "-fo",
+        "--frame_occurrence",
+        type=int,
+        default=1,
+        help="integer >=1 (default =1). In case the input is a video, it establishes with \n"
+             "which occurrence to consider the frames of the video itself.\n"
+             "Example: frame_occurrence = 30 (value recommended during debugging) means that\n"
+             "it considers one frame every 30.\n\n"
+    )
+
+    parser.add_argument(
+        "-vp",
+        "--verbosity_print",
+        type=int,
+        choices=[0, 1],
+        default=0,
+        help="set the verbosity of the information displayed (description of the operation\n"
+             "executed and its execution time)\n"
+             "  0 = ONLY main processing steps info (default)\n"
+             "  1 = ALL processing steps info\n\n"
+    )
+
+    parser.add_argument(
+        "-vi",
+        "--verbosity_image",
+        type=int,
+        choices=[0, 1, 2],
+        default=0,
+        help="set the verbosity of the images displayed.\n"
+             "NOTE: if the input is a video, is automatically set to '0' (in order to avoid\n"
+             "an excessive number of images displayed on the screen).\n"
+             "  0 = NO image (default)\n"
+             "  1 = ONLY main steps final images\n"
+             "  2 = ALL intermediate steps images\n\n"
+    )
+
+    parser.add_argument(
+        "-mdbi",
+        "--match_db_image",
+        action="store_false",
+        help="if present, to perform Painting Retrieval, the program rectifies each painting\n"
+             "to match the aspect ration of every painting in 'db_path'. Otherwise, it\n"
+             "rectifies each painting one time using a calculated aspect ratio.\n\n"
+    )
+
+    parser.add_argument(
+        "-hm",
+        "--histo_mode",
+        action="store_false",
+        help="if present indicates that, during Painting Retrieval, the program will executes\n"
+             "Histogram Matching in the case ORB does not produce any match.\n\n"
+    )
+
+    args = parser.parse_args()
     # main(args)
     #
     # ----- MAIN FUNCTION -----
@@ -93,24 +216,26 @@ if __name__ == '__main__':
 
     verbosity_print = 0
     verbosity_image = 1
-    task = Task(3)
-    resize = True
+    task = Task(5)
     match_db_image = False
     histo_mode = False
-    occurrence = 10
+    frame_occurrence = 10
+    painting_db_path = "./paintings_db"
+    painting_data_path = "./data/data.csv"
+    output_base_path = "output/"
     # ----------------------
     # TESTING TODO remove it
     # ----------------------
     # input_filename = args.input_filename
-    # input_filename = "dataset/photos/test/
+    input_filename = "dataset/photos/test/"
     # VIDEOS
-    input_filename = "dataset/videos/002/"
+    # input_filename = "dataset/videos/002/"
     # input_filename += "VID_20180529_112627.mp4"
-    input_filename += "20180206_114604.mp4"
+    # input_filename += "20180206_114604.mp4"
     # IMAGES
     # input_filename += 'IMG_2659_0012.jpg'  # CRITIC
     # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
-    # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
+    input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
     # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
@@ -127,9 +252,11 @@ if __name__ == '__main__':
     script_time_start = time.time()
     total_time = 0
 
-    if occurrence < 1:
-        sys.exit("occurrence should be >= 1\n")
+    if frame_occurrence < 1:
+        sys.exit("frame_occurrence should be >= 1\n")
 
+    # For extensibility and future improvements
+    resize = True
     if resize:
         resize_height = 720
         resize_width = 1280
@@ -176,8 +303,8 @@ if __name__ == '__main__':
     print(f"\t-Verbosity_print: {verbosity_print}")
     print(f"\t-Verbosity_image: {verbosity_image}")
     if media_type == MediaType.video:
-        if occurrence > 1:
-            print(f"\t-Saving 1 frame every: {occurrence}")
+        if frame_occurrence > 1:
+            print(f"\t-Saving 1 frame every: {frame_occurrence}")
         else:
             print('\t-Saving all frames')
 
@@ -202,8 +329,6 @@ if __name__ == '__main__':
     # -----------------------------
 
     # DB path info
-    painting_db_path = "./paintings_db"
-    painting_data_path = "./data/data.csv"
     paintings_db = create_paintings_db(painting_db_path, painting_data_path)
 
     # ------------------------------------------------------------------------------
@@ -211,7 +336,6 @@ if __name__ == '__main__':
     # -----------------------------
 
     # Output path info
-    output_base_path = "output/"
     output_path = os.path.join(output_base_path, task.name)
 
     if task == Task.painting_rectification:
@@ -259,7 +383,7 @@ if __name__ == '__main__':
         videoCapture = media
         frame_count = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
         in_fps = videoCapture.get(cv2.CAP_PROP_FPS)
-        frame_process = int(frame_count // occurrence)
+        frame_process = int(frame_count // frame_occurrence)
         # In order to have an output video of the same duration as the input one
         out_fps = (frame_process / frame_count) * in_fps
         duration = frame_count / in_fps
@@ -306,7 +430,7 @@ if __name__ == '__main__':
                 video.write(img_original)
 
             current_frame += 1
-            frame_number += occurrence
+            frame_number += frame_occurrence
             videoCapture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             success, img_original = videoCapture.read()
 

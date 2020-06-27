@@ -58,18 +58,18 @@ def show_image_window(title, img, height=None, width=None, wait_key=True):
     """
     Create a window showing the given image with the given title.
     """
-    # img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    # plt.figure()
-    # plt.axis('off')
-    # plt.title(title)
-    # plt.imshow(img_rgb)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.figure()
+    plt.axis('off')
+    plt.title(title)
+    plt.imshow(img_rgb)
     # plt.show()
-    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    if height is not None and width is not None:
-        cv2.resizeWindow(title, width, height)
-    cv2.imshow(title, img)
-    if wait_key:
-        cv2.waitKey(0)
+    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    # if height is not None and width is not None:
+    #     cv2.resizeWindow(title, width, height)
+    # cv2.imshow(title, img)
+    # if wait_key:
+    #     cv2.waitKey(0)
 
 
 def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
@@ -244,7 +244,8 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
             font_scale,
             line_thickness
         )[0]
-        xb_room = int(w / 2 - room_width / 2)
+        # xb_room = int(w / 2 - room_width / 2)
+        xb_room = int(20)
         yb_room = int(h - 20)
 
         bottom_left_corner_of_room = (xb_room, yb_room)

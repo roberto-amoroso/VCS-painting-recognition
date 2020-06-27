@@ -4,7 +4,6 @@ Module containing general utility functions.
 import sys
 import cv2
 import os
-import ntpath
 
 from model.media_type import MediaType
 from model.task import Task
@@ -60,36 +59,6 @@ def create_output_dir(base_path, task):
         output_path = create_rectification_output_dirs(output_path)
 
     return output_path
-
-# TODO: remove following comment
-# def create_output_dir(base_path, media_type, task, input_filename):
-#     """Create output directory path where the results will be saved.
-#
-#     Parameters
-#     ----------
-#     base_path:str
-#         base output path
-#     task: Task
-#         task to be executed
-#     media_type: MediaType
-#         media type of the input
-#     input_filename: str
-#         name of the input file
-#
-#     Returns
-#     -------
-#     str or tuple
-#         output directory path(s)
-#     """
-#
-#     input_filename_only = ntpath.basename(input_filename).split('.')[0]
-#     output_path = os.path.join(base_path, media_type.name + 's', task.name, input_filename)
-#
-#     if task == Task.painting_rectification:
-#         output_path = create_rectification_output_dirs(output_path)
-#
-#     return output_path
-
 
 
 def create_directory(path):

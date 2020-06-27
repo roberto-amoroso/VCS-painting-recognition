@@ -6,8 +6,6 @@ for applications other than Painting Detection.
 import cv2
 import numpy as np
 
-from draw import draw_lines
-
 
 def automatic_brightness_and_contrast(image, clip_hist_percent=1):
     """Adjust automatically brightness and contrast of the image.

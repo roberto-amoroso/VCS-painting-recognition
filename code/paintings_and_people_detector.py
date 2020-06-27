@@ -13,24 +13,17 @@ Main script to execute the following tasks, depending on the arguments received:
 from model.task import Task
 from model.media_type import MediaType
 from pipeline_manager import PipelineManager
-from utils import check_media_file, create_output_dir, create_directory
-from draw import step_generator, draw_paintings_info, draw_people_bounding_box, show_image_window, print_next_step_info, \
+from utils import check_media_file, create_directory
+from draw import step_generator, show_image_window, print_next_step_info, \
     print_nicer, print_time_info, show_image_window_blocking
-from image_processing import create_segmented_image, image_resize
-from math_utils import translate_points
-from painting_detection import detect_paintings
-from painting_rectification import rectify_painting
-from painting_retrieval import create_paintings_db, retrieve_paintings
-from people_detection import detect_people
-from paintings_and_people_localization import locale_paintings_and_people
+
+from painting_retrieval import create_paintings_db
 from yolo.people_detection import PeopleDetection
 
 import cv2
 import os
 import ntpath
 import time
-import numpy as np
-import argparse
 import matplotlib.pyplot as plt
 import sys
 

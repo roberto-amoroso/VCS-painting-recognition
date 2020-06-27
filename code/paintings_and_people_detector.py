@@ -93,21 +93,26 @@ if __name__ == '__main__':
 
     verbosity_print = 0
     verbosity_image = 1
-    task = Task(5)
+    task = Task(3)
     resize = True
     match_db_image = False
     histo_mode = False
-    occurrence = 45
+    occurrence = 10
     # ----------------------
     # TESTING TODO remove it
     # ----------------------
     # input_filename = args.input_filename
-    input_filename = "dataset/photos/test/"
+    # input_filename = "dataset/photos/test/
+    # VIDEOS
+    input_filename = "dataset/videos/002/"
+    # input_filename += "VID_20180529_112627.mp4"
+    input_filename += "20180206_114604.mp4"
+    # IMAGES
     # input_filename += 'IMG_2659_0012.jpg'  # CRITIC
     # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
     # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
-    input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
+    # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
     # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
     # input_filename += "IMG_2646_0003.jpg"  # overlapping contours
     # input_filename += "IMG_2646_0006.jpg"  # overlapping contours
@@ -122,7 +127,8 @@ if __name__ == '__main__':
     script_time_start = time.time()
     total_time = 0
 
-    assert occurrence > 0, "occurrence should be >= 1"
+    if occurrence < 1:
+        sys.exit("occurrence should be >= 1\n")
 
     if resize:
         resize_height = 720
@@ -238,43 +244,81 @@ if __name__ == '__main__':
 
     if media_type == MediaType.image:
         img_original = media
+
+        print()
+        print("-" * 50)
+        print("# IMAGE INFO:")
+        print(f"\t-Height: {img_original.shape[0]}")
+        print(f"\t-Width: {img_original.shape[1]}")
+        print("-" * 50)
+
         pipeline_manager.run(img_original)
     else:
-        frame_processed = 0
+        current_frame = 0
         frame_number = 0
         videoCapture = media
         frame_count = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
+        in_fps = videoCapture.get(cv2.CAP_PROP_FPS)
+        frame_process = int(frame_count // occurrence)
+        # In order to have an output video of the same duration as the input one
+        out_fps = (frame_process / frame_count) * in_fps
+        duration = frame_count / in_fps
+
+        print()
+        print("-" * 50)
+        print("# VIDEO INFO:")
+        print('\t-Duration: {:.2f} s'.format(duration))
+        print(f"\t-Frame count: {int(frame_count)}")
+        print(f"\t-Frames to process: {frame_process}")
+        print("\t-Input FPS: {:.2f}".format(in_fps))
+        print("\t-Output FPS: {:.2f}".format(out_fps))
+        print("-" * 50)
+
         success, img_original = videoCapture.read()
         if not success:
             sys.exit("Error while processing video frames.\n")
         height = img_original.shape[0]
         width = img_original.shape[1]
-        video = cv2.VideoWriter(pipeline_manager.out_filename, -1, 1, (width, height))
-        while frame_number <= frame_count:
-            print(f"# Processing frame #{frame_processed + 1}/{frame_count}")
-            filename, ext = pipeline_manager.out_filename.split('.')
-            pipeline_manager.out_filename = "_".join([filename, "{:02d}".format(frame_processed)])
-            pipeline_manager.out_filename = '.'.join([pipeline_manager.out_filename, ext])
+        filename, ext = pipeline_manager.out_filename.split('.')
+
+        # Credits: https://github.com/ContinuumIO/anaconda-issues/issues/223#issuecomment-285523938
+        if task != Task.painting_rectification:
+            video = cv2.VideoWriter(
+                os.path.join(output_path, '.'.join([filename, 'mp4'])),
+                cv2.VideoWriter_fourcc(*"mp4v"),
+                out_fps,
+                (width, height)
+            )
+        while success and current_frame < frame_process:
+
+            print()
+            print("=" * 50)
+            print(f"# PROCESSING FRAME #{current_frame + 1}/{frame_process}")
+            print("=" * 50)
+            current_filename = "_".join([filename, "{:05d}".format(current_frame)])
+            pipeline_manager.out_filename = '.'.join([current_filename, "png"])
 
             # Process current frame
-            pipeline_manager.run(img_original)
+            img_original = pipeline_manager.run(img_original)
 
             # Write elaborated frame to create a video
-            video.write(img_original)
+            if task != Task.painting_rectification:
+                video.write(img_original)
 
-            frame_processed += 1
-            frame_number += occurrence
+            current_frame += 1
             frame_number += occurrence
             videoCapture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             success, img_original = videoCapture.read()
-            if not success:
-                sys.exit("Error while processing video frames.\n")
-        video.release()
+
+        if current_frame != frame_process:
+            sys.exit("Error while processing video frames.\n")
+        if task != Task.painting_rectification:
+            video.release()
 
     print()
-    print("===================   RESULTS   ===================")
+    print("===================   RESULT   ===================")
     print("# Total execution time: {:.4f} s".format(time.time() - script_time_start))
-    print("=" * 51)
+    print("=" * 50)
 
     print("\n\n")
     print("--------------------------------------------------")

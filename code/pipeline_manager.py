@@ -85,6 +85,8 @@ class PipelineManager:
         """
         if self.task == Task.painting_rectification:
             filename, ext = self.out_filename.split('.')
+            # if self.media_type == MediaType.video:
+            #     ext = 'png'  # 'jpg'
             out_name = "_".join([filename, "{:02d}".format(self.counter)])
             out_name = '.'.join([out_name, ext])
             self.counter += 1
@@ -283,6 +285,9 @@ class PipelineManager:
 
             if self.task == Task.painting_segmentation:
                 img_original = segmented_img_original
+                # Replicate over 3 channel to avoid problem with `cv2.VideoWriter()`
+                if self.media_type == MediaType.video:
+                    img_original = cv2.merge((img_original, img_original, img_original))
                 paintings_detected = []
 
         # ------------------------------------------------------------------------
@@ -297,7 +302,6 @@ class PipelineManager:
             if self.task == Task.painting_rectification:
                 for self.counter, painting in enumerate(paintings_detected):
                     self.save_image(painting.image)
-                return None
 
         # ------------------------------------------------------------------------
 
@@ -348,3 +352,5 @@ class PipelineManager:
         self.show_image_main('final_frame', img_original, height=405, width=720)
         if self.media_type == MediaType.image:
             self.save_image(img_original)
+
+        return img_original

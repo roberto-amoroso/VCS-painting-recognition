@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>code.yolo.bbox API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>code.yolo.bbox</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from __future__ import division
+
+import torch 
+import random
+
+import numpy as np
+import cv2
+
+def confidence_filter(result, confidence):
+    conf_mask = (result[:,:,4] &gt; confidence).float().unsqueeze(2)
+    result = result*conf_mask    
+    
+    return result
+
+def confidence_filter_cls(result, confidence):
+    max_scores = torch.max(result[:,:,5:25], 2)[0]
+    res = torch.cat((result, max_scores),2)
+    print(res.shape)
+    
+    
+    cond_1 = (res[:,:,4] &gt; confidence).float()
+    cond_2 = (res[:,:,25] &gt; 0.995).float()
+    
+    conf = cond_1 + cond_2
+    conf = torch.clamp(conf, 0.0, 1.0)
+    conf = conf.unsqueeze(2)
+    result = result*conf   
+    return result
+
+
+
+def get_abs_coord(box):
+    box[2], box[3] = abs(box[2]), abs(box[3])
+    x1 = (box[0] - box[2]/2) - 1 
+    y1 = (box[1] - box[3]/2) - 1 
+    x2 = (box[0] + box[2]/2) - 1 
+    y2 = (box[1] + box[3]/2) - 1
+    return x1, y1, x2, y2
+    
+
+
+def sanity_fix(box):
+    if (box[0] &gt; box[2]):
+        box[0], box[2] = box[2], box[0]
+    
+    if (box[1] &gt;  box[3]):
+        box[1], box[3] = box[3], box[1]
+        
+    return box
+
+def bbox_iou(box1, box2):
+    &#34;&#34;&#34;
+    Returns the IoU of two bounding boxes 
+    
+    
+    &#34;&#34;&#34;
+    #Get the coordinates of bounding boxes
+    b1_x1, b1_y1, b1_x2, b1_y2 = box1[:,0], box1[:,1], box1[:,2], box1[:,3]
+    b2_x1, b2_y1, b2_x2, b2_y2 = box2[:,0], box2[:,1], box2[:,2], box2[:,3]
+    
+    #get the corrdinates of the intersection rectangle
+    inter_rect_x1 =  torch.max(b1_x1, b2_x1)
+    inter_rect_y1 =  torch.max(b1_y1, b2_y1)
+    inter_rect_x2 =  torch.min(b1_x2, b2_x2)
+    inter_rect_y2 =  torch.min(b1_y2, b2_y2)
+    
+    #Intersection area
+    if torch.cuda.is_available():
+            inter_area = torch.max(inter_rect_x2 - inter_rect_x1 + 1,torch.zeros(inter_rect_x2.shape).cuda())*torch.max(inter_rect_y2 - inter_rect_y1 + 1, torch.zeros(inter_rect_x2.shape).cuda())
+    else:
+            inter_area = torch.max(inter_rect_x2 - inter_rect_x1 + 1,torch.zeros(inter_rect_x2.shape))*torch.max(inter_rect_y2 - inter_rect_y1 + 1, torch.zeros(inter_rect_x2.shape))
+    
+    #Union Area
+    b1_area = (b1_x2 - b1_x1 + 1)*(b1_y2 - b1_y1 + 1)
+    b2_area = (b2_x2 - b2_x1 + 1)*(b2_y2 - b2_y1 + 1)
+    
+    iou = inter_area / (b1_area + b2_area - inter_area)
+    
+    return iou
+
+
+def pred_corner_coord(prediction):
+    #Get indices of non-zero confidence bboxes
+    ind_nz = torch.nonzero(prediction[:,:,4]).transpose(0,1).contiguous()
+    
+    box = prediction[ind_nz[0], ind_nz[1]]
+    
+    
+    box_a = box.new(box.shape)
+    box_a[:,0] = (box[:,0] - box[:,2]/2)
+    box_a[:,1] = (box[:,1] - box[:,3]/2)
+    box_a[:,2] = (box[:,0] + box[:,2]/2) 
+    box_a[:,3] = (box[:,1] + box[:,3]/2)
+    box[:,:4] = box_a[:,:4]
+    
+    prediction[ind_nz[0], ind_nz[1]] = box
+    
+    return prediction
+
+
+
+
+def write(x, batches, results, colors, classes):
+    c1 = tuple(x[1:3].int())
+    c2 = tuple(x[3:5].int())
+    img = results[int(x[0])]
+    cls = int(x[-1])
+    label = &#34;{0}&#34;.format(classes[cls])
+    color = random.choice(colors)
+    cv2.rectangle(img, c1, c2,color, 1)
+    t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1 , 1)[0]
+    c2 = c1[0] + t_size[0] + 3, c1[1] + t_size[1] + 4
+    cv2.rectangle(img, c1, c2,color, -1)
+    cv2.putText(img, label, (c1[0], c1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225,255,255], 1);
+    return img</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="code.yolo.bbox.bbox_iou"><code class="name flex">
+<span>def <span class="ident">bbox_iou</span></span>(<span>box1, box2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the IoU of two bounding boxes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bbox_iou(box1, box2):
+    &#34;&#34;&#34;
+    Returns the IoU of two bounding boxes 
+    
+    
+    &#34;&#34;&#34;
+    #Get the coordinates of bounding boxes
+    b1_x1, b1_y1, b1_x2, b1_y2 = box1[:,0], box1[:,1], box1[:,2], box1[:,3]
+    b2_x1, b2_y1, b2_x2, b2_y2 = box2[:,0], box2[:,1], box2[:,2], box2[:,3]
+    
+    #get the corrdinates of the intersection rectangle
+    inter_rect_x1 =  torch.max(b1_x1, b2_x1)
+    inter_rect_y1 =  torch.max(b1_y1, b2_y1)
+    inter_rect_x2 =  torch.min(b1_x2, b2_x2)
+    inter_rect_y2 =  torch.min(b1_y2, b2_y2)
+    
+    #Intersection area
+    if torch.cuda.is_available():
+            inter_area = torch.max(inter_rect_x2 - inter_rect_x1 + 1,torch.zeros(inter_rect_x2.shape).cuda())*torch.max(inter_rect_y2 - inter_rect_y1 + 1, torch.zeros(inter_rect_x2.shape).cuda())
+    else:
+            inter_area = torch.max(inter_rect_x2 - inter_rect_x1 + 1,torch.zeros(inter_rect_x2.shape))*torch.max(inter_rect_y2 - inter_rect_y1 + 1, torch.zeros(inter_rect_x2.shape))
+    
+    #Union Area
+    b1_area = (b1_x2 - b1_x1 + 1)*(b1_y2 - b1_y1 + 1)
+    b2_area = (b2_x2 - b2_x1 + 1)*(b2_y2 - b2_y1 + 1)
+    
+    iou = inter_area / (b1_area + b2_area - inter_area)
+    
+    return iou</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.bbox.confidence_filter"><code class="name flex">
+<span>def <span class="ident">confidence_filter</span></span>(<span>result, confidence)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def confidence_filter(result, confidence):
+    conf_mask = (result[:,:,4] &gt; confidence).float().unsqueeze(2)
+    result = result*conf_mask    
+    
+    return result</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.bbox.confidence_filter_cls"><code class="name flex">
+<span>def <span class="ident">confidence_filter_cls</span></span>(<span>result, confidence)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def confidence_filter_cls(result, confidence):
+    max_scores = torch.max(result[:,:,5:25], 2)[0]
+    res = torch.cat((result, max_scores),2)
+    print(res.shape)
+    
+    
+    cond_1 = (res[:,:,4] &gt; confidence).float()
+    cond_2 = (res[:,:,25] &gt; 0.995).float()
+    
+    conf = cond_1 + cond_2
+    conf = torch.clamp(conf, 0.0, 1.0)
+    conf = conf.unsqueeze(2)
+    result = result*conf   
+    return result</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.bbox.get_abs_coord"><code class="name flex">
+<span>def <span class="ident">get_abs_coord</span></span>(<span>box)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_abs_coord(box):
+    box[2], box[3] = abs(box[2]), abs(box[3])
+    x1 = (box[0] - box[2]/2) - 1 
+    y1 = (box[1] - box[3]/2) - 1 
+    x2 = (box[0] + box[2]/2) - 1 
+    y2 = (box[1] + box[3]/2) - 1
+    return x1, y1, x2, y2</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.bbox.pred_corner_coord"><code class="name flex">
+<span>def <span class="ident">pred_corner_coord</span></span>(<span>prediction)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pred_corner_coord(prediction):
+    #Get indices of non-zero confidence bboxes
+    ind_nz = torch.nonzero(prediction[:,:,4]).transpose(0,1).contiguous()
+    
+    box = prediction[ind_nz[0], ind_nz[1]]
+    
+    
+    box_a = box.new(box.shape)
+    box_a[:,0] = (box[:,0] - box[:,2]/2)
+    box_a[:,1] = (box[:,1] - box[:,3]/2)
+    box_a[:,2] = (box[:,0] + box[:,2]/2) 
+    box_a[:,3] = (box[:,1] + box[:,3]/2)
+    box[:,:4] = box_a[:,:4]
+    
+    prediction[ind_nz[0], ind_nz[1]] = box
+    
+    return prediction</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.bbox.sanity_fix"><code class="name flex">
+<span>def <span class="ident">sanity_fix</span></span>(<span>box)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sanity_fix(box):
+    if (box[0] &gt; box[2]):
+        box[0], box[2] = box[2], box[0]
+    
+    if (box[1] &gt;  box[3]):
+        box[1], box[3] = box[3], box[1]
+        
+    return box</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.bbox.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>x, batches, results, colors, classes)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write(x, batches, results, colors, classes):
+    c1 = tuple(x[1:3].int())
+    c2 = tuple(x[3:5].int())
+    img = results[int(x[0])]
+    cls = int(x[-1])
+    label = &#34;{0}&#34;.format(classes[cls])
+    color = random.choice(colors)
+    cv2.rectangle(img, c1, c2,color, 1)
+    t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1 , 1)[0]
+    c2 = c1[0] + t_size[0] + 3, c1[1] + t_size[1] + 4
+    cv2.rectangle(img, c1, c2,color, -1)
+    cv2.putText(img, label, (c1[0], c1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225,255,255], 1);
+    return img</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="code.yolo" href="index.html">code.yolo</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="code.yolo.bbox.bbox_iou" href="#code.yolo.bbox.bbox_iou">bbox_iou</a></code></li>
+<li><code><a title="code.yolo.bbox.confidence_filter" href="#code.yolo.bbox.confidence_filter">confidence_filter</a></code></li>
+<li><code><a title="code.yolo.bbox.confidence_filter_cls" href="#code.yolo.bbox.confidence_filter_cls">confidence_filter_cls</a></code></li>
+<li><code><a title="code.yolo.bbox.get_abs_coord" href="#code.yolo.bbox.get_abs_coord">get_abs_coord</a></code></li>
+<li><code><a title="code.yolo.bbox.pred_corner_coord" href="#code.yolo.bbox.pred_corner_coord">pred_corner_coord</a></code></li>
+<li><code><a title="code.yolo.bbox.sanity_fix" href="#code.yolo.bbox.sanity_fix">sanity_fix</a></code></li>
+<li><code><a title="code.yolo.bbox.write" href="#code.yolo.bbox.write">write</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

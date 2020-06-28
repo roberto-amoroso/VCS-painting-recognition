@@ -171,7 +171,7 @@ def image_blurring(img, ksize):
     ----------
     img: ndarray
         the input image
-    ksize
+    ksize: int
         aperture linear size; it must be odd and greater than 1, for example: 3, 5, 7 ...
 
     Returns
@@ -263,7 +263,7 @@ def canny_edge_detection(img, threshold1, threshold2):
         the input image
     threshold1: int
         first threshold for the hysteresis procedure.
-    threshold2:int
+    threshold2: int
         second threshold for the hysteresis procedure.
 
     Returns
@@ -490,7 +490,7 @@ def find_largest_segment(img, color_difference=1, x_samples=8):
         image to apply masking
     color_difference: int
         euclidean distance between wall's pixel and the rest of the image
-    x_samples : int
+    x_samples: int
         numer of samples that will be tested orizontally in the image
 
     Returns

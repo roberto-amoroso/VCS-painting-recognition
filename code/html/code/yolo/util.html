@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>code.yolo.util API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>code.yolo.util</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from __future__ import division
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.autograd import Variable
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from yolo.bbox import bbox_iou
+
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters())
+
+
+def count_learnable_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+def convert2cpu(matrix):
+    if matrix.is_cuda:
+        return torch.FloatTensor(matrix.size()).copy_(matrix)
+    else:
+        return matrix
+
+
+def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA=True):
+    batch_size = prediction.size(0)
+    stride = inp_dim // prediction.size(2)
+    grid_size = inp_dim // stride
+    bbox_attrs = 5 + num_classes
+    num_anchors = len(anchors)
+
+    anchors = [(a[0] / stride, a[1] / stride) for a in anchors]
+
+    prediction = prediction.view(batch_size, bbox_attrs * num_anchors, grid_size * grid_size)
+    prediction = prediction.transpose(1, 2).contiguous()
+    prediction = prediction.view(batch_size, grid_size * grid_size * num_anchors, bbox_attrs)
+
+    # Sigmoid the  centre_X, centre_Y. and object confidencce
+    prediction[:, :, 0] = torch.sigmoid(prediction[:, :, 0])
+    prediction[:, :, 1] = torch.sigmoid(prediction[:, :, 1])
+    prediction[:, :, 4] = torch.sigmoid(prediction[:, :, 4])
+
+    # Add the center offsets
+    grid_len = np.arange(grid_size)
+    a, b = np.meshgrid(grid_len, grid_len)
+
+    x_offset = torch.FloatTensor(a).view(-1, 1)
+    y_offset = torch.FloatTensor(b).view(-1, 1)
+
+    if CUDA:
+        x_offset = x_offset.cuda()
+        y_offset = y_offset.cuda()
+
+    x_y_offset = torch.cat((x_offset, y_offset), 1).repeat(1, num_anchors).view(-1, 2).unsqueeze(0)
+
+    prediction[:, :, :2] += x_y_offset
+
+    # log space transform height and the width
+    anchors = torch.FloatTensor(anchors)
+
+    if CUDA:
+        anchors = anchors.cuda()
+
+    anchors = anchors.repeat(grid_size * grid_size, 1).unsqueeze(0)
+    prediction[:, :, 2:4] = torch.exp(prediction[:, :, 2:4]) * anchors
+
+    # Softmax the class scores
+    prediction[:, :, 5: 5 + num_classes] = torch.sigmoid((prediction[:, :, 5: 5 + num_classes]))
+
+    prediction[:, :, :4] *= stride
+
+    return prediction
+
+
+def load_classes(namesfile):
+    fp = open(namesfile, &#34;r&#34;)
+    names = fp.read().split(&#34;\n&#34;)[:-1]
+    return names
+
+
+def get_im_dim(im):
+    im = cv2.imread(im)
+    w, h = im.shape[1], im.shape[0]
+    return w, h
+
+
+def unique(tensor):
+    tensor_np = tensor.cpu().numpy()
+    unique_np = np.unique(tensor_np)
+    unique_tensor = torch.from_numpy(unique_np)
+
+    tensor_res = tensor.new(unique_tensor.shape)
+    tensor_res.copy_(unique_tensor)
+    return tensor_res
+
+
+def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
+    conf_mask = (prediction[:, :, 4] &gt; confidence).float().unsqueeze(2)
+    prediction = prediction * conf_mask
+
+    try:
+        ind_nz = torch.nonzero(prediction[:, :, 4]).transpose(0, 1).contiguous()
+        if ind_nz.nelement() == 0:
+            return 0
+    except:
+        return 0
+
+    box_a = prediction.new(prediction.shape)
+    box_a[:, :, 0] = (prediction[:, :, 0] - prediction[:, :, 2] / 2)
+    box_a[:, :, 1] = (prediction[:, :, 1] - prediction[:, :, 3] / 2)
+    box_a[:, :, 2] = (prediction[:, :, 0] + prediction[:, :, 2] / 2)
+    box_a[:, :, 3] = (prediction[:, :, 1] + prediction[:, :, 3] / 2)
+    prediction[:, :, :4] = box_a[:, :, :4]
+
+    batch_size = prediction.size(0)
+
+    output = prediction.new(1, prediction.size(2) + 1)
+    write = False
+
+    for ind in range(batch_size):
+        # select the image from the batch
+        image_pred = prediction[ind]
+
+        # Get the class having maximum score, and the index of that class
+        # Get rid of num_classes softmax scores
+        # Add the class index and the class score of class having maximum score
+        max_conf, max_conf_score = torch.max(image_pred[:, 5:5 + num_classes], 1)
+        max_conf = max_conf.float().unsqueeze(1)
+        max_conf_score = max_conf_score.float().unsqueeze(1)
+        seq = (image_pred[:, :5], max_conf, max_conf_score)
+        image_pred = torch.cat(seq, 1)
+
+        # Get rid of the zero entries
+        non_zero_ind = (torch.nonzero(image_pred[:, 4]))
+
+        image_pred_ = image_pred[non_zero_ind.squeeze(), :].view(-1, 7)
+
+        # Get the various classes detected in the image
+        try:
+            img_classes = unique(image_pred_[:, -1])
+        except:
+            continue
+        # WE will do NMS classwise
+        for cls in img_classes:
+            # get the detections with one particular class
+            cls_mask = image_pred_ * (image_pred_[:, -1] == cls).float().unsqueeze(1)
+            class_mask_ind = torch.nonzero(cls_mask[:, -2]).squeeze()
+
+            image_pred_class = image_pred_[class_mask_ind].view(-1, 7)
+
+            # sort the detections such that the entry with the maximum objectness
+            # confidence is at the top
+            conf_sort_index = torch.sort(image_pred_class[:, 4], descending=True)[1]
+            image_pred_class = image_pred_class[conf_sort_index]
+            idx = image_pred_class.size(0)
+
+            # if nms has to be done
+            if nms:
+                # For each detection
+                for i in range(idx):
+                    # Get the IOUs of all boxes that come after the one we are looking at
+                    # in the loop
+                    try:
+                        ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i + 1:])
+                    except ValueError:
+                        break
+
+                    except IndexError:
+                        break
+
+                    # Zero out all the detections that have IoU &gt; treshhold
+                    iou_mask = (ious &lt; nms_conf).float().unsqueeze(1)
+                    image_pred_class[i + 1:] *= iou_mask
+
+                    # Remove the non-zero entries
+                    non_zero_ind = torch.nonzero(image_pred_class[:, 4]).squeeze()
+                    image_pred_class = image_pred_class[non_zero_ind].view(-1, 7)
+
+            # Concatenate the batch_id of the image to the detection
+            # this helps us identify which image does the detection correspond to
+            # We use a linear straucture to hold ALL the detections from the batch
+            # the batch_dim is flattened
+            # batch is identified by extra batch column
+
+            batch_ind = image_pred_class.new(image_pred_class.size(0), 1).fill_(ind)
+            seq = batch_ind, image_pred_class
+            if not write:
+                output = torch.cat(seq, 1)
+                write = True
+            else:
+                out = torch.cat(seq, 1)
+                output = torch.cat((output, out))
+
+    return output
+
+
+# !/usr/bin/env python3
+# -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+Created on Sat Mar 24 00:12:16 2018
+
+@author: ayooshmac
+&#34;&#34;&#34;
+
+
+def predict_transform_half(prediction, inp_dim, anchors, num_classes, CUDA=True):
+    batch_size = prediction.size(0)
+    stride = inp_dim // prediction.size(2)
+
+    bbox_attrs = 5 + num_classes
+    num_anchors = len(anchors)
+    grid_size = inp_dim // stride
+
+    prediction = prediction.view(batch_size, bbox_attrs * num_anchors, grid_size * grid_size)
+    prediction = prediction.transpose(1, 2).contiguous()
+    prediction = prediction.view(batch_size, grid_size * grid_size * num_anchors, bbox_attrs)
+
+    # Sigmoid the  centre_X, centre_Y. and object confidencce
+    prediction[:, :, 0] = torch.sigmoid(prediction[:, :, 0])
+    prediction[:, :, 1] = torch.sigmoid(prediction[:, :, 1])
+    prediction[:, :, 4] = torch.sigmoid(prediction[:, :, 4])
+
+    # Add the center offsets
+    grid_len = np.arange(grid_size)
+    a, b = np.meshgrid(grid_len, grid_len)
+
+    x_offset = torch.FloatTensor(a).view(-1, 1)
+    y_offset = torch.FloatTensor(b).view(-1, 1)
+
+    if CUDA:
+        x_offset = x_offset.cuda().half()
+        y_offset = y_offset.cuda().half()
+
+    x_y_offset = torch.cat((x_offset, y_offset), 1).repeat(1, num_anchors).view(-1, 2).unsqueeze(0)
+
+    prediction[:, :, :2] += x_y_offset
+
+    # log space transform height and the width
+    anchors = torch.HalfTensor(anchors)
+
+    if CUDA:
+        anchors = anchors.cuda()
+
+    anchors = anchors.repeat(grid_size * grid_size, 1).unsqueeze(0)
+    prediction[:, :, 2:4] = torch.exp(prediction[:, :, 2:4]) * anchors
+
+    # Softmax the class scores
+    prediction[:, :, 5: 5 + num_classes] = nn.Softmax(-1)(Variable(prediction[:, :, 5: 5 + num_classes])).data
+
+    prediction[:, :, :4] *= stride
+
+    return prediction
+
+
+def write_results_half(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
+    conf_mask = (prediction[:, :, 4] &gt; confidence).half().unsqueeze(2)
+    prediction = prediction * conf_mask
+
+    try:
+        ind_nz = torch.nonzero(prediction[:, :, 4]).transpose(0, 1).contiguous()
+    except:
+        return 0
+
+    box_a = prediction.new(prediction.shape)
+    box_a[:, :, 0] = (prediction[:, :, 0] - prediction[:, :, 2] / 2)
+    box_a[:, :, 1] = (prediction[:, :, 1] - prediction[:, :, 3] / 2)
+    box_a[:, :, 2] = (prediction[:, :, 0] + prediction[:, :, 2] / 2)
+    box_a[:, :, 3] = (prediction[:, :, 1] + prediction[:, :, 3] / 2)
+    prediction[:, :, :4] = box_a[:, :, :4]
+
+    batch_size = prediction.size(0)
+
+    output = prediction.new(1, prediction.size(2) + 1)
+    write = False
+
+    for ind in range(batch_size):
+        # select the image from the batch
+        image_pred = prediction[ind]
+
+        # Get the class having maximum score, and the index of that class
+        # Get rid of num_classes softmax scores
+        # Add the class index and the class score of class having maximum score
+        max_conf, max_conf_score = torch.max(image_pred[:, 5:5 + num_classes], 1)
+        max_conf = max_conf.half().unsqueeze(1)
+        max_conf_score = max_conf_score.half().unsqueeze(1)
+        seq = (image_pred[:, :5], max_conf, max_conf_score)
+        image_pred = torch.cat(seq, 1)
+
+        # Get rid of the zero entries
+        non_zero_ind = (torch.nonzero(image_pred[:, 4]))
+        try:
+            image_pred_ = image_pred[non_zero_ind.squeeze(), :]
+        except:
+            continue
+
+        # Get the various classes detected in the image
+        img_classes = unique(image_pred_[:, -1].long()).half()
+
+        # WE will do NMS classwise
+        for cls in img_classes:
+            # get the detections with one particular class
+            cls_mask = image_pred_ * (image_pred_[:, -1] == cls).half().unsqueeze(1)
+            class_mask_ind = torch.nonzero(cls_mask[:, -2]).squeeze()
+
+            image_pred_class = image_pred_[class_mask_ind]
+
+            # sort the detections such that the entry with the maximum objectness
+            # confidence is at the top
+            conf_sort_index = torch.sort(image_pred_class[:, 4], descending=True)[1]
+            image_pred_class = image_pred_class[conf_sort_index]
+            idx = image_pred_class.size(0)
+
+            # if nms has to be done
+            if nms:
+                # For each detection
+                for i in range(idx):
+                    # Get the IOUs of all boxes that come after the one we are looking at
+                    # in the loop
+                    try:
+                        ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i + 1:])
+                    except ValueError:
+                        break
+
+                    except IndexError:
+                        break
+
+                    # Zero out all the detections that have IoU &gt; treshhold
+                    iou_mask = (ious &lt; nms_conf).half().unsqueeze(1)
+                    image_pred_class[i + 1:] *= iou_mask
+
+                    # Remove the non-zero entries
+                    non_zero_ind = torch.nonzero(image_pred_class[:, 4]).squeeze()
+                    image_pred_class = image_pred_class[non_zero_ind]
+
+            # Concatenate the batch_id of the image to the detection
+            # this helps us identify which image does the detection correspond to
+            # We use a linear straucture to hold ALL the detections from the batch
+            # the batch_dim is flattened
+            # batch is identified by extra batch column
+            batch_ind = image_pred_class.new(image_pred_class.size(0), 1).fill_(ind)
+            seq = batch_ind, image_pred_class
+
+            if not write:
+                output = torch.cat(seq, 1)
+                write = True
+            else:
+                out = torch.cat(seq, 1)
+                output = torch.cat((output, out))
+
+    return output</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="code.yolo.util.convert2cpu"><code class="name flex">
+<span>def <span class="ident">convert2cpu</span></span>(<span>matrix)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert2cpu(matrix):
+    if matrix.is_cuda:
+        return torch.FloatTensor(matrix.size()).copy_(matrix)
+    else:
+        return matrix</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.util.count_learnable_parameters"><code class="name flex">
+<span>def <span class="ident">count_learnable_parameters</span></span>(<span>model)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def count_learnable_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.util.count_parameters"><code class="name flex">
+<span>def <span class="ident">count_parameters</span></span>(<span>model)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def count_parameters(model):
+    return sum(p.numel() for p in model.parameters())</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.util.get_im_dim"><code class="name flex">
+<span>def <span class="ident">get_im_dim</span></span>(<span>im)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_im_dim(im):
+    im = cv2.imread(im)
+    w, h = im.shape[1], im.shape[0]
+    return w, h</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.util.load_classes"><code class="name flex">
+<span>def <span class="ident">load_classes</span></span>(<span>namesfile)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_classes(namesfile):
+    fp = open(namesfile, &#34;r&#34;)
+    names = fp.read().split(&#34;\n&#34;)[:-1]
+    return names</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.util.predict_transform"><code class="name flex">
+<span>def <span class="ident">predict_transform</span></span>(<span>prediction, inp_dim, anchors, num_classes, CUDA=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA=True):
+    batch_size = prediction.size(0)
+    stride = inp_dim // prediction.size(2)
+    grid_size = inp_dim // stride
+    bbox_attrs = 5 + num_classes
+    num_anchors = len(anchors)
+
+    anchors = [(a[0] / stride, a[1] / stride) for a in anchors]
+
+    prediction = prediction.view(batch_size, bbox_attrs * num_anchors, grid_size * grid_size)
+    prediction = prediction.transpose(1, 2).contiguous()
+    prediction = prediction.view(batch_size, grid_size * grid_size * num_anchors, bbox_attrs)
+
+    # Sigmoid the  centre_X, centre_Y. and object confidencce
+    prediction[:, :, 0] = torch.sigmoid(prediction[:, :, 0])
+    prediction[:, :, 1] = torch.sigmoid(prediction[:, :, 1])
+    prediction[:, :, 4] = torch.sigmoid(prediction[:, :, 4])
+
+    # Add the center offsets
+    grid_len = np.arange(grid_size)
+    a, b = np.meshgrid(grid_len, grid_len)
+
+    x_offset = torch.FloatTensor(a).view(-1, 1)
+    y_offset = torch.FloatTensor(b).view(-1, 1)
+
+    if CUDA:
+        x_offset = x_offset.cuda()
+        y_offset = y_offset.cuda()
+
+    x_y_offset = torch.cat((x_offset, y_offset), 1).repeat(1, num_anchors).view(-1, 2).unsqueeze(0)
+
+    prediction[:, :, :2] += x_y_offset
+
+    # log space transform height and the width
+    anchors = torch.FloatTensor(anchors)
+
+    if CUDA:
+        anchors = anchors.cuda()
+
+    anchors = anchors.repeat(grid_size * grid_size, 1).unsqueeze(0)
+    prediction[:, :, 2:4] = torch.exp(prediction[:, :, 2:4]) * anchors
+
+    # Softmax the class scores
+    prediction[:, :, 5: 5 + num_classes] = torch.sigmoid((prediction[:, :, 5: 5 + num_classes]))
+
+    prediction[:, :, :4] *= stride
+
+    return prediction</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.util.predict_transform_half"><code class="name flex">
+<span>def <span class="ident">predict_transform_half</span></span>(<span>prediction, inp_dim, anchors, num_classes, CUDA=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_transform_half(prediction, inp_dim, anchors, num_classes, CUDA=True):
+    batch_size = prediction.size(0)
+    stride = inp_dim // prediction.size(2)
+
+    bbox_attrs = 5 + num_classes
+    num_anchors = len(anchors)
+    grid_size = inp_dim // stride
+
+    prediction = prediction.view(batch_size, bbox_attrs * num_anchors, grid_size * grid_size)
+    prediction = prediction.transpose(1, 2).contiguous()
+    prediction = prediction.view(batch_size, grid_size * grid_size * num_anchors, bbox_attrs)
+
+    # Sigmoid the  centre_X, centre_Y. and object confidencce
+    prediction[:, :, 0] = torch.sigmoid(prediction[:, :, 0])
+    prediction[:, :, 1] = torch.sigmoid(prediction[:, :, 1])
+    prediction[:, :, 4] = torch.sigmoid(prediction[:, :, 4])
+
+    # Add the center offsets
+    grid_len = np.arange(grid_size)
+    a, b = np.meshgrid(grid_len, grid_len)
+
+    x_offset = torch.FloatTensor(a).view(-1, 1)
+    y_offset = torch.FloatTensor(b).view(-1, 1)
+
+    if CUDA:
+        x_offset = x_offset.cuda().half()
+        y_offset = y_offset.cuda().half()
+
+    x_y_offset = torch.cat((x_offset, y_offset), 1).repeat(1, num_anchors).view(-1, 2).unsqueeze(0)
+
+    prediction[:, :, :2] += x_y_offset
+
+    # log space transform height and the width
+    anchors = torch.HalfTensor(anchors)
+
+    if CUDA:
+        anchors = anchors.cuda()
+
+    anchors = anchors.repeat(grid_size * grid_size, 1).unsqueeze(0)
+    prediction[:, :, 2:4] = torch.exp(prediction[:, :, 2:4]) * anchors
+
+    # Softmax the class scores
+    prediction[:, :, 5: 5 + num_classes] = nn.Softmax(-1)(Variable(prediction[:, :, 5: 5 + num_classes])).data
+
+    prediction[:, :, :4] *= stride
+
+    return prediction</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.util.unique"><code class="name flex">
+<span>def <span class="ident">unique</span></span>(<span>tensor)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unique(tensor):
+    tensor_np = tensor.cpu().numpy()
+    unique_np = np.unique(tensor_np)
+    unique_tensor = torch.from_numpy(unique_np)
+
+    tensor_res = tensor.new(unique_tensor.shape)
+    tensor_res.copy_(unique_tensor)
+    return tensor_res</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.util.write_results"><code class="name flex">
+<span>def <span class="ident">write_results</span></span>(<span>prediction, confidence, num_classes, nms=True, nms_conf=0.4)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
+    conf_mask = (prediction[:, :, 4] &gt; confidence).float().unsqueeze(2)
+    prediction = prediction * conf_mask
+
+    try:
+        ind_nz = torch.nonzero(prediction[:, :, 4]).transpose(0, 1).contiguous()
+        if ind_nz.nelement() == 0:
+            return 0
+    except:
+        return 0
+
+    box_a = prediction.new(prediction.shape)
+    box_a[:, :, 0] = (prediction[:, :, 0] - prediction[:, :, 2] / 2)
+    box_a[:, :, 1] = (prediction[:, :, 1] - prediction[:, :, 3] / 2)
+    box_a[:, :, 2] = (prediction[:, :, 0] + prediction[:, :, 2] / 2)
+    box_a[:, :, 3] = (prediction[:, :, 1] + prediction[:, :, 3] / 2)
+    prediction[:, :, :4] = box_a[:, :, :4]
+
+    batch_size = prediction.size(0)
+
+    output = prediction.new(1, prediction.size(2) + 1)
+    write = False
+
+    for ind in range(batch_size):
+        # select the image from the batch
+        image_pred = prediction[ind]
+
+        # Get the class having maximum score, and the index of that class
+        # Get rid of num_classes softmax scores
+        # Add the class index and the class score of class having maximum score
+        max_conf, max_conf_score = torch.max(image_pred[:, 5:5 + num_classes], 1)
+        max_conf = max_conf.float().unsqueeze(1)
+        max_conf_score = max_conf_score.float().unsqueeze(1)
+        seq = (image_pred[:, :5], max_conf, max_conf_score)
+        image_pred = torch.cat(seq, 1)
+
+        # Get rid of the zero entries
+        non_zero_ind = (torch.nonzero(image_pred[:, 4]))
+
+        image_pred_ = image_pred[non_zero_ind.squeeze(), :].view(-1, 7)
+
+        # Get the various classes detected in the image
+        try:
+            img_classes = unique(image_pred_[:, -1])
+        except:
+            continue
+        # WE will do NMS classwise
+        for cls in img_classes:
+            # get the detections with one particular class
+            cls_mask = image_pred_ * (image_pred_[:, -1] == cls).float().unsqueeze(1)
+            class_mask_ind = torch.nonzero(cls_mask[:, -2]).squeeze()
+
+            image_pred_class = image_pred_[class_mask_ind].view(-1, 7)
+
+            # sort the detections such that the entry with the maximum objectness
+            # confidence is at the top
+            conf_sort_index = torch.sort(image_pred_class[:, 4], descending=True)[1]
+            image_pred_class = image_pred_class[conf_sort_index]
+            idx = image_pred_class.size(0)
+
+            # if nms has to be done
+            if nms:
+                # For each detection
+                for i in range(idx):
+                    # Get the IOUs of all boxes that come after the one we are looking at
+                    # in the loop
+                    try:
+                        ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i + 1:])
+                    except ValueError:
+                        break
+
+                    except IndexError:
+                        break
+
+                    # Zero out all the detections that have IoU &gt; treshhold
+                    iou_mask = (ious &lt; nms_conf).float().unsqueeze(1)
+                    image_pred_class[i + 1:] *= iou_mask
+
+                    # Remove the non-zero entries
+                    non_zero_ind = torch.nonzero(image_pred_class[:, 4]).squeeze()
+                    image_pred_class = image_pred_class[non_zero_ind].view(-1, 7)
+
+            # Concatenate the batch_id of the image to the detection
+            # this helps us identify which image does the detection correspond to
+            # We use a linear straucture to hold ALL the detections from the batch
+            # the batch_dim is flattened
+            # batch is identified by extra batch column
+
+            batch_ind = image_pred_class.new(image_pred_class.size(0), 1).fill_(ind)
+            seq = batch_ind, image_pred_class
+            if not write:
+                output = torch.cat(seq, 1)
+                write = True
+            else:
+                out = torch.cat(seq, 1)
+                output = torch.cat((output, out))
+
+    return output</code></pre>
+</details>
+</dd>
+<dt id="code.yolo.util.write_results_half"><code class="name flex">
+<span>def <span class="ident">write_results_half</span></span>(<span>prediction, confidence, num_classes, nms=True, nms_conf=0.4)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_results_half(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
+    conf_mask = (prediction[:, :, 4] &gt; confidence).half().unsqueeze(2)
+    prediction = prediction * conf_mask
+
+    try:
+        ind_nz = torch.nonzero(prediction[:, :, 4]).transpose(0, 1).contiguous()
+    except:
+        return 0
+
+    box_a = prediction.new(prediction.shape)
+    box_a[:, :, 0] = (prediction[:, :, 0] - prediction[:, :, 2] / 2)
+    box_a[:, :, 1] = (prediction[:, :, 1] - prediction[:, :, 3] / 2)
+    box_a[:, :, 2] = (prediction[:, :, 0] + prediction[:, :, 2] / 2)
+    box_a[:, :, 3] = (prediction[:, :, 1] + prediction[:, :, 3] / 2)
+    prediction[:, :, :4] = box_a[:, :, :4]
+
+    batch_size = prediction.size(0)
+
+    output = prediction.new(1, prediction.size(2) + 1)
+    write = False
+
+    for ind in range(batch_size):
+        # select the image from the batch
+        image_pred = prediction[ind]
+
+        # Get the class having maximum score, and the index of that class
+        # Get rid of num_classes softmax scores
+        # Add the class index and the class score of class having maximum score
+        max_conf, max_conf_score = torch.max(image_pred[:, 5:5 + num_classes], 1)
+        max_conf = max_conf.half().unsqueeze(1)
+        max_conf_score = max_conf_score.half().unsqueeze(1)
+        seq = (image_pred[:, :5], max_conf, max_conf_score)
+        image_pred = torch.cat(seq, 1)
+
+        # Get rid of the zero entries
+        non_zero_ind = (torch.nonzero(image_pred[:, 4]))
+        try:
+            image_pred_ = image_pred[non_zero_ind.squeeze(), :]
+        except:
+            continue
+
+        # Get the various classes detected in the image
+        img_classes = unique(image_pred_[:, -1].long()).half()
+
+        # WE will do NMS classwise
+        for cls in img_classes:
+            # get the detections with one particular class
+            cls_mask = image_pred_ * (image_pred_[:, -1] == cls).half().unsqueeze(1)
+            class_mask_ind = torch.nonzero(cls_mask[:, -2]).squeeze()
+
+            image_pred_class = image_pred_[class_mask_ind]
+
+            # sort the detections such that the entry with the maximum objectness
+            # confidence is at the top
+            conf_sort_index = torch.sort(image_pred_class[:, 4], descending=True)[1]
+            image_pred_class = image_pred_class[conf_sort_index]
+            idx = image_pred_class.size(0)
+
+            # if nms has to be done
+            if nms:
+                # For each detection
+                for i in range(idx):
+                    # Get the IOUs of all boxes that come after the one we are looking at
+                    # in the loop
+                    try:
+                        ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i + 1:])
+                    except ValueError:
+                        break
+
+                    except IndexError:
+                        break
+
+                    # Zero out all the detections that have IoU &gt; treshhold
+                    iou_mask = (ious &lt; nms_conf).half().unsqueeze(1)
+                    image_pred_class[i + 1:] *= iou_mask
+
+                    # Remove the non-zero entries
+                    non_zero_ind = torch.nonzero(image_pred_class[:, 4]).squeeze()
+                    image_pred_class = image_pred_class[non_zero_ind]
+
+            # Concatenate the batch_id of the image to the detection
+            # this helps us identify which image does the detection correspond to
+            # We use a linear straucture to hold ALL the detections from the batch
+            # the batch_dim is flattened
+            # batch is identified by extra batch column
+            batch_ind = image_pred_class.new(image_pred_class.size(0), 1).fill_(ind)
+            seq = batch_ind, image_pred_class
+
+            if not write:
+                output = torch.cat(seq, 1)
+                write = True
+            else:
+                out = torch.cat(seq, 1)
+                output = torch.cat((output, out))
+
+    return output</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="code.yolo" href="index.html">code.yolo</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="code.yolo.util.convert2cpu" href="#code.yolo.util.convert2cpu">convert2cpu</a></code></li>
+<li><code><a title="code.yolo.util.count_learnable_parameters" href="#code.yolo.util.count_learnable_parameters">count_learnable_parameters</a></code></li>
+<li><code><a title="code.yolo.util.count_parameters" href="#code.yolo.util.count_parameters">count_parameters</a></code></li>
+<li><code><a title="code.yolo.util.get_im_dim" href="#code.yolo.util.get_im_dim">get_im_dim</a></code></li>
+<li><code><a title="code.yolo.util.load_classes" href="#code.yolo.util.load_classes">load_classes</a></code></li>
+<li><code><a title="code.yolo.util.predict_transform" href="#code.yolo.util.predict_transform">predict_transform</a></code></li>
+<li><code><a title="code.yolo.util.predict_transform_half" href="#code.yolo.util.predict_transform_half">predict_transform_half</a></code></li>
+<li><code><a title="code.yolo.util.unique" href="#code.yolo.util.unique">unique</a></code></li>
+<li><code><a title="code.yolo.util.write_results" href="#code.yolo.util.write_results">write_results</a></code></li>
+<li><code><a title="code.yolo.util.write_results_half" href="#code.yolo.util.write_results_half">write_results_half</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

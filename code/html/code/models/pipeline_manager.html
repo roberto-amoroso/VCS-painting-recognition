@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>code.models.pipeline_manager API documentation</title>
+<meta name="description" content="Class managing the order of execution of the functions necessary to perform:
+- Painting Detection
+- Painting Segmentation
+- Painting …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>code.models.pipeline_manager</code></h1>
+</header>
+<section id="section-intro">
+<p>Class managing the order of execution of the functions necessary to perform:
+- Painting Detection
+- Painting Segmentation
+- Painting Rectification
+- Painting Retrieval
+- People Detection
+- People and Paintings Localization</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Class managing the order of execution of the functions necessary to perform:
+    - Painting Detection
+    - Painting Segmentation
+    - Painting Rectification
+    - Painting Retrieval
+    - People Detection
+    - People and Paintings Localization
+&#34;&#34;&#34;
+from models.media_type import MediaType
+from utils.draw import draw_paintings_info, draw_people_bounding_box, show_image_window, print_nicer, print_time_info
+from image_processing import create_segmented_image, image_resize
+from utils.math_utils import translate_points
+from painting_detection import detect_paintings
+from painting_rectification import rectify_painting
+from painting_retrieval import retrieve_paintings
+from people_detection import detect_people
+from paintings_and_people_localization import locale_paintings_and_people
+
+import cv2
+import os
+import time
+import numpy as np
+from models.task import Task
+import ntpath
+
+
+class PipelineManager:
+    &#34;&#34;&#34;
+    Manages the order of execution of the functions necessary to perform:
+    - Painting Detection
+    - Painting Segmentation
+    - Painting Rectification
+    - Painting Retrieval
+    - People Detection
+    - People and Paintings Localization
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 input_filename,
+                 output_path,
+                 task,
+                 media_type,
+                 paintings_db,
+                 people_detector,
+                 resize_height,
+                 resize_width,
+                 match_db_image,
+                 histo_mode,
+                 generator,
+                 show_image_main,
+                 show_image,
+                 print_next_step,
+                 print_time):
+        self.input_filename = input_filename
+        self.media_type = media_type
+        self.output_path = output_path
+        self.histo_mode = histo_mode
+        self.match_db_image = match_db_image
+        self.resize_height = resize_height
+        self.resize_width = resize_width
+        self.people_detector = people_detector
+        self.paintings_db = paintings_db
+        self.task = task
+        self.generator = generator
+        self.show_image_main = show_image_main
+        self.show_image = show_image
+        self.print_next_step = print_next_step
+        self.print_time = print_time
+
+        # Counter used to save rectified images
+        self.counter = 0
+
+        # Define output filename
+        self.out_filename = ntpath.basename(self.input_filename)
+
+        # ----------------------
+        # Create some stats info
+        # ----------------------
+        self.num_paintings_detected = 0
+        self.num_paintings_retrieved = 0
+        self.num_people_detected = 0
+
+    def save_image(self, img):
+        &#34;&#34;&#34;
+        Save the given image(s). The destination depends on the task.
+        &#34;&#34;&#34;
+        if self.task == Task.painting_rectification:
+            filename, ext = self.out_filename.split(&#39;.&#39;)
+            # if self.media_type == MediaType.video:
+            #     ext = &#39;png&#39;  # &#39;jpg&#39;
+            out_name = &#34;_&#34;.join([filename, &#34;{:02d}&#34;.format(self.counter)])
+            out_name = &#39;.&#39;.join([out_name, ext])
+            self.counter += 1
+        else:
+            out_name = self.out_filename
+
+        out_path = os.path.join(self.output_path, out_name)
+        cv2.imwrite(out_path, img)
+
+    def __resize_image(self, img_original):
+        &#34;&#34;&#34;
+        Resize the input image
+        &#34;&#34;&#34;
+        print_nicer(&#34;RESIZE IMAGE - START&#34;)
+        start_time = time.time()
+        img, scale_factor = image_resize(
+            img_original,
+            self.resize_width,
+            self.resize_height,
+            cv2.INTER_CUBIC
+        )
+        print_time_info(start_time, &#34;RESIZE IMAGE - END&#34;)
+        print(f&#34;\tResized image shape: {img.shape}&#34;)
+        print(&#34;-&#34; * 50)
+        self.show_image_main(&#39;image_resized&#39;, img, height=405, width=720)
+
+        return img, scale_factor
+
+    def __painting_detection(self, img, scale_factor):
+        &#34;&#34;&#34;
+        Execute Painting Detection on the input image.
+        &#34;&#34;&#34;
+
+        print_nicer(&#34;PAINTING DETECTION - START&#34;)
+        start_time = time.time()
+        paintings_detected = detect_paintings(
+            img,
+            self.generator,
+            self.show_image,
+            self.print_next_step,
+            self.print_time,
+            scale_factor=scale_factor
+        )
+        print_time_info(start_time, &#34;PAINTING DETECTION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        self.num_paintings_detected += len(paintings_detected)
+
+        return paintings_detected
+
+    def __painting_segmentation(self, img_original, paintings_detected):
+        &#34;&#34;&#34;
+        Execute Painting Segmentation of the input image.
+        &#34;&#34;&#34;
+
+        print_nicer(&#34;PAINTING SEGMENTATION - START&#34;)
+        start_time = time.time()
+        painting_contours = [p.frame_contour for p in paintings_detected]
+        segmented_img_original = create_segmented_image(
+            img_original,
+            painting_contours
+        )
+        print_time_info(start_time, &#34;PAINTING SEGMENTATION - END&#34;)
+        print(&#34;  Segmented shape: &#34;, segmented_img_original.shape)
+        print(&#34;-&#34; * 50)
+        self.show_image_main(&#39;segmented_img_original&#39;, segmented_img_original, height=405, width=720)
+
+        return segmented_img_original
+
+    def __painting_rectification(self, img_original, paintings_detected):
+        &#34;&#34;&#34;
+        Execute Rectification of the painting received
+        &#34;&#34;&#34;
+        print_nicer(&#34;PAINTING RECTIFICATION - START&#34;)
+        start_time = time.time()
+        for i, painting in enumerate(paintings_detected):
+            x, y, w_rect, h_rect = painting.bounding_box
+            sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
+            corners = translate_points(painting.corners, -np.array([x, y]))
+            painting.image = rectify_painting(sub_img_original, corners)
+        print_time_info(start_time, &#34;PAINTING RECTIFICATION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        if self.show_image_main == show_image_window:
+            for i, painting in enumerate(paintings_detected):
+                x, y, w_rect, h_rect = painting.bounding_box
+                sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
+                # self.show_image_main(f&#34;sub_img_original_{i}&#34;, sub_img_original)
+                self.show_image_main(f&#34;painting_rectified_{i}&#34;, painting.image)
+
+    def __painting_retrieval(self, paintings_detected):
+        &#34;&#34;&#34;
+        Execute Painting Retrieval on the input image.
+        &#34;&#34;&#34;
+        print_nicer(&#34;PAINTING RETRIEVAL - START&#34;)
+        start_time = time.time()
+        retrieve_paintings(
+            paintings_detected,
+            self.paintings_db,
+            self.generator,
+            self.show_image,
+            self.print_next_step,
+            self.print_time,
+            match_db_image=self.match_db_image,
+            histo_mode=self.histo_mode
+        )
+        print_time_info(start_time, &#34;PAINTING RETRIEVAL - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        for p in paintings_detected:
+            if p.title is not None:
+                self.num_paintings_retrieved += 1
+
+    def __people_detection(self, img, paintings_detected, scale_factor):
+        &#34;&#34;&#34;
+        Execute People Detection on the input image.
+        &#34;&#34;&#34;
+        print_nicer(&#34;PEOPLE DETECTION - START&#34;)
+        start_time = time.time()
+        max_percentage = 0.85
+        people_bounding_boxes = detect_people(
+            img,
+            self.people_detector,
+            paintings_detected,
+            self.generator,
+            self.show_image,
+            self.print_next_step,
+            self.print_time,
+            scale_factor=scale_factor,
+            max_percentage=max_percentage
+        )
+        print_time_info(start_time, &#34;PEOPLE DETECTION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        self.num_people_detected += len(people_bounding_boxes)
+
+        return people_bounding_boxes
+
+    def __paintings_and_people_localization(self, paintings_detected):
+        &#34;&#34;&#34;
+        Execute People Localization using Information about the detected paintings.
+        &#34;&#34;&#34;
+
+        print_nicer(&#34;PEOPLE LOCALIZATION - START&#34;)
+        start_time = time.time()
+        people_room = locale_paintings_and_people(
+            paintings_detected,
+            self.generator,
+            self.show_image,
+            self.print_next_step,
+            self.print_time
+        )
+        print_time_info(start_time, &#34;PEOPLE LOCALIZATION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        return people_room
+
+    def __draw_painting_and_people(self, img_original, paintings_detected, people_bounding_boxes, people_room,
+                                   scale_factor):
+        &#34;&#34;&#34;
+        Draw information about Paintings and People found.
+        &#34;&#34;&#34;
+        print_nicer(&#34;DRAW PAINTINGS AND PEOPLE INFORMATION - START&#34;)
+        start_time = time.time()
+        # First draw the info on the paintings...
+        draw_paintings_info(img_original, paintings_detected, people_room, scale_factor)
+        # ...and then the info on the people, so as to respect the prospect.
+        draw_people_bounding_box(img_original, people_bounding_boxes, scale_factor)
+        print_time_info(start_time, &#34;DRAW PAINTINGS AND PEOPLE INFORMATION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+    def run(self, img_original):
+        &#34;&#34;&#34;
+        It execute the `self.task` operation on single images, so in the case of videos,
+        it should be called on every frame.
+        &#34;&#34;&#34;
+
+        # ---------------------------------
+        # RESIZING: resize to work only with HD resolution images
+        # ---------------------------------
+        if self.resize_height is not None and self.resize_width is not None:
+            img, scale_factor = self.__resize_image(img_original)
+        else:
+            img = img_original
+            scale_factor = 1
+
+        # ------------------------------------------------------------------------
+        paintings_detected = []
+        if self.task != Task.people_detection:
+            # ----------------------
+            # PAINTING DETECTION
+            # ----------------------
+            paintings_detected = self.__painting_detection(img, scale_factor)
+
+        # ------------------------------------------------------------------------
+        if self.task.value &gt; Task.painting_detection.value and self.task != Task.people_detection:
+            # ----------------------
+            # PAINTING SEGMENTATION
+            # ----------------------
+            segmented_img_original = self.__painting_segmentation(
+                img_original,
+                paintings_detected
+            )
+
+            if self.task == Task.painting_segmentation:
+                img_original = segmented_img_original
+                # Replicate over 3 channel to avoid problem with `cv2.VideoWriter()`
+                if self.media_type == MediaType.video:
+                    img_original = cv2.merge((img_original, img_original, img_original))
+                paintings_detected = []
+
+        # ------------------------------------------------------------------------
+
+        if self.task.value &gt; Task.painting_segmentation.value and self.task != Task.people_detection:
+            # ----------------------
+            # PAINTING RECTIFICATION
+            # ----------------------
+            self.__painting_rectification(img_original, paintings_detected)
+
+            # Special case to accomplish mandatory task requirements
+            if self.task == Task.painting_rectification:
+                for self.counter, painting in enumerate(paintings_detected):
+                    self.save_image(painting.image)
+
+        # ------------------------------------------------------------------------
+
+        if self.task.value &gt; Task.painting_rectification.value and self.task != Task.people_detection:
+            # ----------------------
+            # PAINTING RETRIEVAL
+            # ----------------------
+            self.__painting_retrieval(paintings_detected)
+
+        # ------------------------------------------------------------------------
+        people_bounding_boxes = []
+        if self.task.value &gt; Task.painting_retrieval.value or self.task == Task.people_detection:
+            # ----------------------
+            # PEOPLE DETECTION
+            # ----------------------
+            people_bounding_boxes = self.__people_detection(
+                img,
+                paintings_detected,
+                scale_factor
+            )
+
+        # ------------------------------------------------------------------------
+        people_room = -1
+        if self.task.value &gt; Task.people_detection.value:
+            # ----------------------
+            # PAINTINGS AND PEOPLE LOCALIZATION
+            # ----------------------
+            people_room = self.__paintings_and_people_localization(paintings_detected)
+
+            # If I want to execute only people localization, I will not show info
+            # about paintings, otherwise I have `self.task == Task.all_in`
+            # if self.task == Task.paintings_and_people_localization:
+            #     paintings_detected = []
+
+        # ------------------------------------------------------------------------
+
+        # Step 18: Draw information about Paintings and People found
+        # ----------------------------
+        self.__draw_painting_and_people(
+            img_original,
+            paintings_detected,
+            people_bounding_boxes,
+            people_room,
+            scale_factor
+        )
+
+        # print(&#34;\n# Final frame shape: &#34;, img_original.shape)
+        self.show_image_main(&#39;final_frame&#39;, img_original, height=405, width=720)
+        if self.media_type == MediaType.image:
+            self.save_image(img_original)
+
+        return img_original</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="code.models.pipeline_manager.PipelineManager"><code class="flex name class">
+<span>class <span class="ident">PipelineManager</span></span>
+<span>(</span><span>input_filename, output_path, task, media_type, paintings_db, people_detector, resize_height, resize_width, match_db_image, histo_mode, generator, show_image_main, show_image, print_next_step, print_time)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manages the order of execution of the functions necessary to perform:
+- Painting Detection
+- Painting Segmentation
+- Painting Rectification
+- Painting Retrieval
+- People Detection
+- People and Paintings Localization</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PipelineManager:
+    &#34;&#34;&#34;
+    Manages the order of execution of the functions necessary to perform:
+    - Painting Detection
+    - Painting Segmentation
+    - Painting Rectification
+    - Painting Retrieval
+    - People Detection
+    - People and Paintings Localization
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 input_filename,
+                 output_path,
+                 task,
+                 media_type,
+                 paintings_db,
+                 people_detector,
+                 resize_height,
+                 resize_width,
+                 match_db_image,
+                 histo_mode,
+                 generator,
+                 show_image_main,
+                 show_image,
+                 print_next_step,
+                 print_time):
+        self.input_filename = input_filename
+        self.media_type = media_type
+        self.output_path = output_path
+        self.histo_mode = histo_mode
+        self.match_db_image = match_db_image
+        self.resize_height = resize_height
+        self.resize_width = resize_width
+        self.people_detector = people_detector
+        self.paintings_db = paintings_db
+        self.task = task
+        self.generator = generator
+        self.show_image_main = show_image_main
+        self.show_image = show_image
+        self.print_next_step = print_next_step
+        self.print_time = print_time
+
+        # Counter used to save rectified images
+        self.counter = 0
+
+        # Define output filename
+        self.out_filename = ntpath.basename(self.input_filename)
+
+        # ----------------------
+        # Create some stats info
+        # ----------------------
+        self.num_paintings_detected = 0
+        self.num_paintings_retrieved = 0
+        self.num_people_detected = 0
+
+    def save_image(self, img):
+        &#34;&#34;&#34;
+        Save the given image(s). The destination depends on the task.
+        &#34;&#34;&#34;
+        if self.task == Task.painting_rectification:
+            filename, ext = self.out_filename.split(&#39;.&#39;)
+            # if self.media_type == MediaType.video:
+            #     ext = &#39;png&#39;  # &#39;jpg&#39;
+            out_name = &#34;_&#34;.join([filename, &#34;{:02d}&#34;.format(self.counter)])
+            out_name = &#39;.&#39;.join([out_name, ext])
+            self.counter += 1
+        else:
+            out_name = self.out_filename
+
+        out_path = os.path.join(self.output_path, out_name)
+        cv2.imwrite(out_path, img)
+
+    def __resize_image(self, img_original):
+        &#34;&#34;&#34;
+        Resize the input image
+        &#34;&#34;&#34;
+        print_nicer(&#34;RESIZE IMAGE - START&#34;)
+        start_time = time.time()
+        img, scale_factor = image_resize(
+            img_original,
+            self.resize_width,
+            self.resize_height,
+            cv2.INTER_CUBIC
+        )
+        print_time_info(start_time, &#34;RESIZE IMAGE - END&#34;)
+        print(f&#34;\tResized image shape: {img.shape}&#34;)
+        print(&#34;-&#34; * 50)
+        self.show_image_main(&#39;image_resized&#39;, img, height=405, width=720)
+
+        return img, scale_factor
+
+    def __painting_detection(self, img, scale_factor):
+        &#34;&#34;&#34;
+        Execute Painting Detection on the input image.
+        &#34;&#34;&#34;
+
+        print_nicer(&#34;PAINTING DETECTION - START&#34;)
+        start_time = time.time()
+        paintings_detected = detect_paintings(
+            img,
+            self.generator,
+            self.show_image,
+            self.print_next_step,
+            self.print_time,
+            scale_factor=scale_factor
+        )
+        print_time_info(start_time, &#34;PAINTING DETECTION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        self.num_paintings_detected += len(paintings_detected)
+
+        return paintings_detected
+
+    def __painting_segmentation(self, img_original, paintings_detected):
+        &#34;&#34;&#34;
+        Execute Painting Segmentation of the input image.
+        &#34;&#34;&#34;
+
+        print_nicer(&#34;PAINTING SEGMENTATION - START&#34;)
+        start_time = time.time()
+        painting_contours = [p.frame_contour for p in paintings_detected]
+        segmented_img_original = create_segmented_image(
+            img_original,
+            painting_contours
+        )
+        print_time_info(start_time, &#34;PAINTING SEGMENTATION - END&#34;)
+        print(&#34;  Segmented shape: &#34;, segmented_img_original.shape)
+        print(&#34;-&#34; * 50)
+        self.show_image_main(&#39;segmented_img_original&#39;, segmented_img_original, height=405, width=720)
+
+        return segmented_img_original
+
+    def __painting_rectification(self, img_original, paintings_detected):
+        &#34;&#34;&#34;
+        Execute Rectification of the painting received
+        &#34;&#34;&#34;
+        print_nicer(&#34;PAINTING RECTIFICATION - START&#34;)
+        start_time = time.time()
+        for i, painting in enumerate(paintings_detected):
+            x, y, w_rect, h_rect = painting.bounding_box
+            sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
+            corners = translate_points(painting.corners, -np.array([x, y]))
+            painting.image = rectify_painting(sub_img_original, corners)
+        print_time_info(start_time, &#34;PAINTING RECTIFICATION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        if self.show_image_main == show_image_window:
+            for i, painting in enumerate(paintings_detected):
+                x, y, w_rect, h_rect = painting.bounding_box
+                sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
+                # self.show_image_main(f&#34;sub_img_original_{i}&#34;, sub_img_original)
+                self.show_image_main(f&#34;painting_rectified_{i}&#34;, painting.image)
+
+    def __painting_retrieval(self, paintings_detected):
+        &#34;&#34;&#34;
+        Execute Painting Retrieval on the input image.
+        &#34;&#34;&#34;
+        print_nicer(&#34;PAINTING RETRIEVAL - START&#34;)
+        start_time = time.time()
+        retrieve_paintings(
+            paintings_detected,
+            self.paintings_db,
+            self.generator,
+            self.show_image,
+            self.print_next_step,
+            self.print_time,
+            match_db_image=self.match_db_image,
+            histo_mode=self.histo_mode
+        )
+        print_time_info(start_time, &#34;PAINTING RETRIEVAL - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        for p in paintings_detected:
+            if p.title is not None:
+                self.num_paintings_retrieved += 1
+
+    def __people_detection(self, img, paintings_detected, scale_factor):
+        &#34;&#34;&#34;
+        Execute People Detection on the input image.
+        &#34;&#34;&#34;
+        print_nicer(&#34;PEOPLE DETECTION - START&#34;)
+        start_time = time.time()
+        max_percentage = 0.85
+        people_bounding_boxes = detect_people(
+            img,
+            self.people_detector,
+            paintings_detected,
+            self.generator,
+            self.show_image,
+            self.print_next_step,
+            self.print_time,
+            scale_factor=scale_factor,
+            max_percentage=max_percentage
+        )
+        print_time_info(start_time, &#34;PEOPLE DETECTION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        self.num_people_detected += len(people_bounding_boxes)
+
+        return people_bounding_boxes
+
+    def __paintings_and_people_localization(self, paintings_detected):
+        &#34;&#34;&#34;
+        Execute People Localization using Information about the detected paintings.
+        &#34;&#34;&#34;
+
+        print_nicer(&#34;PEOPLE LOCALIZATION - START&#34;)
+        start_time = time.time()
+        people_room = locale_paintings_and_people(
+            paintings_detected,
+            self.generator,
+            self.show_image,
+            self.print_next_step,
+            self.print_time
+        )
+        print_time_info(start_time, &#34;PEOPLE LOCALIZATION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+        return people_room
+
+    def __draw_painting_and_people(self, img_original, paintings_detected, people_bounding_boxes, people_room,
+                                   scale_factor):
+        &#34;&#34;&#34;
+        Draw information about Paintings and People found.
+        &#34;&#34;&#34;
+        print_nicer(&#34;DRAW PAINTINGS AND PEOPLE INFORMATION - START&#34;)
+        start_time = time.time()
+        # First draw the info on the paintings...
+        draw_paintings_info(img_original, paintings_detected, people_room, scale_factor)
+        # ...and then the info on the people, so as to respect the prospect.
+        draw_people_bounding_box(img_original, people_bounding_boxes, scale_factor)
+        print_time_info(start_time, &#34;DRAW PAINTINGS AND PEOPLE INFORMATION - END&#34;)
+        print(&#34;-&#34; * 50)
+
+    def run(self, img_original):
+        &#34;&#34;&#34;
+        It execute the `self.task` operation on single images, so in the case of videos,
+        it should be called on every frame.
+        &#34;&#34;&#34;
+
+        # ---------------------------------
+        # RESIZING: resize to work only with HD resolution images
+        # ---------------------------------
+        if self.resize_height is not None and self.resize_width is not None:
+            img, scale_factor = self.__resize_image(img_original)
+        else:
+            img = img_original
+            scale_factor = 1
+
+        # ------------------------------------------------------------------------
+        paintings_detected = []
+        if self.task != Task.people_detection:
+            # ----------------------
+            # PAINTING DETECTION
+            # ----------------------
+            paintings_detected = self.__painting_detection(img, scale_factor)
+
+        # ------------------------------------------------------------------------
+        if self.task.value &gt; Task.painting_detection.value and self.task != Task.people_detection:
+            # ----------------------
+            # PAINTING SEGMENTATION
+            # ----------------------
+            segmented_img_original = self.__painting_segmentation(
+                img_original,
+                paintings_detected
+            )
+
+            if self.task == Task.painting_segmentation:
+                img_original = segmented_img_original
+                # Replicate over 3 channel to avoid problem with `cv2.VideoWriter()`
+                if self.media_type == MediaType.video:
+                    img_original = cv2.merge((img_original, img_original, img_original))
+                paintings_detected = []
+
+        # ------------------------------------------------------------------------
+
+        if self.task.value &gt; Task.painting_segmentation.value and self.task != Task.people_detection:
+            # ----------------------
+            # PAINTING RECTIFICATION
+            # ----------------------
+            self.__painting_rectification(img_original, paintings_detected)
+
+            # Special case to accomplish mandatory task requirements
+            if self.task == Task.painting_rectification:
+                for self.counter, painting in enumerate(paintings_detected):
+                    self.save_image(painting.image)
+
+        # ------------------------------------------------------------------------
+
+        if self.task.value &gt; Task.painting_rectification.value and self.task != Task.people_detection:
+            # ----------------------
+            # PAINTING RETRIEVAL
+            # ----------------------
+            self.__painting_retrieval(paintings_detected)
+
+        # ------------------------------------------------------------------------
+        people_bounding_boxes = []
+        if self.task.value &gt; Task.painting_retrieval.value or self.task == Task.people_detection:
+            # ----------------------
+            # PEOPLE DETECTION
+            # ----------------------
+            people_bounding_boxes = self.__people_detection(
+                img,
+                paintings_detected,
+                scale_factor
+            )
+
+        # ------------------------------------------------------------------------
+        people_room = -1
+        if self.task.value &gt; Task.people_detection.value:
+            # ----------------------
+            # PAINTINGS AND PEOPLE LOCALIZATION
+            # ----------------------
+            people_room = self.__paintings_and_people_localization(paintings_detected)
+
+            # If I want to execute only people localization, I will not show info
+            # about paintings, otherwise I have `self.task == Task.all_in`
+            # if self.task == Task.paintings_and_people_localization:
+            #     paintings_detected = []
+
+        # ------------------------------------------------------------------------
+
+        # Step 18: Draw information about Paintings and People found
+        # ----------------------------
+        self.__draw_painting_and_people(
+            img_original,
+            paintings_detected,
+            people_bounding_boxes,
+            people_room,
+            scale_factor
+        )
+
+        # print(&#34;\n# Final frame shape: &#34;, img_original.shape)
+        self.show_image_main(&#39;final_frame&#39;, img_original, height=405, width=720)
+        if self.media_type == MediaType.image:
+            self.save_image(img_original)
+
+        return img_original</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="code.models.pipeline_manager.PipelineManager.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>self, img_original)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>It execute the <code>self.task</code> operation on single images, so in the case of videos,
+it should be called on every frame.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run(self, img_original):
+    &#34;&#34;&#34;
+    It execute the `self.task` operation on single images, so in the case of videos,
+    it should be called on every frame.
+    &#34;&#34;&#34;
+
+    # ---------------------------------
+    # RESIZING: resize to work only with HD resolution images
+    # ---------------------------------
+    if self.resize_height is not None and self.resize_width is not None:
+        img, scale_factor = self.__resize_image(img_original)
+    else:
+        img = img_original
+        scale_factor = 1
+
+    # ------------------------------------------------------------------------
+    paintings_detected = []
+    if self.task != Task.people_detection:
+        # ----------------------
+        # PAINTING DETECTION
+        # ----------------------
+        paintings_detected = self.__painting_detection(img, scale_factor)
+
+    # ------------------------------------------------------------------------
+    if self.task.value &gt; Task.painting_detection.value and self.task != Task.people_detection:
+        # ----------------------
+        # PAINTING SEGMENTATION
+        # ----------------------
+        segmented_img_original = self.__painting_segmentation(
+            img_original,
+            paintings_detected
+        )
+
+        if self.task == Task.painting_segmentation:
+            img_original = segmented_img_original
+            # Replicate over 3 channel to avoid problem with `cv2.VideoWriter()`
+            if self.media_type == MediaType.video:
+                img_original = cv2.merge((img_original, img_original, img_original))
+            paintings_detected = []
+
+    # ------------------------------------------------------------------------
+
+    if self.task.value &gt; Task.painting_segmentation.value and self.task != Task.people_detection:
+        # ----------------------
+        # PAINTING RECTIFICATION
+        # ----------------------
+        self.__painting_rectification(img_original, paintings_detected)
+
+        # Special case to accomplish mandatory task requirements
+        if self.task == Task.painting_rectification:
+            for self.counter, painting in enumerate(paintings_detected):
+                self.save_image(painting.image)
+
+    # ------------------------------------------------------------------------
+
+    if self.task.value &gt; Task.painting_rectification.value and self.task != Task.people_detection:
+        # ----------------------
+        # PAINTING RETRIEVAL
+        # ----------------------
+        self.__painting_retrieval(paintings_detected)
+
+    # ------------------------------------------------------------------------
+    people_bounding_boxes = []
+    if self.task.value &gt; Task.painting_retrieval.value or self.task == Task.people_detection:
+        # ----------------------
+        # PEOPLE DETECTION
+        # ----------------------
+        people_bounding_boxes = self.__people_detection(
+            img,
+            paintings_detected,
+            scale_factor
+        )
+
+    # ------------------------------------------------------------------------
+    people_room = -1
+    if self.task.value &gt; Task.people_detection.value:
+        # ----------------------
+        # PAINTINGS AND PEOPLE LOCALIZATION
+        # ----------------------
+        people_room = self.__paintings_and_people_localization(paintings_detected)
+
+        # If I want to execute only people localization, I will not show info
+        # about paintings, otherwise I have `self.task == Task.all_in`
+        # if self.task == Task.paintings_and_people_localization:
+        #     paintings_detected = []
+
+    # ------------------------------------------------------------------------
+
+    # Step 18: Draw information about Paintings and People found
+    # ----------------------------
+    self.__draw_painting_and_people(
+        img_original,
+        paintings_detected,
+        people_bounding_boxes,
+        people_room,
+        scale_factor
+    )
+
+    # print(&#34;\n# Final frame shape: &#34;, img_original.shape)
+    self.show_image_main(&#39;final_frame&#39;, img_original, height=405, width=720)
+    if self.media_type == MediaType.image:
+        self.save_image(img_original)
+
+    return img_original</code></pre>
+</details>
+</dd>
+<dt id="code.models.pipeline_manager.PipelineManager.save_image"><code class="name flex">
+<span>def <span class="ident">save_image</span></span>(<span>self, img)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save the given image(s). The destination depends on the task.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_image(self, img):
+    &#34;&#34;&#34;
+    Save the given image(s). The destination depends on the task.
+    &#34;&#34;&#34;
+    if self.task == Task.painting_rectification:
+        filename, ext = self.out_filename.split(&#39;.&#39;)
+        # if self.media_type == MediaType.video:
+        #     ext = &#39;png&#39;  # &#39;jpg&#39;
+        out_name = &#34;_&#34;.join([filename, &#34;{:02d}&#34;.format(self.counter)])
+        out_name = &#39;.&#39;.join([out_name, ext])
+        self.counter += 1
+    else:
+        out_name = self.out_filename
+
+    out_path = os.path.join(self.output_path, out_name)
+    cv2.imwrite(out_path, img)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="code.models" href="index.html">code.models</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="code.models.pipeline_manager.PipelineManager" href="#code.models.pipeline_manager.PipelineManager">PipelineManager</a></code></h4>
+<ul class="">
+<li><code><a title="code.models.pipeline_manager.PipelineManager.run" href="#code.models.pipeline_manager.PipelineManager.run">run</a></code></li>
+<li><code><a title="code.models.pipeline_manager.PipelineManager.save_image" href="#code.models.pipeline_manager.PipelineManager.save_image">save_image</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

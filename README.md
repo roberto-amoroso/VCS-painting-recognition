@@ -79,45 +79,45 @@ For convenience, we report again the program invocation prototype:
 
 ### Optional Arguments:
 
- - `-h, --help` 
+ - `-h, --help`<br> 
  show an help message and exit
 
- - `-o OUTPUT, --output OUTPUT`
+ - `-o OUTPUT, --output OUTPUT`<br> 
 path used as base to determine where the outputs are stored. For details, read the epilogue at the bottom, section `# OUTPUT`
 
- - `-t {0,1,2,3,4,5}, --task {0,1,2,3,4,5}`
-determines which task will be performed on the input.
-***NOTE***: for details on how the tasks are performed and for some examples, read  the epilogue at the bottom of the page, section `# TASKS`
-                          0 = Painting Detection
-                          1 = Painting Segmentation
-                          2 = Painting Rectification
-                          3 = Painting Retrieval
-                          4 = People Detection
+ - `-t {0,1,2,3,4,5}, --task {0,1,2,3,4,5}`<br> 
+determines which task will be performed on the input.<br> 
+***NOTE***: for details on how the tasks are performed and for some examples, read  the epilogue at the bottom of the page, section `# TASKS`<br> 
+                          0 = Painting Detection<br> 
+                          1 = Painting Segmentation<br> 
+                          2 = Painting Rectification<br> 
+                          3 = Painting Retrieval<br> 
+                          4 = People Detection<br> 
                           5 = People and Paintings Localization **(default)**
 
- - `-fo FRAME_OCCURRENCE, --frame_occurrence FRAME_OCCURRENCE`
-integer >=1 (default =1). In case the input is a video, it establishes with which occurrence to consider the frames of the video itself.
-***Example***: `frame_occurrence = 30` (**value recommended during debugging**) means that it considers one frame every 30.
+ - `-fo FRAME_OCCURRENCE, --frame_occurrence FRAME_OCCURRENCE`<br> 
+integer >=1 (default =1). In case the input is a video, it establishes with which occurrence to consider the frames of the video itself.<br> 
+***Example***: `frame_occurrence = 30` (**value recommended during debugging**) means that it considers one frame every 30.<br> 
 ***NOTE***: for more details read the epilogue at the bottom of the page, section `# FRAME_OCCURRENCE`
 
- - `-vp {0,1}, --verbosity_print {0,1}`
-set the verbosity of the information displayed (description of the operation  executed and its execution time)
-                          0 = ONLY main processing steps info **(default)**
-                          1 = ALL processing steps info
+ - `-vp {0,1}, --verbosity_print {0,1}`<br> 
+set the verbosity of the information displayed (description of the operation  executed and its execution time)<br> 
+                          0 = ONLY main processing steps info **(default)**<br> 
+                          1 = ALL processing steps info<br> 
 
- - `-vi {0,1,2}, --verbosity_image {0,1,2}`
-set the verbosity of the images displayed.
-***NOTE***: if the input is a video, is automatically set to '0' (in order to avoid  an excessive number of images displayed on the screen).
-                          0 = no image shown **(default)**
-                          1 = shows main steps final images, at the end of the script execution                              ***(NOT BLOCKING)***
+ - `-vi {0,1,2}, --verbosity_image {0,1,2}`<br> 
+set the verbosity of the images displayed.<br> 
+***NOTE***: if the input is a video, is automatically set to '0' (in order to avoid  an excessive number of images displayed on the screen).<br> 
+                          0 = no image shown **(default)**<br> 
+                          1 = shows main steps final images, at the end of the script execution ***(NOT BLOCKING)***<br> 
                           2 = shows each final and intermediate image when it is created and a button
-                              must be pressed to continue the execution (mainly used for debugging)                              ***(BLOCKING)***
+                              must be pressed to continue the execution (mainly used for debugging) ***(BLOCKING)***
 
- - `-mdbi, --match_db_image`
+ - `-mdbi, --match_db_image`<br> 
  if present, to perform *Painting Retrieval*, the program rectifies each painting  to match the aspect ration of every painting in `db_path`. Otherwise, it rectifies each painting one time using a calculated aspect ratio.
 
- - `-hm, --histo_mode`
-if present indicates that, during *Painting Retrieval*, the program will executes  *Histogram Matching* in the case *ORB* does not produce any match.
+ - `-hm, --histo_mode`<br> 
+if present indicates that, during *Painting Retrieval*, the program will executes  *Histogram Matching* in the case *ORB* does not produce any match.<br> 
 ***WARNINGS***: setting `--histo_mode` increases the percentage of matches with the DB, but decreases the precision, i.e. increases the number of false positives (incorrect matches).
 
 
@@ -174,5 +174,4 @@ A full example could be:
  In the event that ORB does not produce any match, a match based on histogram will be executed. 
  
  The output is a video stored in `'./output/paintings_and_people_localization/VID_20180529_112627.mp4'` whose frames show the results of the tasks performed on the frames of the input video.
-
 

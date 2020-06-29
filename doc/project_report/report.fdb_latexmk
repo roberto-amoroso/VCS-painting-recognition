@@ -1,24 +1,26 @@
 # Fdb version 3
-["bibtex report"] 1592783076 "report.aux" "report.bbl" "report" 1592783078
+["bibtex report"] 1593396406 "report.aux" "report.bbl" "report" 1593396408
   "./ieee_fullname.bst" 1552187850 19905 72b73f4cb1c51eaa1a7af8ecad2b6bfb ""
-  "egbib.bib" 1592783065 1574 f7fd6ff386f5ffee89824b5804b0ef5b ""
-  "report.aux" 1592783078 2534 5f6cd278e48f3edfd916d307920f17a1 "xelatex"
+  "egbib.bib" 1593390895 7331 3db280038bc43e1f8335e6cf8a868ef9 ""
+  "report.aux" 1593396407 4139 5ad3342d973b82cea96fd7b9725bd979 "xelatex"
   (generated)
   "report.blg"
   "report.bbl"
-["xdvipdfmx"] 1592783078 "report.xdv" "report.pdf" "report" 1592783079
-  "report.xdv" 1592783078 33484 6add9424caa3260c421a1020f76c46d0 "xelatex"
+["xdvipdfmx"] 1593396408 "report.xdv" "report.pdf" "report" 1593396409
+  "report.xdv" 1593396407 150264 56d7f3b72641b328cb6bbbd59df7936f "xelatex"
   (generated)
   "report.pdf"
-["xelatex"] 1592783077 "c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex" "report.xdv" "report" 1592783078
+["xelatex"] 1593396406 "c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex" "report.xdv" "report" 1593396408
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/adobe/helvetic/phvb.tfm" 1136797454 2300 14616918391efa49ac8b481a75fbdc1a ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/adobe/times/ptmb.tfm" 1136797454 2684 6e2c4802f04d90088c5e467e1e010ed7 ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136797454 1528 7e12f4c0fcf5a072cebdcfbfc610f54c ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1233955448 1004 54797486969f23fa377b128694d548df ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1233955448 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1233955454 916 f87d7c45f9c908e672703b83b72241a3 ""
+  "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/symbols/msam5.tfm" 1233955454 924 9904cf1d39e9767e7a3622f2a125a565 ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/symbols/msam7.tfm" 1233955454 928 2dc8d444221b7a635bb58038579b861a ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/symbols/msbm10.tfm" 1233955454 908 2921f8a10601f252058503cc6570e581 ""
+  "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/symbols/msbm5.tfm" 1233955454 940 75ac932a52f80982a9f8ea75d03a34cf ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/amsfonts/symbols/msbm7.tfm" 1233955454 940 228d6584342e91276bf566bcf9716b83 ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/cm/cmex10.tfm" 1136768653 992 662f679a0b3d2d53c1b94050fdaa3f50 ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/public/cm/cmmi12.tfm" 1136768653 1524 4414a8315f39513458b80dfc63bff03a ""
@@ -84,14 +86,14 @@
   "C:/Program Files/MiKTeX 2.9/tex/latex/tools/xspace.sty" 1580648486 4546 3e6071704acf4f66392376b7b66ae02c ""
   "C:/Program Files/MiKTeX 2.9/tex/latex/url/url.sty" 1388494052 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "C:/Users/Roberto/AppData/Local/MiKTeX/2.9/miktex/data/le/xetex/xelatex.fmt" 1586300262 22895678 d7e0b365509cff8a075eb715385d7fb8 ""
-  "c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex" 1592783071 4246 80c117dcf91281cd0d25fda0b5ea9ad2 ""
+  "c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex" 1593396402 12089 ecfdae74a54448623db1a200239cc850 ""
   "cvpr.sty" 1531649934 8185 3fd86e5ce25647e164a15f2329a49bc2 ""
   "cvpr_eso.sty" 1506811308 3878 6aa7c08ff2621006e0603349e40a30a8 ""
   "eso-pic.sty" 1506811308 9460 d2935ae95b5cd343fcf5887ff530288d ""
-  "report.aux" 1592783078 2534 5f6cd278e48f3edfd916d307920f17a1 "xelatex"
-  "report.bbl" 1592783077 1149 1aec060f6b64c235cbb4edea870b4a5c "bibtex report"
-  "report.tex" 1592783071 4246 80c117dcf91281cd0d25fda0b5ea9ad2 ""
+  "report.aux" 1593396407 4139 5ad3342d973b82cea96fd7b9725bd979 "xelatex"
+  "report.bbl" 1593396406 6300 960c4a2f27c7902e13fd27190cf5fe4e "bibtex report"
+  "report.tex" 1593396402 12089 ecfdae74a54448623db1a200239cc850 ""
   (generated)
   "report.log"
-  "report.xdv"
   "report.aux"
+  "report.xdv"

@@ -37,35 +37,103 @@ University of Modena and Reggio Emilia\\
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-   We propose a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, we created a Python program that is able to locate and recognize paintings and people present in a video or single image. For the part relating to the paintings, we used the OpenCV library, while to carry out the people detection operation we used YOLO, a real-time object detection system.
+   Thsi work proposes a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, we created a Python program that is able to locate and recognize paintings and people present in a video or single image. For the part relating to the paintings, we used the OpenCV library, while to carry out the people detection operation we used YOLO, a real-time object detection system.
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
 \section{Introduction}
-Localizzare un dipinto, calcolare la traformazione che consente di rettificare l'immagine e poi confrontare l'immagine ottenuta con quelle memorizza in un datase, sono tutte operaioni nontrivial. 
+Detect a painting, computing the transformation to rectify the image and then comparing the image obtained with those stored in a database, are all nontrivial tasks. Detect and analysing paintings is of course of great interest to art historians, and can help them to take full advantage of the massive databases that are built worldwide.
 
-Le tecniche comuni di image processing soffrono di alcuni problemi (illuminazione, scale changes, distorsione, etc.) che diventano ancora più rilevanti nel caso di moving cameras, le quali a loro volta introducono ulteriori effetti indesiderati, e.g. blur, noise, motion. 
-In aggiunta a ciò, l'esposione dei dipinti in esibizioni e mostre aggiunge problemi di riflessione delle luci, image exposure and image saturation.
+At the core of many recent computer vision works, the object detection task (classifying and localising an object) has
+been less studied in the case of paintings.
 
-Negli ultimi anni, sono stati sviluppati molti lavori che investigano i problemi di image detection \cite{fathy1995image,hambly2001supercosmos}, recognition \cite{martinel2013robust} and retieval \cite{rui1999image}. Molti di questi lavori, match le appearance features di un dipinto against a large database of location-tagged images.
+In recent years, many works have been developed that investigate the problems of image detection \cite{fathy1995image,hambly2001supercosmos}, recognition \cite{martinel2013robust} and retrieval \cite{rui1999image}. 
 
+Many of these approaches use Deep Learning techniques and are based on the use of Convolutional Neural Networks (CNNs) to carry out operations such as Painting Detection and Identification\cite{hong2019art}. This implies the need to have a large amount of annotated data, necessary to train and test the model.
 
-Il problema consiste nel localizzare e riconoscere dipinti e persone in un museo o galleria d'arte.
-Ogni dipinto localizzato viene confrontato con un database di immagini di dipinti a nostra disposizione, così da ricavare tutte le informazioni ad esso correlate.
+The approach we propose avoids this problem by submitting the input image through a processing pipeline which, using the OpenCV \cite{bradski2008learning} library, performs a series of operations and transformations that produce the following results:
+\begin{itemize}
+   \item \textbf{Painting Detection}: detects all paintingds in the image.
+   \item \textbf{Painting Segmentation}: creates a segmented version of the input, where the paintings, and also any statues, identified are white and the background is black.
+   \item \textbf{Painting Rectification}: rectifies each painting detected, through an affine transformation.
+   \item \textbf{Painting Retrieval}: matches each detected and rectified painting to a paintings DB, containing a list of the paintings in the museum or gallery with related information, such as title of the painting, author, room in which the painting is located. We used ORB \cite{rublee2011orb} as feature detector, to find keypoints and execute matching between an input image and the various database images.
+   \item \textbf{People Detection}: detect people in the input using YOLOv3 \cite{redmon2018yolov3}, a state-of-the-art real-time object detection system and pre-trained weights.
+   \item \textbf{People and Painting Localization}: locates paitning and people using information, using the information discovered during the painting retrieval phase.
+\end{itemize} 
 
 %------------------------------------------------------------------------
 \section{Related Work}
--- TODO --
-Inserisci informazioni riguardo a ciascuno dei punti obbligatori che hai sviluppato
+
+\subsection{Object Detection}
+
+One of the main problems in the field of computer vision is object detection. In the last few years, numerous works have been published to propose a possible solution capable of solving this task, leading to a continuous improvement in performance. A milestone, which led to great progress in this area, was the use of CNNs.
+
+Pioneer in this sense was R-CNN (Regions with CNN features) \cite{girshick2014rich}, who had the idea of ​​using a selective search \cite{uijlings2013selective} image segmentation algorithm to generate many candidate regions for potential object instances before CNN is used to perform classification to these regions individually. Subsequently, other \cite{girshick2015fast, ren2015faster} works have unified the localization and classification phases in order to improve the speed of object detection.
+
+In the wake of these pioneers, many other works have been conducted \cite{dai2016r, kim2016pvanet, lin2017feature, liu2016ssd, redmon2017yolo9000, redmon2016you, shrivastava2016training, redmon2018yolov3} aimed at further improving the performance of the architecture.
+
+We decided to use a CNN-based object detector only to perform the people detection task. In particular, we have selected YOLOv3 as it is a balanced system in terms of speed and accuracy, it comes with a well organized code and pre-trained weights.
+
+%------------------------------------------------------------------------
+
+\subsection{Image local features}
+Paintings, statues and all objects present in a museum or art gallery can be filmed and photographed from various viewpoints and with different lighting conditions. This implies the need for a technique capable of representing an image as invariant to rotation, affine transformation, and some noise.
+
+Hand-crafted image local features \cite{rublee2011orb,alahi2012freak,bay2006surf,jain2000statistical,leutenegger2011brisk,lowe2004distinctive,morel2009asift} can be used to solve these problems. These are techniques used for object tracking, image stitching, image registration, etc., i.e. all those applications that are based on finding correspondences between two images.
+
+In this work, among the various image local features proposed, we have selected ORB. It is a good alternative to SIFT and SURF in computation cost, matching performance and mainly it's not patented (SIFT and SURF are patented and you are supposed to pay them for its use). ORB is a good choice in low-power devices.
+
+Here we have brief introductions to ORB, for more information and the details about how it works read the original paper \cite{rublee2011orb}.
+
+ORB is a fusion of FAST keypoint detector and BRIEF descriptor with many modifications to enhance the performance. First it use FAST to find keypoints, then apply Harris corner measure to find top N points among them. It also use pyramid to produce multiscale-features.
+
+ORB's main contributions are:
+\begin{itemize}
+   \item The addition of a fast and accurate orientation component to FAST.
+   \item The efficient computation of oriented BRIEF features.
+   \item Analysis of variance and correlation of oriented BRIEF features.
+   \item A learning method for decorrelating BRIEF features under rotational invariance, leading to better performance in nearest-neighbor applications.
+\end{itemize}
+ 
 
 %------------------------------------------------------------------------
 \section{Methods}
--- TODO --
+
 %------------------------------------------------------------------------
-\subsection{Data Collection and Preparation}
--- TODO --
+\subsection{Material and Data Preparation}
+
+The data available and representing the inputs of our program are:
+\begin{itemize}
+   \item A series of videos recorded inside the Estense Gallery in Modena, Italy.
+   \item A database consisting of 95 images of as many paintings.
+   \item A CSV file containing important information on each of the 95 paintings in the database, such as: title of the painting, author, room of the museum in which it is located, filename of the image.
+\end{itemize}
+
+The videos were recorded using different devices, angles and orientations, and during normal museum activity, so they often show people.
+
+It was therefore necessary to create a program that was able to process not only individual images but also videos.
+In the latter case, that is, when the input is a video, the solution we adopted is to consider each frame of the video as an image to submit to our processing pipeline.
+
+The processing pipeline, therefore, works with images as input and produces in output, for each of them, another image, on which the obtained information has been reported (painting and people bounding boxes, title of the paintings, number of the room where the paintings and people are located).
+
+The Painting Rectification task represents a particular case. In fact, it requires that for each painting present in an input image or video frames, an image containing the rectified version of the painting is saved as output. So in this case, against a single input there are potentially multiple outputs.
+
+One of the first problems we faced concerns the different resolution of the videos, which are provided in the formats: HD (1280x720), full-HD (1920x1080) and 4K (3840 x 2160).
+
+Having inputs with different resolutions posed the problem of making the measures adopted in the various functions of the processing pipeline (often expressed in pixels) invariant with respect to the resolution.
+
+Our solution was to perform as a first operation of our processing pipeline a resize of all the inputs to the lower resolution, the HD one.
+
+Subsequently, the resized images continue in the pipeline and are subjected to the various processing described below.
+
+The information found (bounding boxes and information about paintings and room) is then subjected to an upscaling phase, i.e. the $(x, y)$ coordinates of contours, corners, bounding boxes are multiplied by the scale factor for which the original image has been resized to obtain its HD version.
+
+The output is generated by drawing this information on the original image. This allows us to maintain the original resolution and improve performance as the functions of the processing pipeline are performed on tensors of a smaller size (e.g. a ninth of the input size in the case of 4K images or videos). 
+
+Having obtained from our processing pipeline the various processed images, these are: directly stored in case the input is an image, treated as video frames and stored as a single video in case the input is a video.
+
 %------------------------------------------------------------------------
-\subsection{Painting Detection}
+\subsection{Painting Detection and Segmentation}
 -- TODO --
 %------------------------------------------------------------------------
 \subsection{Painting Rectification}
@@ -77,7 +145,7 @@ Inserisci informazioni riguardo a ciascuno dei punti obbligatori che hai svilupp
 \subsection{People Detection}
 -- TODO --
 %------------------------------------------------------------------------
-\subsection{People and Painting Localization}
+\subsection{Painting and People Localization}
 -- TODO --
 
 %------------------------------------------------------------------------
@@ -88,6 +156,10 @@ Mostra i risultati complessivi e dove l'approccio fallisce quando non vengono ri
 %------------------------------------------------------------------------
 \section{Conclusions}
 -- TODO --
+
+PROBLEMI:
+Le tecniche comuni di image processing soffrono di alcuni problemi (illuminazione, scale changes, distorsione, etc.) che diventano ancora più rilevanti nel caso di moving cameras, le quali a loro volta introducono ulteriori effetti indesiderati, e.g. blur, noise, motion. 
+In aggiunta a ciò, l'esposione dei dipinti in esibizioni e mostre aggiunge problemi di riflessione delle luci, image exposure and image saturation.
 
 {\small
 \bibliographystyle{ieee_fullname}

@@ -15,7 +15,7 @@ Before proceeding to the detailed description of the functionalities of the prog
 The program, calleble through the script `main_detector.py`,  allows you to perform the following tasks:
 
 - **Painting Detection**:  detects all paintings.
-- **Painting Segmentation**:  creates a segmented version of the input, where the paintings statues identified are white and the background is black.
+- **Painting Segmentation**:  creates a segmented version of the input, where the paintings, and also any statues, identified are white and the background is black.
 - **Painting Rectification**:  rectifies each painting detected, through an affine transformation
 - **Painting Retrieval**: matches each detected and rectified painting to the paintings DB found in `db_path`
 - **People Detection**: detects people in the input

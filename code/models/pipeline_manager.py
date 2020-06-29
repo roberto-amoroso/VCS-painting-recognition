@@ -179,7 +179,7 @@ class PipelineManager:
                 # self.show_image_main(f"sub_img_original_{i}", sub_img_original)
                 self.show_image_main(f"painting_rectified_{i}", painting.image)
 
-    def __painting_retrieval(self, paintings_detected):
+    def __painting_retrieval(self, paintings_detected, scale_factor):
         """
         Execute Painting Retrieval on the input image.
         """
@@ -193,7 +193,8 @@ class PipelineManager:
             self.print_next_step,
             self.print_time,
             match_db_image=self.match_db_image,
-            histo_mode=self.histo_mode
+            histo_mode=self.histo_mode,
+            scale_factor=scale_factor
         )
         print_time_info(start_time, "PAINTING RETRIEVAL - END")
         print("-" * 50)
@@ -319,7 +320,7 @@ class PipelineManager:
             # ----------------------
             # PAINTING RETRIEVAL
             # ----------------------
-            self.__painting_retrieval(paintings_detected)
+            self.__painting_retrieval(paintings_detected, scale_factor)
 
         # ------------------------------------------------------------------------
         people_bounding_boxes = []

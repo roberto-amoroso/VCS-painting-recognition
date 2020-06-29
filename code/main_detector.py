@@ -228,7 +228,7 @@ def main():
     # histo_mode = args.histo_mode
 
     verbosity_print = 0
-    verbosity_image = 2
+    verbosity_image = 1
     task = Task(5)
     match_db_image = False
     histo_mode = False
@@ -241,13 +241,13 @@ def main():
     # ----------------------
     input_filename = "dataset/photos/test/"
     # VIDEOS
-    # input_filename = "dataset/videos/002/"
+    input_filename = "dataset/videos/002/"
     # input_filename += "VID_20180529_112627.mp4"
-    # input_filename += "20180206_114604.mp4"
+    input_filename += "20180206_114604.mp4"
     # IMAGES
     # input_filename += 'IMG_2659_0012.jpg'  # CRITIC
     # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
-    input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
+    # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
     # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
@@ -360,7 +360,12 @@ def main():
     # ---------------------------------------------------------------------------------------------
 
     # DB path info
+    print_nicer('Loading paintings from DB')
+    start_time = time.time()
     paintings_db = create_paintings_db(painting_db_path, painting_data_path)
+    print(f"\tPaintings loaded:  {len(paintings_db)}")
+    print_time_info(start_time)
+    print("-" * 50)
 
     # ---------------------------------------------------------------------------------------------
     # Instantiating output path

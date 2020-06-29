@@ -140,7 +140,7 @@ def extract_candidate_painting_contours(img, contours, hierarchy, show_image, fi
     - https://stackoverflow.com/questions/42453605/how-does-cv2-boundingrect-function-of-opencv-work
     - https://docs.opencv.org/trunk/d9/d8b/tutorial_py_contours_hierarchy.html
     """
-    img_copy = img.copy()
+    # img_copy = img.copy()
     h_img, w_img, _ = img.shape
     area_img = h_img * w_img
     area_rect_min = height_min * width_min
@@ -157,11 +157,11 @@ def extract_candidate_painting_contours(img, contours, hierarchy, show_image, fi
                 rotation_angle = rect[2]
                 box = cv2.boxPoints(rect)
                 box = np.int0(box)
-                cv2.drawContours(img_copy, [box], 0, (0, 0, 255), 2)
+                # cv2.drawContours(img_copy, [box], 0, (0, 0, 255), 2)
             else:
                 x, y, w_rect, h_rect = cv2.boundingRect(contour)
                 # Draw rectangles on the image [MUST be a COPY of the image]
-                img_copy = cv2.rectangle(img_copy, (x, y), (x + w_rect, y + h_rect), (0, 255, 0), 2)
+                # img_copy = cv2.rectangle(img_copy, (x, y), (x + w_rect, y + h_rect), (0, 255, 0), 2)
 
             # show_image('image_rectangles', img_copy, height=405, width=720)
 
@@ -187,7 +187,7 @@ def extract_candidate_painting_contours(img, contours, hierarchy, show_image, fi
                     if len(childs) > 0:
                         del candidate_painting_contours[i]
 
-    show_image('image_rectangles', img_copy, height=405, width=720)
+    # show_image('image_rectangles', img_copy, height=405, width=720)
     return candidate_painting_contours
 
 
@@ -281,15 +281,15 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     contours_1, hierarchy_1 = find_image_contours(wall_mask_inverted, contours_mode, contours_method)
     print_time(start_time)
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-    img_contours = img.copy()
-    cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
-    show_image('image_contours_1', img_contours, height=405, width=720)
+    # img_contours = img.copy()
+    # cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
+    # show_image('image_contours_1', img_contours, height=405, width=720)
 
     # Add a white border to manage cases when `find_largest_segment`
     # works the opposite way (wall black and painting white)
     thickness = 1
     wall_mask_inverted_2 = cv2.rectangle(wall_mask_inverted, (0, 0), (w_img - 1, h_img - 1), 255, thickness)
-    show_image("wall_mask_inverted_2", wall_mask_inverted_2, height=405, width=720)
+    # show_image("wall_mask_inverted_2", wall_mask_inverted_2, height=405, width=720)
 
     # Step 5: Find all contours
     # ----------------------------
@@ -300,15 +300,15 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     contours_2, hierarchy_2 = find_image_contours(wall_mask_inverted_2, contours_mode, contours_method)
     print_time(start_time)
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-    img_contours = img.copy()
-    cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
-    show_image('image_contours_2', img_contours, height=405, width=720)
+    # img_contours = img.copy()
+    # cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
+    # show_image('image_contours_2', img_contours, height=405, width=720)
 
     # Print every contour step-by-step
-    img_contours = img.copy()
-    for contour in contours_2:
-        cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
-        show_image('image_contours', img_contours, height=405, width=720)
+    # img_contours = img.copy()
+    # for contour in contours_2:
+    #     cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
+    #     show_image('image_contours', img_contours, height=405, width=720)
 
     remove_overlapping = False
     error_in_wall_mask = False

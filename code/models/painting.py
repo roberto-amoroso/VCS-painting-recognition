@@ -17,7 +17,9 @@ class Painting:
                  bounding_box=None,
                  frame_contour=None,
                  points=None,
-                 corners=None):
+                 corners=None,
+                 keypoints=None,
+                 descriptors=None):
         # It will contain the DB image or the rectified sub-image (up-scaled if necessary)
         self.image = image
         self.title = title
@@ -28,3 +30,5 @@ class Painting:
         self.points = points
         self.corners = corners
         self.bounding_box = bounding_box
+        self.keypoints = keypoints
+        self.descriptors = descriptors

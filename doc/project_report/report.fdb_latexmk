@@ -1,16 +1,16 @@
 # Fdb version 3
-["bibtex report"] 1593396406 "report.aux" "report.bbl" "report" 1593396408
+["bibtex report"] 1593412406 "report.aux" "report.bbl" "report" 1593412409
   "./ieee_fullname.bst" 1552187850 19905 72b73f4cb1c51eaa1a7af8ecad2b6bfb ""
   "egbib.bib" 1593390895 7331 3db280038bc43e1f8335e6cf8a868ef9 ""
-  "report.aux" 1593396407 4139 5ad3342d973b82cea96fd7b9725bd979 "xelatex"
+  "report.aux" 1593412408 5746 992a524ad0433ab05868f30c36ed51e3 "xelatex"
   (generated)
-  "report.blg"
   "report.bbl"
-["xdvipdfmx"] 1593396408 "report.xdv" "report.pdf" "report" 1593396409
-  "report.xdv" 1593396407 150264 56d7f3b72641b328cb6bbbd59df7936f "xelatex"
+  "report.blg"
+["xdvipdfmx"] 1593412409 "report.xdv" "report.pdf" "report" 1593412409
+  "report.xdv" 1593412408 241892 5d1349fa2d80d8ebf0edd8fc7d9554aa "xelatex"
   (generated)
   "report.pdf"
-["xelatex"] 1593396406 "c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex" "report.xdv" "report" 1593396408
+["xelatex"] 1593412407 "c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex" "report.xdv" "report" 1593412409
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/adobe/helvetic/phvb.tfm" 1136797454 2300 14616918391efa49ac8b481a75fbdc1a ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/adobe/times/ptmb.tfm" 1136797454 2684 6e2c4802f04d90088c5e467e1e010ed7 ""
   "C:/Program Files/MiKTeX 2.9/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136797454 1528 7e12f4c0fcf5a072cebdcfbfc610f54c ""
@@ -86,13 +86,13 @@
   "C:/Program Files/MiKTeX 2.9/tex/latex/tools/xspace.sty" 1580648486 4546 3e6071704acf4f66392376b7b66ae02c ""
   "C:/Program Files/MiKTeX 2.9/tex/latex/url/url.sty" 1388494052 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "C:/Users/Roberto/AppData/Local/MiKTeX/2.9/miktex/data/le/xetex/xelatex.fmt" 1586300262 22895678 d7e0b365509cff8a075eb715385d7fb8 ""
-  "c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex" 1593396402 12089 ecfdae74a54448623db1a200239cc850 ""
+  "c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex" 1593412402 22532 01ef25697b9e1abfdc94dc02f91c31f1 ""
   "cvpr.sty" 1531649934 8185 3fd86e5ce25647e164a15f2329a49bc2 ""
   "cvpr_eso.sty" 1506811308 3878 6aa7c08ff2621006e0603349e40a30a8 ""
   "eso-pic.sty" 1506811308 9460 d2935ae95b5cd343fcf5887ff530288d ""
-  "report.aux" 1593396407 4139 5ad3342d973b82cea96fd7b9725bd979 "xelatex"
-  "report.bbl" 1593396406 6300 960c4a2f27c7902e13fd27190cf5fe4e "bibtex report"
-  "report.tex" 1593396402 12089 ecfdae74a54448623db1a200239cc850 ""
+  "report.aux" 1593412408 5746 992a524ad0433ab05868f30c36ed51e3 "xelatex"
+  "report.bbl" 1593412407 6300 960c4a2f27c7902e13fd27190cf5fe4e "bibtex report"
+  "report.tex" 1593412402 22532 01ef25697b9e1abfdc94dc02f91c31f1 ""
   (generated)
   "report.log"
   "report.aux"

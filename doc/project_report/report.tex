@@ -134,7 +134,129 @@ Having obtained from our processing pipeline the various processed images, these
 
 %------------------------------------------------------------------------
 \subsection{Painting Detection and Segmentation}
--- TODO --
+
+To aid the description of the processing of locating, rectifing and recognising a painting in an image, we suppose we want to recognize the painting 'TODO', represented in Figure \ref{fig:dbPainting}, inside the image present in Figure \ref{fig:originalImage}.
+
+\begin{figure}[t]
+   \begin{center}
+   \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
+      %\includegraphics[width=0.8\linewidth]{egfigure.eps}
+   \end{center}
+      \caption{'TODO', the painting we want to locate, rectify and recognize}
+   \label{fig:dbPainting}
+   \end{figure}
+
+\begin{figure}[t]
+   \begin{center}
+   \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
+      %\includegraphics[width=0.8\linewidth]{egfigure.eps}
+   \end{center}
+      \caption{The input image of our processing pipeline.}
+   \label{fig:originalImage}
+\end{figure}
+
+All'interno di un museo o galleria d'arte i dipinti sono oggetti appesi alle pareti. Quest'ultime, sono assunte essere di un singolo colore uniforme, come di solito avviene nei musei e gallerie d'arte al fine di evitare di distrarre i visitatori dalle opere d'arte. 
+
+Sulla base di questa assunzione, la prima operazione da compiere per individuare e segmentare i dipinti è quella di distinguere quali porzioni dell'immagine non sono muro. Ciò avviene eseguendo l'operazione di Mean Shift Segmentation sull'immagine, la quale clusters nearby pixels with similar pixel values and sets them all to have the value of the local maximum of pixel value. Il risultato è quello di avere i pixel raggruppati per colore e location, come si evince dall'immagine in Figure \ref{fig:meanShiftSegmentation}
+
+\begin{figure}[t]
+   \begin{center}
+   \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
+      %\includegraphics[width=0.8\linewidth]{egfigure.eps}
+   \end{center}
+      \caption{Result of the mean-shift-segmentation on the input image.}
+   \label{fig:meanShiftSegmentation}
+\end{figure}
+
+Sull'immagine risultante si esegue un'operazione chiamata Flood Fill, la quale assegna lo stesso colore a componenti connessi. 
+
+The connectivity is determined by the color/brightness closeness of the neighbor pixels. That is, to be added to the connected component, a color/brightness of the pixel should be close enough to color/brightness of one of its neighbors that already belong to the connected component.
+
+Assegnamo ai componenti connessi il valore 255 (bianco) e poniamo a 0 (nero) tutti i restanti pixel. In questo modo ad ogni perazione di Flood Fill si ottiene una maschera con due segmenti, uno bianco e uno nero. Si ripete questo procedimento sui pixel dell'immagine al fine di individuare la maschera in cui il segmento bianco è quello più esteso, assumimao che tale segmento sia il muro e che le componenti nere siano i dipinti.
+ 
+Il risultato dell'operazioni di flooding è osservabile in Figura \ref{fig:maskLargestSegment} 
+
+\begin{figure}[t]
+   \begin{center}
+   \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
+      %\includegraphics[width=0.8\linewidth]{egfigure.eps}
+   \end{center}
+      \caption{Mask showing the wall in white and the painting in black.}
+   \label{fig:maskLargestSegment}
+\end{figure}
+
+L'assunzione per cui si consiera essere muro il segmento più esteso, pur rivelandosi valida nella maggiorn parte dei casi, presenta dei problemi quando l'immagine ritrae un dipinto molto grande o un dipinto molto da vicino. In questo caso, l'assunzione non è più valida in quanto il segmento più esteso sarà quello associato al dipinto, che sarà bianco, mentre il muro verrà colorato di nero. 
+
+Ovviamente, un problema del genera all'inizio della pipeline causerebbe un catene di predizioni errate. Per questo motivo, abbiamo trovato una soluzione che seppur molto empirica si è rivelata essere valida. Prima di procedere con la sua descrizione è necessario aver sottoposto l'immagine ad una serie di altre operazioni. 
+
+Per rimuovere eventuale rumore presente all'interno della maschera, essa viene prima dilatata e poi erosa in egual misura. 
+
+Dilation involves moving a kernel (a matrix of a given size) over the pixels of a binary image. When the kernel is centered on a pixel with a value of 0 and some of its pixels are on pixels with a value of 1, the centre pixel is given a value of 1.
+
+Erosion is the opposite of dilation. Erosion involves moving a kernel over the pixels of a binary image. A pixel in the original image (either 1 or 0) will be considered 1 only if all the pixels under the kernel is 1, otherwise it is eroded (made to zero).
+
+A questo punto, si invertono i colori della maschera dilatata, assegnando 255 ai pixel aventi valore 0 e viceversa. Si ottiene così una maschera in cui il muro è nero e i dipinti bianchi. 
+
+Come si può notare dall'immagine, non tutti i componenti neri sono dei dipinti, ad esempio anche le targe che contengono la descrizione del dipinto vengono cosniderate esse stesse dei dipinti. Anche evenuali porzioni di soffitto o pavimento presenti nell'immagine potrebbero essere considerati dei dipinti. 
+
+Per risolvere tali problemi abbiamo introdotto dei criteri che ciascun componente deve rispettare per poter essere considerato un dipinto quali:
+\begin{itemize}
+   \item it should not span the entire image
+   \item their bounding boxes devono avere un'area minima, che abbiamo fissato essere di 150x150 pixels. Questo valore ci ha permesso di eliminare oggetti piccoli come le targe descrittive o piccoli estintori.
+   \item l'area del dipinto deve occupare almeno il 60\% della sua bounding boxe. That means that the paintings are also assumed to be somewhat rectangular. This assumption helps to eliminate parts of the wall and ceiling that may be in the input image.
+\end{itemize}
+
+If some paintings do not fall under these criteria, they are not be categorised as paintings. Questo potrebbe verificarsi ad esempio per very small paintings or pictures of paintings that have been taken very far away from the painting.
+
+Per stabilire se un componente rispetta o meno tali criteri, si trovano i contorni di tutti gli oggetti bianci presenti nella maschera invertita precedentemente ricavata. Per ognuno di essi si ricava il rettangolo ad area minima che lo contiene, ossia una bounding box ruotata e con base non parallela alla base dell'immagine. Si scartano tutte i contorni che non rispettano i precedenti criteri.
+
+A questo punto abbiamo una lista di contorni ognuno associato ad un dipinto.
+
+Qui entra in gioco la soluzione empirica al problema che si ha quando il flooding considera il muro come dipinti e viceversa. 
+
+La soluzione che ho adottato può essere così schematizzata:
+\begin{enumerate}
+   \item Considero nuovamente la wall mask invertita.
+   \item Applico un bordo bianco di un pixel lungo il contorno dell'immagine.
+   \item Calcolo nuovamente tutti i contorni dei componenti bianchi
+   \item Ho due set di contorni, il primo associato alla wall mask invertita il secondo associato alla wall mask invertita con un contorno bianco.
+   \item Considero il set di contorni con il maggior numero di elementi, a parità scelgo il secondo.
+   \item Se il set di contorni selezionato è il primo, allora eseguo la fase di rifinitura dei contorni come descritto precedentemente. Se il set di contorni selezionato è il secondo, allora sono nell'ipotesi in cui il flood fill ha identificato come muro i dipinti e viceversa. Quindi inverto nuovamente la wall mask ed eseguo la fase di rifinitura dei contorni aggiungendo però un nuovo controllo alla fine. Esso consiste nell'eliminare tutti i contorni che hanno al loro interno altri contorni.
+\end{enumerate}
+
+Per capire perchè la mia soluzione funziona basti considerare che nel caso in cui la wall mask è già corretta (muro bianco e dipinti neri) aggiungere un bordo dello stesso colore del muro non farà altro che lasciare il numero di contours trovati invariato, oppure lo farà diminuire nel caso di dipinti che si trovano solo in parte all'interno dell'immagine e/o toccano il bordo della stessa. Ciò mi permette di capire se flood fill ha funzionato correttamente o nel verso opposto. Il controllo aggiuntivo, che elimina tutti i contorni che hanno altri contorni al loro interno, serve per evitare che l'aggiunta del bordo bianco unito a degli oggetti di disturbo presenti nell'immagine (e.g. una ringhiera messa a protezione di un dipinto) possano generare dei contorni indesiderati che contengano al loro interno uno o più dipinti. Ovviamente, sto supponendo che non sia possibile avere un dipinto all'interno di un altro dipinto, condizione che può considerarsi quasi sempre verificata e che in particolare lo è per quanto riguarda i video e le immagini che ci sono state fornite.
+
+
+A questo punto, ho ottenuto una lista dei contorni dei dipinti all'interno dell'immagine.
+
+Generare una versione segmentata dell'immagine originale è adesso molto semplice. Genero un'immagine completamente nera avente la stessa risoluzione dell'immagine originale e vi disegno sopra solo i contorni che hanno superato tutti i precedenti tests, riempendoli di bianco. Il risultato della segmentazione è osservabile in Figura \ref{fig:imageSegmented}
+
+\begin{figure}[t]
+   \begin{center}
+   \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
+      %\includegraphics[width=0.8\linewidth]{egfigure.eps}
+   \end{center}
+      \caption{Segmented version of the input image.}
+   \label{fig:imageSegmented}
+\end{figure}
+
+Il task di Painting detection and Segmentation sembra quindi completato. In realtà il risultato così ottenuto si limita a disegnare dei rettangoli attorno al contorno dei dipinti, come mostrato in Figura \ref{fig:imageRectROI}.
+
+\begin{figure}[t]
+   \begin{center}
+   \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
+      %\includegraphics[width=0.8\linewidth]{egfigure.eps}
+   \end{center}
+      \caption{Image showing the rectangular bounding box of the paintings.}
+   \label{fig:imageRectROI}
+\end{figure}
+
+Il risultato che invece vorrei ottenere è quello di avere una ROI che fitti al meglio possibile il contorno del dipinto, il quale a causa di distorsioni legate ad esempio alla prospettiva può non essere esattamnte rettangolare, soprattutto quando posizionato non esattamente di fronte al dispositivo che ha scattato la foto o registrato il video.
+
+Per migliore il risultato della detection. Sono necessari una serie di passi e trasformazioni aggiuntive, che tra l'altro sono propedeutiche all'esecuzione del task successivo, quello della Painting Rectification.
+
+
+
 %------------------------------------------------------------------------
 \subsection{Painting Rectification}
 -- TODO --

@@ -445,7 +445,7 @@ def mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_l
     This function takes an image and mean-shift parameters and returns a version
     of the image that has had mean shift segmentation performed on it.
 
-    Mean shift segmentation clusters nearby pixels with similar pixel values
+    Mean shift segmentation clusters nearby pixels with similar pixel values and
     sets them all to have the value of the local maxima of pixel value.
 
     Parameters

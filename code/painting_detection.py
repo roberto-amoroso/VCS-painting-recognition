@@ -283,13 +283,13 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
     img_contours = img.copy()
     cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
-    # show_image('image_contours_1', img_contours, height=405, width=720)
+    show_image('image_contours_1', img_contours, height=405, width=720)
 
     # Add a white border to manage cases when `find_largest_segment`
     # works the opposite way (wall black and painting white)
     thickness = 1
     wall_mask_inverted_2 = cv2.rectangle(wall_mask_inverted, (0, 0), (w_img - 1, h_img - 1), 255, thickness)
-    # show_image("wall_mask_inverted_2", wall_mask_inverted_2, height=405, width=720)
+    show_image("wall_mask_inverted_2", wall_mask_inverted_2, height=405, width=720)
 
     # Step 5: Find all contours
     # ----------------------------
@@ -302,7 +302,13 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
     img_contours = img.copy()
     cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
-    # show_image('image_contours_2', img_contours, height=405, width=720)
+    show_image('image_contours_2', img_contours, height=405, width=720)
+
+    # Print every contour step-by-step
+    img_contours = img.copy()
+    for contour in contours_2:
+        cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
+        show_image('image_contours', img_contours, height=405, width=720)
 
     remove_overlapping = False
     error_in_wall_mask = False
@@ -318,6 +324,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         hierarchy = hierarchy_1
 
     # # Print every contour step-by-step
+    # img_contours = img.copy()
     # for contour in contours:
     #     cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
     #     show_image('image_contours', img_contours, height=405, width=720)

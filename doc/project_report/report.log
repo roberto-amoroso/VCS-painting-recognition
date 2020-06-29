@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.999992 (MiKTeX 2.9.7380 64-bit) (preloaded format=xelatex 2020.4.7)  29 JUN 2020 01:33
+This is XeTeX, Version 3.14159265-2.6-0.999992 (MiKTeX 2.9.7380 64-bit) (preloaded format=xelatex 2020.4.7)  29 JUN 2020 01:58
 entering extended mode
 **c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex
 (c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex
@@ -334,21 +334,29 @@ File: se-ascii-print.def 2019/11/29 v1.12 stringenc: Printable ASCII characters
 
 
 ] [2]
-Underfull \hbox (badness 10000) in paragraph at lines 173--174
+Underfull \hbox (badness 10000) in paragraph at lines 176--177
 []\TU/ptm/b/n/10 The connectivity is determined by the
  []
 
 
-Underfull \hbox (badness 2460) in paragraph at lines 173--174
+Underfull \hbox (badness 2460) in paragraph at lines 176--177
 \TU/ptm/b/n/10 color/brightness closeness of the neighbor pixels.
  []
 
 [3] [4]
-Underfull \hbox (badness 4156) in paragraph at lines 232--233
+Underfull \hbox (badness 4156) in paragraph at lines 242--243
 \TU/ptm/b/n/10 completamente nera avente la stessa risoluzione
  []
 
-[5] (report.bbl
+[5]
+Underfull \hbox (badness 2103) in paragraph at lines 295--296
+[]\TU/ptm/b/n/10 Questo lavoro ha mostrato come sia possibile
+ []
+
+(report.bbl
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 Underfull \hbox (badness 3302) in paragraph at lines 47--52
 []\TU/ptm/m/it/9 NC Hambly, MJ Irwin, and HT MacGillivray.
  []
@@ -363,7 +371,7 @@ Underfull \hbox (badness 2005) in paragraph at lines 85--90
 \TU/ptm/m/it/9 tian Szegedy, Scott Reed, Cheng-Yang Fu, and
  []
 
-
+[6]
 Underfull \hbox (badness 10000) in paragraph at lines 120--123
 []\TU/ptm/m/it/9 Joseph Redmon and Ali Farhadi.  Yolov3:
  []
@@ -374,25 +382,27 @@ Underfull \hbox (badness 5578) in paragraph at lines 120--123
  []
 
 )
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 291.
- [6]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 291.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 310.
+ [7
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 310.
  (report.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 291.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 291.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 310.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 310.
 
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 291.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 310.
  ) 
 Here is how much of TeX's memory you used:
  9634 strings out of 414219
  132433 string characters out of 2902578
- 398525 words of memory out of 3000000
+ 397525 words of memory out of 3000000
  27028 multiletter control sequences out of 15000+200000
  540272 words of font info for 57 fonts, out of 3000000 for 9000
  1348 hyphenation exceptions out of 8191
- 38i,9n,31p,1176b,396s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 38i,9n,31p,1176b,465s stack positions out of 5000i,500n,10000p,200000b,50000s
 
-Output written on report.xdv (6 pages, 241892 bytes).
+Output written on report.xdv (7 pages, 260820 bytes).

@@ -135,6 +135,9 @@ Having obtained from our processing pipeline the various processed images, these
 %------------------------------------------------------------------------
 \subsection{Painting Detection and Segmentation}
 
+%------------------------------------------------------------------------
+\subsubsection{Obtain a Wall Mask}
+
 To aid the description of the processing of locating, rectifing and recognising a painting in an image, we suppose we want to recognize the painting 'TODO', represented in Figure \ref{fig:dbPainting}, inside the image present in Figure \ref{fig:originalImage}.
 
 \begin{figure}[t]
@@ -195,7 +198,10 @@ Dilation involves moving a kernel (a matrix of a given size) over the pixels of 
 
 Erosion is the opposite of dilation. Erosion involves moving a kernel over the pixels of a binary image. A pixel in the original image (either 1 or 0) will be considered 1 only if all the pixels under the kernel is 1, otherwise it is eroded (made to zero).
 
-A questo punto, si invertono i colori della maschera dilatata, assegnando 255 ai pixel aventi valore 0 e viceversa. Si ottiene così una maschera in cui il muro è nero e i dipinti bianchi. 
+A questo punto, si invertono i colori della maschera dilatata, assegnando 255 ai pixel aventi valore 0 e viceversa. Si ottiene così una maschera in cui il muro è nero e i dipinti bianchi, chiamata wall mask.
+
+%------------------------------------------------------------------------
+\subsubsection{Connected Component Analysis}
 
 Come si può notare dall'immagine, non tutti i componenti neri sono dei dipinti, ad esempio anche le targe che contengono la descrizione del dipinto vengono cosniderate esse stesse dei dipinti. Anche evenuali porzioni di soffitto o pavimento presenti nell'immagine potrebbero essere considerati dei dipinti. 
 
@@ -212,6 +218,9 @@ Per stabilire se un componente rispetta o meno tali criteri, si trovano i contor
 
 A questo punto abbiamo una lista di contorni ognuno associato ad un dipinto.
 
+%------------------------------------------------------------------------
+\subsubsection{Refine the Wall Mask}
+
 Qui entra in gioco la soluzione empirica al problema che si ha quando il flooding considera il muro come dipinti e viceversa. 
 
 La soluzione che ho adottato può essere così schematizzata:
@@ -226,6 +235,7 @@ La soluzione che ho adottato può essere così schematizzata:
 
 Per capire perchè la mia soluzione funziona basti considerare che nel caso in cui la wall mask è già corretta (muro bianco e dipinti neri) aggiungere un bordo dello stesso colore del muro non farà altro che lasciare il numero di contours trovati invariato, oppure lo farà diminuire nel caso di dipinti che si trovano solo in parte all'interno dell'immagine e/o toccano il bordo della stessa. Ciò mi permette di capire se flood fill ha funzionato correttamente o nel verso opposto. Il controllo aggiuntivo, che elimina tutti i contorni che hanno altri contorni al loro interno, serve per evitare che l'aggiunta del bordo bianco unito a degli oggetti di disturbo presenti nell'immagine (e.g. una ringhiera messa a protezione di un dipinto) possano generare dei contorni indesiderati che contengano al loro interno uno o più dipinti. Ovviamente, sto supponendo che non sia possibile avere un dipinto all'interno di un altro dipinto, condizione che può considerarsi quasi sempre verificata e che in particolare lo è per quanto riguarda i video e le immagini che ci sono state fornite.
 
+\subsubsection{Painting Segmentation}
 
 A questo punto, ho ottenuto una lista dei contorni dei dipinti all'interno dell'immagine.
 
@@ -255,10 +265,11 @@ Il risultato che invece vorrei ottenere è quello di avere una ROI che fitti al 
 
 Per migliore il risultato della detection. Sono necessari una serie di passi e trasformazioni aggiuntive, che tra l'altro sono propedeutiche all'esecuzione del task successivo, quello della Painting Rectification.
 
-
-
 %------------------------------------------------------------------------
 \subsection{Painting Rectification}
+
+%------------------------------------------------------------------------
+\subsubsection{Find Contours}
 -- TODO --
 %------------------------------------------------------------------------
 \subsection{Painting Retieval}
@@ -274,14 +285,22 @@ Per migliore il risultato della detection. Sono necessari una serie di passi e t
 \section{Results}
 -- TODO --
 Mostra i risultati complessivi e dove l'approccio fallisce quando non vengono rispettate le premesse e i presupposti fatti precedentemente (vedi ad esempio il flooding della parete).
+Inserire tempistiche e che precisa che YOLO gira su GPU.
+
+
+Un fattore molto importante da evidenziare riguarda la suscettibilità del risultato ottenibile al variare dei parametri con cui sono state incovate le funzioni della libreria OpenCV. In alcuni casi, modificare anche leggermente un paramtro, porta ad una netta variazione dell'output. Ciò ha richiesto molti test al fine di trovare la combinazione di valori dei parametri che mi permettesse di ottenre i risultati migliori. Questo però apre la strada a molti altri test che possono ancora essere fatti al fine di migliorare i risultati ottenuti con questo lavoro.
 
 %------------------------------------------------------------------------
 \section{Conclusions}
--- TODO --
+Questo lavoro ha mostrato come sia possibile portare a termine i task di painting Detection, Retrieval and Localization senza l'utilizzo di tecniche di deep learning, ma attraverso delle operazioni e trasformazioni di image processing. I risultati comuni sono degni di nota seppur il sistema mostri il fianco in situazioni particolarmente ostiche.
 
-PROBLEMI:
-Le tecniche comuni di image processing soffrono di alcuni problemi (illuminazione, scale changes, distorsione, etc.) che diventano ancora più rilevanti nel caso di moving cameras, le quali a loro volta introducono ulteriori effetti indesiderati, e.g. blur, noise, motion. 
-In aggiunta a ciò, l'esposione dei dipinti in esibizioni e mostre aggiunge problemi di riflessione delle luci, image exposure and image saturation.
+Ciò è legato al fatto che le tecniche comuni di image processing soffrono di alcuni problemi (illuminazione, scale changes, distorsione, etc.) che diventano ancora più rilevanti nel caso di moving cameras, le quali a loro volta introducono ulteriori effetti indesiderati, e.g. blur, noise, motion. 
+In aggiunta a ciò, l'esposione dei dipinti in esibizioni e mostre aggiunge problemi di riflessione delle luci, image exposure and image saturation, nonchè la presenza di persone che si sovrappongono in misura più o meno rilevante ai dipinti esposti.
+
+Sono riuscito ad affrontare alcuni di questi problemi, come ad esempio il problema del flooding errato che riconosceva in modo invertito il muro e i dipinti, oppure i problemi di contrasto e illuminazione delle immagine, risolti attraverso tecniche di auto-adjusting che mi hanno inoltre permesso di migliorare i risultati di match corretti con il DB.
+
+Questo lavoro presenta buoni risultati ma apre anche la strada a una serie di nuove strade e soluzioni alternative e differenti combinazioni delle operazioni svolte che fanno sperare nella possibilità di poter ottenere un miglioramento dei risultati e delle performance.
+
 
 {\small
 \bibliographystyle{ieee_fullname}

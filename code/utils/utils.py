@@ -4,6 +4,7 @@ Module containing general utility functions.
 import sys
 import cv2
 import os
+import ntpath
 
 from models.media_type import MediaType
 
@@ -13,7 +14,7 @@ def create_directory(path):
     Create directory at the given path, checking for errors and if the directory
     already exists.
     """
-
+    path = ntpath.realpath(path)
     if not os.path.exists(path):
         try:
             os.makedirs(path)
@@ -41,6 +42,7 @@ def check_media_file(filename):
 
     """
     media_type = MediaType(0)
+    filename = ntpath.realpath(filename)
     media = cv2.imread(filename, cv2.IMREAD_COLOR)
     if media is None:
         try:

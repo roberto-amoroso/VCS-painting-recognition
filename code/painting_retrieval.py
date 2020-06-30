@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 import os
 import time
+import ntpath
 
 
 def create_paintings_db(db_path, data_path):
@@ -31,6 +32,7 @@ def create_paintings_db(db_path, data_path):
     """
     paintings_db = []
     df_painting_data = pd.read_csv(data_path)
+    db_path = ntpath.realpath(db_path)
     orb = cv2.ORB_create()
     for subdir, dirs, files in os.walk(db_path):
         for painting_file in files:

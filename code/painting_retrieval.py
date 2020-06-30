@@ -31,6 +31,7 @@ def create_paintings_db(db_path, data_path):
     """
     paintings_db = []
     df_painting_data = pd.read_csv(data_path)
+    orb = cv2.ORB_create()
     for subdir, dirs, files in os.walk(db_path):
         for painting_file in files:
             image = cv2.imread(os.path.join(db_path, painting_file))
@@ -41,9 +42,7 @@ def create_paintings_db(db_path, data_path):
             room = painting_info['Room']
 
             # create ORB keypoints and descriptors for each painting in the DB
-            orb = cv2.ORB_create()
-            src_kp = orb.detect(image, None)
-            src_kp, src_des = orb.compute(image, src_kp)
+            src_kp, src_des = orb.detectAndCompute(image, None)
             painting = Painting(
                 image,
                 title,
@@ -83,8 +82,7 @@ def match_features_orb(src_img, dst_img, max_matches=50):
     """
     orb = cv2.ORB_create()
 
-    src_kp = orb.detect(src_img, None)
-    src_kp, src_des = orb.compute(src_img, src_kp)
+    src_kp, src_des = orb.detectAndCompute(src_img, None)
     # show_image("src_kp", cv2.drawKeypoints(src_img, src_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
 
     dst_kp, dst_des = dst_img.keypoints, dst_img.descriptors
@@ -398,10 +396,10 @@ def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, 
 
         print('\n# Painting #%d/%d information:' % (i + 1, len(paintings_detected)))
         if painting.title is not None:
-            print("\ttitle:    ", painting.title)
-            print("\tauthor:   ", painting.author)
-            print("\troom:     ", painting.room)
-            print("\tfilename: ", painting.filename)
+            print("\t{:10s} {}".format("title:", painting.title))
+            print("\t{:10s} {}".format("author:", painting.author))
+            print("\t{:10s} {}".format("room:", painting.room))
+            print("\t{:10s} {}".format("filename:", painting.filename))
         else:
             print("\t-- No DB match --")
 

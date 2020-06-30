@@ -5,7 +5,7 @@ Module containing functions to perform Painting Detection.
 from utils.draw import draw_corners, draw_lines
 from image_processing import image_dilation, image_erosion, invert_image, find_image_contours, image_blurring, \
     canny_edge_detection, find_hough_lines, extend_image_lines, find_corners, \
-    mean_shift_segmentation, find_largest_segment, create_segmented_image
+    mean_shift_segmentation, find_largest_segment, create_segmented_image, image_morphology_tranformation
 from utils.math_utils import order_points, calculate_polygon_area, translate_points
 from models.painting import Painting
 
@@ -250,7 +250,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     kernel_size = 20  # 18 or 20
     start_time = time.time()
     dilated_wall_mask = image_dilation(wall_mask, kernel_size)
-    exe_time_dilation = time.time() - start_time
+    print_time(start_time)
     show_image('image_dilation', dilated_wall_mask, height=405, width=720)
 
     start_time = time.time()
@@ -279,7 +279,6 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     contours_mode = cv2.RETR_TREE
     contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
     contours_1, hierarchy_1 = find_image_contours(wall_mask_inverted, contours_mode, contours_method)
-    print_time(start_time)
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
     # img_contours = img.copy()
     # cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
@@ -293,8 +292,6 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
 
     # Step 5: Find all contours
     # ----------------------------
-    print_next_step(generator, "Find Contours")
-    start_time = time.time()
     contours_mode = cv2.RETR_TREE
     contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
     contours_2, hierarchy_2 = find_image_contours(wall_mask_inverted_2, contours_mode, contours_method)
@@ -330,9 +327,9 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     #     show_image('image_contours', img_contours, height=405, width=720)
 
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-    img_contours = img.copy()
-    cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
-    show_image('image_contours', img_contours, height=405, width=720)
+    # img_contours = img.copy()
+    # cv2.drawContours(img_contours, contours, -1, (0, 255, 0), 3)
+    # show_image('image_contours', img_contours, height=405, width=720)
 
     # Step 6: Refine list of components found
     # ----------------------------
@@ -361,8 +358,16 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     # Step SEGMENTATION: create a segmented image where only the candidate contours are white, in order to
     #                    remove unwanted object and make the following operation (erosion/dilation) faster
     # -----------------------
+    print_next_step(generator, "Create Segmented Mask")
+    start_time = time.time()
     segmented_img = create_segmented_image(wall_mask_inverted, candidate_painting_contours)
+    # show_image('segmented_img', segmented_img, height=405, width=720)
+    segmented_img = image_morphology_tranformation(segmented_img, cv2.MORPH_OPEN, 30)
     show_image('segmented_img', segmented_img, height=405, width=720)
+    print_time(start_time)
+
+    # I further refine the contours
+    candidate_painting_contours, _ = find_image_contours(segmented_img, contours_mode, contours_method)
 
     # -----------------------
     # PADDING: add black padding to avoid unwanted "adherent" effects at the border when do erosion
@@ -377,12 +382,12 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     print_next_step(generator, "Erode Components")
     start_time = time.time()
     kernel_size = 20  # 23 or 40
-    if not error_in_wall_mask:
-        cleaned_wall_mask = image_erosion(segmented_img, kernel_size)
-    else:
-        kernel_size = 30
-        cleaned_wall_mask = image_dilation(segmented_img, kernel_size)
-        cleaned_wall_mask = image_erosion(cleaned_wall_mask, kernel_size)
+    # if not error_in_wall_mask:
+    cleaned_wall_mask = image_erosion(segmented_img, kernel_size)
+    # else:
+    #     kernel_size = 30
+    #     cleaned_wall_mask = image_dilation(segmented_img, kernel_size)
+    #     cleaned_wall_mask = image_erosion(cleaned_wall_mask, kernel_size)
     print_time(start_time)
     # show_image('image_mask_cleaned', cleaned_wall_mask, height=405, width=720)
 

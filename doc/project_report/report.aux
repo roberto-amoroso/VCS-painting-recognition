@@ -27,6 +27,10 @@
 \citation{uijlings2013selective}
 \citation{girshick2015fast}
 \citation{ren2015faster}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\contentsline {section}{\numberline {1}\hskip -1em.\nobreakspace  {}Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}\hskip -1em.\nobreakspace  {}Related Work}{1}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}\hskip -1em.\nobreakspace  {}Object Detection}{1}{subsection.2.1}\protected@file@percent }
 \citation{dai2016r}
 \citation{kim2016pvanet}
 \citation{lin2017feature}
@@ -35,10 +39,6 @@
 \citation{redmon2016you}
 \citation{shrivastava2016training}
 \citation{redmon2018yolov3}
-\HyPL@Entry{0<</S/D>>}
-\@writefile{toc}{\contentsline {section}{\numberline {1}\hskip -1em.\nobreakspace  {}Introduction}{1}{section.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {2}\hskip -1em.\nobreakspace  {}Related Work}{1}{section.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}\hskip -1em.\nobreakspace  {}Object Detection}{1}{subsection.2.1}\protected@file@percent }
 \citation{rublee2011orb}
 \citation{alahi2012freak}
 \citation{bay2006surf}
@@ -48,7 +48,7 @@
 \citation{morel2009asift}
 \citation{rublee2011orb}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}\hskip -1em.\nobreakspace  {}Image local features}{2}{subsection.2.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}\hskip -1em.\nobreakspace  {}Methods}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}\hskip -1em.\nobreakspace  {}Method}{2}{section.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}\hskip -1em.\nobreakspace  {}Material and Data Preparation}{2}{subsection.3.1}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces 'TODO', the painting we want to locate, rectify and recognize}}{3}{figure.1}\protected@file@percent }
 \newlabel{fig:dbPainting}{{1}{3}{'TODO', the painting we want to locate, rectify and recognize}{figure.1}{}}
@@ -62,42 +62,75 @@
 \newlabel{fig:maskLargestSegment}{{4}{4}{Mask showing the wall in white and the painting in black}{figure.4}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2}Connected Component Analysis}{4}{subsubsection.3.2.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.3}Refine the Wall Mask}{4}{subsubsection.3.2.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Wall mask errata (a sinistra) e wall corretta applicando la mia soluzione (a destra).}}{5}{figure.5}\protected@file@percent }
+\newlabel{fig:wallMaskCorrection}{{5}{5}{Wall mask errata (a sinistra) e wall corretta applicando la mia soluzione (a destra)}{figure.5}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.4}Painting Segmentation}{5}{subsubsection.3.2.4}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Segmented version of the input image.}}{5}{figure.5}\protected@file@percent }
-\newlabel{fig:imageSegmented}{{5}{5}{Segmented version of the input image}{figure.5}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Image showing the rectangular bounding box of the paintings.}}{5}{figure.6}\protected@file@percent }
-\newlabel{fig:imageRectROI}{{6}{5}{Image showing the rectangular bounding box of the paintings}{figure.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}\hskip -1em.\nobreakspace  {}Painting Rectification}{5}{subsection.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}Find Contours}{5}{subsubsection.3.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}\hskip -1em.\nobreakspace  {}Painting Retieval}{5}{subsection.3.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}\hskip -1em.\nobreakspace  {}People Detection}{5}{subsection.3.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}\hskip -1em.\nobreakspace  {}Painting and People Localization}{5}{subsection.3.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Segmented version of the input image.}}{6}{figure.6}\protected@file@percent }
+\newlabel{fig:imageSegmented}{{6}{6}{Segmented version of the input image}{figure.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Image showing the rectangular bounding box of the paintings.}}{6}{figure.7}\protected@file@percent }
+\newlabel{fig:imageRectROI}{{7}{6}{Image showing the rectangular bounding box of the paintings}{figure.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Sub-image (left) and sub-mask (right) of a painting component.}}{6}{figure.8}\protected@file@percent }
+\newlabel{fig:subImageMask}{{8}{6}{Sub-image (left) and sub-mask (right) of a painting component}{figure.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}\hskip -1em.\nobreakspace  {}Painting Rectification}{6}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}Find Corners}{6}{subsubsection.3.3.1}\protected@file@percent }
+\citation{canny1986computational}
+\citation{ballard1987generalizing}
+\citation{shi1994good}
+\citation{harris1988combined}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Result of component erosion e smoothing using a Median Filter.}}{7}{figure.9}\protected@file@percent }
+\newlabel{fig:erosionAndMedianFilter}{{9}{7}{Result of component erosion e smoothing using a Median Filter}{figure.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Result of Canny Edge detection (left) and the mask obtained from Hough Lines (right).}}{7}{figure.10}\protected@file@percent }
+\newlabel{fig:cannyHough}{{10}{7}{Result of Canny Edge detection (left) and the mask obtained from Hough Lines (right)}{figure.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Corners found using the Shi-Tomasi Corner Detector.}}{8}{figure.11}\protected@file@percent }
+\newlabel{fig:cornersDetect}{{11}{8}{Corners found using the Shi-Tomasi Corner Detector}{figure.11}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}Rectify Painting}{8}{subsubsection.3.3.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Original painting image (left) and its reftified version (right).}}{8}{figure.12}\protected@file@percent }
+\newlabel{fig:rectifyComparison}{{12}{8}{Original painting image (left) and its reftified version (right)}{figure.12}{}}
+\newlabel{eq:1}{{1}{8}{Rectify Painting}{equation.3.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces ROI of the detected points obtained using paintings corners.}}{9}{figure.13}\protected@file@percent }
+\newlabel{fig:improvedROI}{{13}{9}{ROI of the detected points obtained using paintings corners}{figure.13}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}Improve Paintings ROI}{9}{subsubsection.3.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}\hskip -1em.\nobreakspace  {}Painting Retieval}{9}{subsection.3.4}\protected@file@percent }
+\newlabel{eq:2}{{2}{9}{\hskip -1em.~Painting Retieval}{equation.3.2}{}}
+\newlabel{eq:3}{{3}{9}{\hskip -1em.~Painting Retieval}{equation.3.3}{}}
+\newlabel{eq:4}{{4}{9}{\hskip -1em.~Painting Retieval}{equation.3.4}{}}
+\newlabel{eq:5}{{5}{10}{\hskip -1em.~Painting Retieval}{equation.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}\hskip -1em.\nobreakspace  {}People Detection}{10}{subsection.3.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Example of output of the people detection task.}}{10}{figure.14}\protected@file@percent }
+\newlabel{fig:peopleDetection}{{14}{10}{Example of output of the people detection task}{figure.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}\hskip -1em.\nobreakspace  {}Painting and People Localization}{10}{subsection.3.6}\protected@file@percent }
 \bibstyle{ieee_fullname}
 \bibdata{egbib}
 \bibcite{alahi2012freak}{1}
-\bibcite{bay2006surf}{2}
-\bibcite{bradski2008learning}{3}
-\bibcite{dai2016r}{4}
-\bibcite{fathy1995image}{5}
-\bibcite{girshick2015fast}{6}
-\bibcite{girshick2014rich}{7}
-\bibcite{hambly2001supercosmos}{8}
-\bibcite{hong2019art}{9}
-\bibcite{jain2000statistical}{10}
-\bibcite{kim2016pvanet}{11}
-\bibcite{leutenegger2011brisk}{12}
-\bibcite{lin2017feature}{13}
-\bibcite{liu2016ssd}{14}
-\@writefile{toc}{\contentsline {section}{\numberline {4}\hskip -1em.\nobreakspace  {}Results}{6}{section.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}\hskip -1em.\nobreakspace  {}Conclusions}{6}{section.5}\protected@file@percent }
-\bibcite{lowe2004distinctive}{15}
-\bibcite{martinel2013robust}{16}
-\bibcite{morel2009asift}{17}
-\bibcite{redmon2016you}{18}
-\bibcite{redmon2017yolo9000}{19}
-\bibcite{redmon2018yolov3}{20}
-\bibcite{ren2015faster}{21}
-\bibcite{rublee2011orb}{22}
-\bibcite{rui1999image}{23}
-\bibcite{shrivastava2016training}{24}
-\bibcite{uijlings2013selective}{25}
+\bibcite{ballard1987generalizing}{2}
+\bibcite{bay2006surf}{3}
+\bibcite{bradski2008learning}{4}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Example of output of the Painting and People Localization task.}}{11}{figure.15}\protected@file@percent }
+\newlabel{fig:paintingPeopleLocalization}{{15}{11}{Example of output of the Painting and People Localization task}{figure.15}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}\hskip -1em.\nobreakspace  {}Results}{11}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}\hskip -1em.\nobreakspace  {}Conclusions}{11}{section.5}\protected@file@percent }
+\bibcite{canny1986computational}{5}
+\bibcite{dai2016r}{6}
+\bibcite{fathy1995image}{7}
+\bibcite{girshick2015fast}{8}
+\bibcite{girshick2014rich}{9}
+\bibcite{hambly2001supercosmos}{10}
+\bibcite{harris1988combined}{11}
+\bibcite{hong2019art}{12}
+\bibcite{jain2000statistical}{13}
+\bibcite{kim2016pvanet}{14}
+\bibcite{leutenegger2011brisk}{15}
+\bibcite{lin2017feature}{16}
+\bibcite{liu2016ssd}{17}
+\bibcite{lowe2004distinctive}{18}
+\bibcite{martinel2013robust}{19}
+\bibcite{morel2009asift}{20}
+\bibcite{redmon2016you}{21}
+\bibcite{redmon2017yolo9000}{22}
+\bibcite{redmon2018yolov3}{23}
+\bibcite{ren2015faster}{24}
+\bibcite{rublee2011orb}{25}
+\bibcite{rui1999image}{26}
+\bibcite{shi1994good}{27}
+\bibcite{shrivastava2016training}{28}
+\bibcite{uijlings2013selective}{29}

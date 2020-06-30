@@ -6,6 +6,11 @@ Alexandre Alahi, Raphael Ortiz, and Pierre Vandergheynst.
 \newblock In {\em 2012 IEEE Conference on Computer Vision and Pattern
   Recognition}, pages 510--517. Ieee, 2012.
 
+\bibitem{ballard1987generalizing}
+Dana~H Ballard.
+\newblock Generalizing the hough transform to detect arbitrary shapes.
+\newblock In {\em Readings in computer vision}, pages 714--725. Elsevier, 1987.
+
 \bibitem{bay2006surf}
 Herbert Bay, Tinne Tuytelaars, and Luc Van~Gool.
 \newblock Surf: Speeded up robust features.
@@ -16,6 +21,12 @@ Herbert Bay, Tinne Tuytelaars, and Luc Van~Gool.
 Gary Bradski and Adrian Kaehler.
 \newblock {\em Learning OpenCV: Computer vision with the OpenCV library}.
 \newblock " O'Reilly Media, Inc.", 2008.
+
+\bibitem{canny1986computational}
+John Canny.
+\newblock A computational approach to edge detection.
+\newblock {\em IEEE Transactions on pattern analysis and machine intelligence},
+  (6):679--698, 1986.
 
 \bibitem{dai2016r}
 Jifeng Dai, Yi Li, Kaiming He, and Jian Sun.
@@ -49,6 +60,12 @@ NC Hambly, MJ Irwin, and HT MacGillivray.
   classification and photometry.
 \newblock {\em Monthly Notices of the Royal Astronomical Society},
   326(4):1295--1314, 2001.
+
+\bibitem{harris1988combined}
+Christopher~G Harris, Mike Stephens, et~al.
+\newblock A combined corner and edge detector.
+\newblock In {\em Alvey vision conference}, volume~15, pages 10--5244.
+  Citeseer, 1988.
 
 \bibitem{hong2019art}
 Yiyu Hong and Jongweon Kim.
@@ -140,6 +157,12 @@ Yong Rui, Thomas~S Huang, and Shih-Fu Chang.
   issues.
 \newblock {\em Journal of visual communication and image representation},
   10(1):39--62, 1999.
+
+\bibitem{shi1994good}
+Jianbo Shi et~al.
+\newblock Good features to track.
+\newblock In {\em 1994 Proceedings of IEEE conference on computer vision and
+  pattern recognition}, pages 593--600. IEEE, 1994.
 
 \bibitem{shrivastava2016training}
 Abhinav Shrivastava, Abhinav Gupta, and Ross Girshick.

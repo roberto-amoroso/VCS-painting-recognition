@@ -3,44 +3,47 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: report.aux
 The style file: ieee_fullname.bst
 Database file #1: egbib.bib
-You've used 25 entries,
+Warning--there's a number but no volume in canny1986computational
+Warning--can't use both volume and number fields in harris1988combined
+You've used 29 entries,
             2120 wiz_defined-function locations,
-            645 strings with 8038 characters,
-and the built_in function-call counts, 10740 in all, are:
-= -- 1094
-> -- 473
-< -- 13
-+ -- 187
-- -- 160
-* -- 735
-:= -- 1639
-add.period$ -- 80
-call.type$ -- 25
-change.case$ -- 154
+            671 strings with 8558 characters,
+and the built_in function-call counts, 12424 in all, are:
+= -- 1279
+> -- 518
+< -- 17
++ -- 207
+- -- 174
+* -- 838
+:= -- 1881
+add.period$ -- 95
+call.type$ -- 29
+change.case$ -- 171
 chr.to.int$ -- 0
-cite$ -- 25
-duplicate$ -- 436
-empty$ -- 844
-format.name$ -- 160
-if$ -- 2345
+cite$ -- 31
+duplicate$ -- 515
+empty$ -- 993
+format.name$ -- 174
+if$ -- 2733
 int.to.chr$ -- 0
-int.to.str$ -- 25
-missing$ -- 26
-newline$ -- 128
-num.names$ -- 50
-pop$ -- 180
+int.to.str$ -- 29
+missing$ -- 30
+newline$ -- 148
+num.names$ -- 58
+pop$ -- 203
 preamble$ -- 1
-purify$ -- 130
+purify$ -- 143
 quote$ -- 0
-skip$ -- 347
+skip$ -- 407
 stack$ -- 0
-substring$ -- 798
-swap$ -- 161
-text.length$ -- 13
+substring$ -- 939
+swap$ -- 194
+text.length$ -- 17
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 98
-warning$ -- 0
-while$ -- 107
-width$ -- 27
-write$ -- 279
+type$ -- 114
+warning$ -- 2
+while$ -- 126
+width$ -- 31
+write$ -- 327
+(There were 2 warnings)

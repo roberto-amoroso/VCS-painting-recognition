@@ -3,7 +3,7 @@
 
 This document describes the structure and functionality of the software I created as the final project of the course of Vision and Cognitive Systems AY 2019/2020.
 
-I propose a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, I created a ***Python*** program that is able to locate and recognize paintings and people present in a video or single image. For the part relating to the paintings, I used the ***OpenCV*** library, while to carry out the people detection operation I used [***YOLO***](https://pjreddie.com/darknet/yolo/), a real-time object detection system.
+I propose a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, I created a ***Python*** program that is able to locate and recognize paintings and people present in a video or image. For the part relating to the paintings, I used the ***OpenCV*** library, while to carry out the people detection operation I used [***YOLO***](https://pjreddie.com/darknet/yolo/), a real-time object detection system.
 
 Before proceeding to the detailed description of the functionalities of the program and the possible arguments accepted, the prototype invocation of the main script follows:
 
@@ -73,7 +73,7 @@ For convenience, we report again the program invocation prototype:
 
 ### Positional Arguments:
 
- - `input_filename`        filename of the input image or video
+ - `input`        image or video filename or folder containing images, videos or a mix of both
  - `db_path`     path of the directory where the images that make up  the DB are located
  - `data_filename`       file containing all the information about the  paintings: *(Title, Author, Room, Image)*
 
@@ -108,10 +108,9 @@ set the verbosity of the information displayed (description of the operation  ex
  - `-vi {0,1,2}, --verbosity_image {0,1,2}`<br> 
 set the verbosity of the images displayed.<br> 
 ***NOTE***: if the input is a video, is automatically set to '0' (in order to avoid  an excessive number of images displayed on the screen).<br> 
-                          0 = no image shown **(default)**<br> 
-                          1 = shows main steps final images, at the end of the script execution ***(NOT BLOCKING)***<br> 
-                          2 = shows each final and intermediate image when it is created and a button
-                              must be pressed to continue the execution (mainly used for debugging) ***(BLOCKING)***
+0 = no image shown during processing (DEFAULT)<br> 
+1 = shows output images of the main pipeline steps when they are created. A button must be pressed to continue the execution (used for DEBUGGING)<br> 
+2 = like `-v1 1`, but it also shows output images of the intermediate pipeline steps<br> 
 
  - `-mdbi, --match_db_image`<br> 
  if present, to perform *Painting Retrieval*, the program rectifies each painting  to match the aspect ration of every painting in `db_path`. Otherwise, it rectifies each painting one time using a calculated aspect ratio.
@@ -126,9 +125,13 @@ if present indicates that, during *Painting Retrieval*, the program will execute
 
 ### \# TASKS:
 
-Given the mutual dependency of the tasks, to execute the $i-th$ task, with $i>1$, it is necessary that the j-th tasks are executed first, for each $j$ such that $0<=j<i$.
-For example, if you want to perform *Painting Rectification* ($i = 2$) it is necessary that you first execute *Painting Segmentation* ($j = 1$) and *Painting Detection* ($j = 0$).
-The *People Detection* task is an **exception**. It runs independently of the other tasks.
+The tasks in the pipeline are performed in succession. Therefore, to execute the i-th task, with i>1, it is necessary that the j-th tasks are executed first, for each j such that 0<=j<i.
+
+For example, if you want to perform *Painting Rectification* (i = 2) it is necessary that you first execute *Painting Segmentation* (j = 1) and *Painting Detection* (j = 0).
+
+This implies that the *Painting and People Detection* task involves performing all the tasks. This is also reflected in the output, which will be the union of the outputs of all the tasks in the pipeline.
+
+The *People Detection* task is an exception. It runs independently of the other tasks.
 
 ### \# OUTPUT:
    

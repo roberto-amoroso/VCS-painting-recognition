@@ -48,10 +48,15 @@ def args_parse():
                     "- People and Painting Localization: locates paintings and people using information found in\n"
                     "                                    `data_filename`\n",
         epilog="# TASKS:\n"
-               "\tGiven the mutual dependency of the tasks, to execute the i-th task, with i>1, it is necessary\n"
-               "\tthat the j-th tasks are executed first, for each j such that 0<=j<i.\n"
+               "\tThe tasks in the pipeline are performed in succession. Therefore, to execute the i-th task,\n"
+               "\twith i>1, it is necessary that the j-th tasks are executed first, for each j such that 0<=j<i.\n"
                "\tFor example, if you want to perform Painting Rectification (i = 2) it is necessary that you\n"
                "\tfirst execute Painting Segmentation (j = 1) and Painting Detection (j = 0).\n"
+               "\n"
+               "\tThis implies that the Painting and People Detection task involves performing all the tasks.\n"
+               "\tThis is also reflected in the output, which will be the union of the outputs of all the tasks\n"
+               "\tin the pipeline.\n"
+               "\n"
                "\tThe People Detection task is an exception. It runs independently of the other tasks.\n\n"
                "# OUTPUT:\n"
                "\tthe program output paths are structured as follows (let's consider '--output = \"output\"'):\n\n"
@@ -97,9 +102,9 @@ def args_parse():
     )
 
     parser.add_argument(
-        "input_filename",
+        "input",
         type=str,
-        help="filename of the input image or video\n\n"
+        help="image or video filename or folder containing images, videos or a mix of both\n\n"
     )
 
     parser.add_argument(
@@ -138,7 +143,7 @@ def args_parse():
              "  2 = Painting Rectification\n"
              "  3 = Painting Retrieval\n"
              "  4 = People Detection\n"
-             "  5 = People and Paintings Localization (default)\n\n"
+             "  5 = People and Paintings Localization (DEFAULT)\n\n"
     )
 
     parser.add_argument(
@@ -148,7 +153,7 @@ def args_parse():
         default=1,
         help="integer >=1 (default =1). In case the input is a video, it establishes with \n"
              "which occurrence to consider the frames of the video itself.\n"
-             "Example: frame_occurrence = 30 (value recommended during debugging) means that\n"
+             "Example: frame_occurrence = 30 (VALUE RECOMMENDED DURING TESTING) means that\n"
              "it considers one frame every 30.\n"
              "NOTE: for more details read the epilogue at the bottom of the page, section \n"
              "'# FRAME_OCCURRENCE'\n\n"
@@ -162,7 +167,7 @@ def args_parse():
         default=0,
         help="set the verbosity of the information displayed (description of the operation\n"
              "executed and its execution time)\n"
-             "  0 = ONLY main processing steps info (default)\n"
+             "  0 = ONLY main processing steps info (DEFAULT)\n"
              "  1 = ALL processing steps info\n\n"
     )
 
@@ -175,12 +180,11 @@ def args_parse():
         help="set the verbosity of the images displayed.\n"
              "NOTE: if the input is a video, is automatically set to '0' (in order to avoid\n"
              "an excessive number of images displayed on the screen).\n"
-             "  0 = no image shown (default)\n"
-             "  1 = shows main steps final images, at the end of the script execution\n"
-             "      (NOT BLOCKING)\n"
-             "  2 = shows each final and intermediate image when it is created and a button\n"
-             "      must be pressed to continue the execution (mainly used for debugging)\n"
-             "      (BLOCKING)\n\n"
+             "  0 = no image shown during processing (DEFAULT)\n"
+             "  1 = shows output images of the main pipeline steps when they are created.\n"
+             "      A button must be pressed to continue the execution (used for DEBUGGING)\n"
+             "  2 = like '-v1 1', but it also shows output images of the intermediate\n"
+             "      pipeline steps.\n\n"
     )
 
     parser.add_argument(
@@ -227,9 +231,9 @@ def main():
     # match_db_image = args.match_db_image
     # histo_mode = args.histo_mode
 
-    verbosity_print = 0
+    verbosity_print = 1
     verbosity_image = 2
-    task = Task(3)
+    task = Task(5)
     match_db_image = False
     histo_mode = False
     frame_occurrence = 10
@@ -239,15 +243,17 @@ def main():
     # ----------------------
     # TESTING TODO remove it
     # ----------------------
-    input_filename = "dataset/photos/test/"
+    # DIR of images and videos
+    input_filename = "dataset/small_test/"
     # VIDEOS
     # input_filename = "dataset/videos/014/"
     # input_filename += "VID_20180529_112627.mp4"
     # input_filename += "20180206_114604.mp4"
     # IMAGES
+    # input_filename = "dataset/photos/test/"
     # input_filename += 'wall_mask_test.jpg'  # CRITIC
     # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
-    input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
+    # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
     # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
@@ -287,7 +293,7 @@ def main():
         sys.exit(f"\nError in Data file: '{painting_data_path}'\n")
 
     # ---------------------------------------------------------------------------------------------
-    # Check if input file is valid
+    # Check if input is valid
     # ---------------------------------------------------------------------------------------------
 
     try:
@@ -309,6 +315,16 @@ def main():
     print("-" * 50)
 
     # ---------------------------------------------------------------------------------------------
+    # Managing prints verbosity
+    # ---------------------------------------------------------------------------------------------
+
+    if verbosity_print >= 1:
+        print_next_step = print_next_step_info
+        print_time = print_time_info
+    else:
+        print_next_step = print_time = lambda *a, **k: None
+
+    # ---------------------------------------------------------------------------------------------
     # Print a summary of the invocation arguments
     # ---------------------------------------------------------------------------------------------
 
@@ -316,7 +332,7 @@ def main():
     print("-" * 50)
     print("# SCRIPT CONFIGURATION:")
     print("\t{:25s} {}".format("-Task:", task.name))
-    print("\t{:25s} {}".format("-Filename:", input_filename))
+    print("\t{:25s} {}".format("-Input:", input_filename))
     print("\t{:25s} {}".format("-DB path:", painting_db_path))
     print("\t{:25s} {}".format("-Data path:", painting_data_path))
     print("\t{:25s} {}".format("-Output base path:", output_base_path))
@@ -324,6 +340,7 @@ def main():
     print("\t{:25s} {}".format("-Verbosity_image:", verbosity_image))
     print("\t{:25s} {}".format("-Task:", task.name))
     print("\t{:25s} {}".format("-Histo mode:", histo_mode))
+    print("\t{:25s} {}".format("-Match DB images:", match_db_image))
 
     if frame_occurrence > 1:
         print("\t{:25s} {}".format("-Saving 1 frame every:", frame_occurrence))
@@ -369,8 +386,13 @@ def main():
     print("--------------------------------------------------")
 
     verbosity_image_backup = verbosity_image
+    tot_paintings_detected = 0
+    tot_paintings_retrieved = 0
+    tot_people_detected = 0
 
     for input_filename in inputs_list:
+
+        file_time_start = time.time()
 
         media, media_type = check_media_file(input_filename)
         if media_type == MediaType.video:
@@ -379,19 +401,13 @@ def main():
             verbosity_image = verbosity_image_backup
 
         # ---------------------------------------------------------------------------------------------
-        # Managing verbosity
+        # Managing images verbosity
         # ---------------------------------------------------------------------------------------------
-
-        if verbosity_print >= 1:
-            print_next_step = print_next_step_info
-            print_time = print_time_info
-        else:
-            print_next_step = print_time = lambda *a, **k: None
 
         if verbosity_image >= 2:
             show_image_main = show_image = show_image_window_blocking
         elif verbosity_image >= 1:
-            show_image_main = show_image_window
+            show_image_main = show_image_window_blocking
             show_image = lambda *a, **k: None
         else:
             show_image_main = show_image = lambda *a, **k: None
@@ -433,7 +449,7 @@ def main():
             print()
             print("-" * 50)
             print("# IMAGE INFO:")
-            print("\t{:10s} {}".format("-Filename:", input_filename))
+            print("\t{:10s} {}".format("-Filename:", input_filename.replace('\\', '/')))
             print("\t{:10s} {}".format("-Height:", img_original.shape[0]))
             print("\t{:10s} {}".format("-Width:", img_original.shape[1]))
             print("-" * 50)
@@ -453,7 +469,7 @@ def main():
             print()
             print("-" * 50)
             print("# VIDEO INFO:")
-            print("\t{:25s} {}".format("-Filename:", input_filename))
+            print("\t{:25s} {}".format("-Filename:", input_filename.replace('\\', '/')))
             print("\t{:25s} {:.2f} s".format("-Duration:", duration))
             print("\t{:25s} {}".format("-Frame count:", int(frame_count)))
             print("\t{:25s} {}".format("-Frames to process:", frame_process))
@@ -504,7 +520,7 @@ def main():
 
         print()
         print("===================   RESULT   ===================")
-        print("{:25s} {:.4f} s".format("# Total execution time:", time.time() - script_time_start))
+        print("{:25s} {:.4f} s".format("# Total execution time:", time.time() - file_time_start))
         print("{:25s} {}".format("# Output path:", out_path_info))
 
         if media_type == MediaType.video:
@@ -517,13 +533,31 @@ def main():
             print("{:25s} {}".format("# People detections:", pipeline_manager.num_people_detected))
         print("=" * 50)
 
+        tot_paintings_detected += pipeline_manager.num_paintings_detected
+        tot_paintings_retrieved += pipeline_manager.num_paintings_retrieved
+        tot_people_detected += pipeline_manager.num_people_detected
+
+        plt.show()
+        cv2.destroyAllWindows()
+
     print("\n\n")
     print("--------------------------------------------------")
     print("---------------   END PROCESSING   ---------------")
     print("--------------------------------------------------")
 
+    print()
+    print("================   FINAL RESULT   ================")
+    print("{:25s} {:.4f} s".format("# Total execution time:", time.time() - script_time_start))
+
+    if task != Task.people_detection:
+        print("{:25s} {}".format("# Painting detections:", tot_paintings_detected))
+    if task.value > Task.painting_rectification.value and task != Task.people_detection:
+        print("{:25s} {}".format("# Painting retrievals:", tot_paintings_retrieved))
+    if task.value > Task.painting_retrieval.value or task == Task.people_detection:
+        print("{:25s} {}".format("# People detections:", tot_people_detected))
+    print("=" * 50)
+
     plt.show()
-    cv2.waitKey()
     cv2.destroyAllWindows()
 
 

@@ -101,7 +101,7 @@ def detect_people(img, people_detector, paintings_detected, generator, show_imag
     start_time = time.time()
 
     img_people_detected, people_in_frame, people_bounding_boxes = people_detector.run(img.copy())
-    show_image('people_before_cleaning', img_people_detected, height=405, width=720)
+    show_image('people_detection', img_people_detected, height=405, width=720)
 
     # Clean people bounding boxes only if I detected paintings
     if len(paintings_detected) > 0:

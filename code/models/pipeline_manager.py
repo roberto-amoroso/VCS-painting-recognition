@@ -154,7 +154,7 @@ class PipelineManager:
         print_time_info(start_time, "PAINTING SEGMENTATION - END")
         print("  Segmented shape: ", segmented_img_original.shape)
         print("-" * 50)
-        self.show_image_main('segmented_img_original', segmented_img_original, height=405, width=720)
+        self.show_image_main('segmented_img_original_size', segmented_img_original, height=405, width=720)
 
         return segmented_img_original
 
@@ -360,7 +360,7 @@ class PipelineManager:
         )
 
         # print("\n# Final frame shape: ", img_original.shape)
-        self.show_image_main('final_frame', img_original, height=405, width=720)
+        self.show_image_main('pipeline_output', img_original, height=405, width=720)
         if self.media_type == MediaType.image:
             self.save_image(img_original)
 

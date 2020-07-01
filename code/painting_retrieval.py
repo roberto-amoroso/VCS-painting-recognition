@@ -352,7 +352,7 @@ def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, 
         # print(f"\talpha: {alpha}")
         # print(f"\tbeta: {beta}")
         print_time(start_time)
-        show_image('auto_adjusted', img_auto_adjusted)
+        show_image('auto_adjusted_image', img_auto_adjusted)
 
         sub_img = img_auto_adjusted
 
@@ -394,7 +394,7 @@ def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, 
                 painting.author = recognized_painting.author
                 painting.room = recognized_painting.room
                 painting.filename = recognized_painting.filename
-                show_image("prediction", recognized_painting.image)
+                show_image("DB_image_predicted", recognized_painting.image)
 
         print('\n# Painting #%d/%d information:' % (i + 1, len(paintings_detected)))
         if painting.title is not None:

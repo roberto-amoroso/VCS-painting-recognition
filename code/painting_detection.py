@@ -228,7 +228,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     maximum_pyramid_level = 1  # 1
     img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
     print_time(start_time)
-    show_image('image_mean_shift_segmentation', img_mss, height=405, width=720)
+    show_image('mean_shift_segmentation', img_mss, height=405, width=720)
 
     # Step 2: Get a mask of just the wall in the gallery
     # ----------------------------
@@ -238,7 +238,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     x_samples = 8  # 8 or 16
     wall_mask = find_largest_segment(img_mss, color_difference, x_samples)
     print_time(start_time)
-    show_image(f'image_mask_largest_segment', wall_mask, height=405, width=720)
+    show_image(f'mask_largest_segment', wall_mask, height=405, width=720)
 
     # Step 4: Invert the wall mask
     # ----------------------------
@@ -246,7 +246,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     start_time = time.time()
     wall_mask_inverted = invert_image(wall_mask)
     print_time(start_time)
-    show_image('image_inversion', wall_mask_inverted, height=405, width=720)
+    show_image('mask_inverted', wall_mask_inverted, height=405, width=720)
 
     # Step 3: Erode and Dilate the wall mask to remove noise
     print_next_step(generator, "Erode and Dilate")
@@ -255,12 +255,12 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     start_time = time.time()
     eroded_wall_mask = image_erosion(wall_mask_inverted, kernel_size)
     print_time(start_time)
-    show_image('image_erosion', eroded_wall_mask, height=405, width=720)
+    show_image('mask_eroded', eroded_wall_mask, height=405, width=720)
 
     start_time = time.time()
     dilated_wall_mask = image_dilation(eroded_wall_mask, kernel_size)
     print_time(start_time)
-    show_image('image_dilation', dilated_wall_mask, height=405, width=720)
+    show_image('mask_dilated', dilated_wall_mask, height=405, width=720)
 
     wall_mask_inverted = dilated_wall_mask
 
@@ -312,8 +312,9 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         hierarchy = hierarchy_2
         remove_overlapping = True
         # Fix the wall mask considering the one before the inversion
-        wall_mask_inverted = eroded_wall_mask
+        wall_mask_inverted = invert_image(dilated_wall_mask)
         error_in_wall_mask = True
+        show_image('wall_mask_corrected', wall_mask_inverted, height=405, width=720)
     else:
         contours = contours_1
         hierarchy = hierarchy_1
@@ -351,7 +352,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     print_time(start_time)
     img_refined_contours = img.copy()
     cv2.drawContours(img_refined_contours, candidate_painting_contours, -1, (0, 255, 0), 3)
-    show_image('image_refined_contours', img_refined_contours, height=405, width=720)
+    show_image('paintings_contours_refined', img_refined_contours, height=405, width=720)
 
     # Step SEGMENTATION: create a segmented image where only the candidate contours are white, in order to
     #                    remove unwanted object and make the following operation (erosion/dilation) faster
@@ -360,7 +361,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     start_time = time.time()
     segmented_img = create_segmented_image(wall_mask_inverted, candidate_painting_contours)
     # show_image('segmented_img', segmented_img, height=405, width=720)
-    segmented_img = image_morphology_tranformation(segmented_img, cv2.MORPH_OPEN, 30)
+    segmented_img = image_morphology_tranformation(segmented_img, cv2.MORPH_OPEN, 20)
     show_image('segmented_img', segmented_img, height=405, width=720)
     print_time(start_time)
 
@@ -380,12 +381,12 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     print_next_step(generator, "Erode Components")
     start_time = time.time()
     kernel_size = 20  # 23 or 40
-    # if not error_in_wall_mask:
-    cleaned_wall_mask = image_erosion(segmented_img, kernel_size)
-    # else:
-    #     kernel_size = 30
-    #     cleaned_wall_mask = image_dilation(segmented_img, kernel_size)
-    #     cleaned_wall_mask = image_erosion(cleaned_wall_mask, kernel_size)
+    if not error_in_wall_mask:
+        cleaned_wall_mask = image_erosion(segmented_img, kernel_size)
+    else:
+        kernel_size = 30
+        cleaned_wall_mask = image_dilation(segmented_img, kernel_size)
+        cleaned_wall_mask = image_erosion(cleaned_wall_mask, kernel_size)
     print_time(start_time)
     # show_image('image_mask_cleaned', cleaned_wall_mask, height=405, width=720)
 
@@ -399,7 +400,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     blur_size = 31  # 15
     blurred_mask = image_blurring(cleaned_wall_mask, blur_size)
     print_time(start_time)
-    show_image('image_mask_blurred', blurred_mask, height=405, width=720)
+    show_image('mask_eroded_and_blurred', blurred_mask, height=405, width=720)
 
     # ----------------------------
     # RECOGNIZE PAINTING:
@@ -413,8 +414,8 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         sub_img = img[y:y + h_rect, x:x + w_rect]
         sub_mask = blurred_mask[y:y + h_rect, x:x + w_rect]
 
-        show_image('image_sub_img', sub_img)
-        show_image('image_sub_mask', sub_mask)
+        show_image('sub_imgage', sub_img)
+        show_image('sub_mask', sub_mask)
 
         # -----------------------
         # BORDER:
@@ -433,17 +434,17 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         threshold2 = 140  # 100
         edges = canny_edge_detection(pad_sub_mask, threshold1, threshold2)
         print_time(start_time)
-        show_image('image_mask_canny', edges)
+        show_image('mask_canny', edges)
 
         # Step 10: Hough Lines to find vertical and horizontal edges of the paintings
         # ----------------------------
         print_next_step(generator, "Hough Lines")
         start_time = time.time()
-        probabilistic_mode = False
+        probabilistic_mode = True
         rho = 1
         theta = np.pi / 180
         threshold = 50  # 50 or 30 or 40 or 0
-        ratio_percentage = 0.10
+        ratio_percentage = 0.15
         lines = find_hough_lines(
             img=edges,
             probabilistic_mode=probabilistic_mode,
@@ -454,7 +455,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         )
         print_time(start_time)
         img_lines = draw_lines(edges, lines, probabilistic_mode)
-        # show_image("Detected Lines (in red)", img_lines)
+        show_image("Detected Lines (in red)", img_lines)
 
         if lines is None:
             # I can't find lines in special situation, e.g the painting is not squared (rounded, octagonal, ...)
@@ -474,7 +475,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
             color_value = 255
             extended_lines_mask = extend_image_lines(sub_mask, lines, probabilistic_mode, color_value)
             print_time(start_time)
-            show_image('image_paint_mask', extended_lines_mask)
+            show_image('hough_lines_mask', extended_lines_mask)
 
             # Step 12: Isolate Painting from mask
             # ----------------------------

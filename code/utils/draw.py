@@ -264,8 +264,7 @@ def draw_paintings_info(img, paintings, scale_factor):
 
         if painting.title is not None:
             # Draw the title of the painting
-            # TODO remove filename info
-            title = f"{painting.filename} - {painting.title}"
+            title = f"{painting.title}"
 
             # Find position of text above painting
             top = np.min(corner_points[:, 1])

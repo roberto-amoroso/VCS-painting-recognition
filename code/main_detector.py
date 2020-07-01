@@ -232,31 +232,35 @@ def main():
     # histo_mode = args.histo_mode
 
     verbosity_print = 0
-    verbosity_image = 1
-    task = Task(5)
+    verbosity_image = 2
+    task = Task(0)
     match_db_image = False
     histo_mode = True
     frame_occurrence = 40
     painting_db_path = "paintings_db/"
     painting_data_path = "data/data.csv"
-    output_base_path = "output_test"
+    output_base_path = "output_paper"
     # ----------------------
     # TESTING TODO remove it
     # ----------------------
     # DIR of images and videos
+    input_filename = "dataset/paper_images/"
+    input_filename += "20180206_113716_0009.jpg"
+    # input_filename += "VID_20180529_112627_0001.jpg"
     # input_filename = "dataset/small_test/"
+    # input_filename += "20180206_112930_0022.jpg"
     # input_filename += '1.mp4'
     # VIDEOS
     # input_filename = "dataset/videos/014/"
     # input_filename += "VID_20180529_112627.mp4"
     # input_filename += "20180206_114604.mp4"
     # IMAGES
-    input_filename = "dataset/photos/test/"
+    # input_filename = "dataset/photos/test/"
     # input_filename += 'wall_mask_test.jpg'  # CRITIC
     # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
     # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
-    input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
+    # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
     # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
     # input_filename += "IMG_2646_0003.jpg"  # overlapping contours
     # input_filename += "IMG_2646_0006.jpg"  # overlapping contours
@@ -299,6 +303,9 @@ def main():
 
     try:
         inputs_list = [ntpath.join(ntpath.realpath('.'), input_filename, file) for file in os.listdir(input_filename)]
+        inputs_list = [f for f in inputs_list if os.path.isfile(f)]
+        if len(inputs_list) == 0:
+            sys.exit(f"No images or video inside directory: {input_filename}")
     except NotADirectoryError:
         inputs_list = []
         inputs_list.append(ntpath.join(ntpath.realpath('.'), input_filename))

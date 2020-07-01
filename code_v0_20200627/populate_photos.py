@@ -2,9 +2,9 @@ import os
 import cv2
 import time
 
-videos_path = 'dataset/videos'
-photos_path = 'dataset/photos'
-occurrence = 45
+videos_path = 'dataset/videos_paper'
+photos_path = 'dataset/photos_paper'
+occurrence = 1
 
 assert occurrence > 0, "occurrence should be >= 1"
 

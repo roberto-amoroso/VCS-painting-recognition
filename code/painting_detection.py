@@ -2,7 +2,7 @@
 Module containing functions to perform Painting Detection.
 """
 
-from utils.draw import draw_corners, draw_lines
+from utils.draw import draw_corners, draw_lines, show_image_window_blocking
 from image_processing import image_dilation, image_erosion, invert_image, find_image_contours, image_blurring, \
     canny_edge_detection, find_hough_lines, extend_image_lines, find_corners, \
     mean_shift_segmentation, find_largest_segment, create_segmented_image, image_morphology_tranformation
@@ -187,7 +187,7 @@ def extract_candidate_painting_contours(img, contours, hierarchy, show_image, fi
                     if len(childs) > 0:
                         del candidate_painting_contours[i]
 
-    # show_image('image_rectangles', img_copy, height=405, width=720)
+    # show_image_window_blocking('image_rectangles', img_copy, height=405, width=720)
     return candidate_painting_contours
 
 
@@ -511,10 +511,10 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
             )
             # painting_corners = np.zeros((sub_img.shape[0], sub_img.shape[1]), dtype=np.uint8)
             # draw_corners(painting_corners, corners)
-            # show_image('painting_corners', painting_corners)
+            # show_image('corners_TEST', painting_corners)
 
             # Checking corners to avoid problem (read function descr. for info)
-            min_percentage = 0.70  # 0.8 or 0.85 or 0.6 TODO: find a good value
+            min_percentage = 0.65  # 0.7 or 0.75 or 0.6 TODO: find a good value
             corners = check_corners_area(sub_img, contour, corners, min_percentage)
             print_time(start_time)
 

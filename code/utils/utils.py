@@ -49,7 +49,7 @@ def check_media_file(filename):
             media_type = MediaType(1)
             media = cv2.VideoCapture(filename)
             if not media.isOpened():
-                sys.exit("The input file should be a valid image or video.\n")
+                sys.exit(f"The input file should be a valid image or video: '{filename}'\n")
         except cv2.error as e:
             print("cv2.error:", e)
         except Exception as e:

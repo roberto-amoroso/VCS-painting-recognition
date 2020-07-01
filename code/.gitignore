@@ -4,3 +4,4 @@ dataset/photos/*
 dataset/videos_backup/*
 dataset/small_test/*
 yolov3.weights
+output/*

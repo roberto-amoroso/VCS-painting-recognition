@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.999992 (MiKTeX 2.9.7380 64-bit) (preloaded format=xelatex 2020.4.7)  30 JUN 2020 20:01
+This is XeTeX, Version 3.14159265-2.6-0.999992 (MiKTeX 2.9.7380 64-bit) (preloaded format=xelatex 2020.4.7)  30 JUN 2020 13:36
 entering extended mode
 **c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex
 (c:/Users/Roberto/Documents/UniProjects/VCS-painting-recognition/doc/project_report/report.tex
@@ -321,6 +321,11 @@ LaTeX Font Warning: Font shape `TU/pcr/m/n' undefined
 LaTeX Font Warning: Font shape `TU/ptm/m/it' undefined
 (Font)              using `TU/ptm/m/n' instead on input line 40.
 
+
+Underfull \hbox (badness 1173) in paragraph at lines 55--56
+\TU/ptm/m/n/10 submitting the input image through a processing
+ []
+
 Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
 Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
 ("C:\Program Files\MiKTeX 2.9\tex/generic/stringenc\se-ascii-print.def"
@@ -328,33 +333,75 @@ File: se-ascii-print.def 2019/11/29 v1.12 stringenc: Printable ASCII characters
 ) [1
 
 
-] [2] [3]
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
- [4] [5]
-Underfull \hbox (badness 1609) in paragraph at lines 287--288
-[]\TU/ptm/m/it/10 The Painting detection and Segmentation task
+] [2]
+Underfull \hbox (badness 10000) in paragraph at lines 177--178
+[]\TU/ptm/b/n/10 The connectivity is determined by the
  []
 
-[6]
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
-Missing character: There is no ​ in font [lmroman10-regular]:mapping=tex-text;!
- [7]
 
-LaTeX Warning: Reference `fig: improvedROI' on page 8 undefined on input line 434.
-
-[8] [9]
-Underfull \hbox (badness 1360) in paragraph at lines 498--499
-\TU/ptm/m/it/10 ($\OML/cmm/m/it/10 d\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 H[]; H[]\OT1/cmr/m/n/10 )$\TU/ptm/m/it/10 ) to express how well both histograms
+Underfull \hbox (badness 2460) in paragraph at lines 177--178
+\TU/ptm/b/n/10 color/brightness closeness of the neighbor pixels.
  []
 
-[10] (report.bbl [11]
+[3]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [4]
+Underfull \hbox (badness 1642) in paragraph at lines 240--241
+\TU/ptm/b/n/10 ata e l’aggiunta del bordo bianco determina
+ []
+
+
+Underfull \hbox (badness 1642) in paragraph at lines 242--243
+\TU/ptm/b/n/10 ata e l’aggiunta del bordo bianco determina
+ []
+
+
+Underfull \hbox (badness 1137) in paragraph at lines 244--245
+[]\TU/ptm/b/n/10 la wall mask trovata con il flood fill è cor-
+ []
+
+
+Underfull \hbox (badness 4156) in paragraph at lines 270--271
+\TU/ptm/b/n/10 completamente nera avente la stessa risoluzione
+ []
+
+[5] [6] [7] [8]
+Underfull \hbox (badness 3895) in paragraph at lines 450--451
+[]\TU/ptm/b/n/10 Problemi di illuminazione,riflessione delle luci,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 450--451
+\TU/ptm/b/n/10 image exposure and image saturation dovuti
+ []
+
+
+Underfull \hbox (badness 4792) in paragraph at lines 450--451
+\TU/ptm/b/n/10 all’esposizone di dipinti in esibizioni e mostre,
+ []
+
+
+Underfull \hbox (badness 4505) in paragraph at lines 450--451
+\TU/ptm/b/n/10 potrebbero tuttavia influenzare negativamente le
+ []
+
+[9]
+Underfull \hbox (badness 1939) in paragraph at lines 506--507
+[]\TU/ptm/b/n/10 In quest’ultimo caso si considera come match
+ []
+
+
+Underfull \hbox (badness 6141) in paragraph at lines 524--525
+[]\TU/ptm/b/n/10 La Figure []14[] mostra un esempio di risul-
+ []
+
+[10]
+Underfull \hbox (badness 2103) in paragraph at lines 592--593
+[]\TU/ptm/b/n/10 Questo lavoro ha mostrato come sia possibile
+ []
+
+[11] (report.bbl
 Underfull \hbox (badness 3302) in paragraph at lines 58--63
 []\TU/ptm/m/it/9 NC Hambly, MJ Irwin, and HT MacGillivray.
  []
@@ -392,18 +439,15 @@ Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 603.
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-
-LaTeX Warning: There were undefined references.
-
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 603.
  ) 
 Here is how much of TeX's memory you used:
- 9660 strings out of 414219
- 132961 string characters out of 2902578
- 397950 words of memory out of 3000000
- 27050 multiletter control sequences out of 15000+200000
+ 9659 strings out of 414219
+ 132936 string characters out of 2902578
+ 397799 words of memory out of 3000000
+ 27049 multiletter control sequences out of 15000+200000
  540288 words of font info for 59 fonts, out of 3000000 for 9000
  1348 hyphenation exceptions out of 8191
- 38i,9n,31p,866b,467s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 38i,9n,31p,902b,469s stack positions out of 5000i,500n,10000p,200000b,50000s
 
-Output written on report.xdv (13 pages, 471888 bytes).
+Output written on report.xdv (13 pages, 484560 bytes).

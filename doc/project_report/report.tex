@@ -25,7 +25,8 @@
 \begin{document}
 
 %%%%%%%%% TITLE
-\title{ARTISTO or ArtDet or ArtVisual or ArTection: an Art Detection Tool to Locate and Recognize Paintings and People in Museums and Art Galleries}
+% ARTISTO or ArtDet or ArtVisual
+\title{ ArTection: an Art Detection Tool to Locate and Recognize Paintings and People in Museums and Art Galleries}
 
 \author{Roberto Amoroso\\
 University of Modena and Reggio Emilia\\
@@ -37,7 +38,7 @@ University of Modena and Reggio Emilia\\
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-   Thsi work proposes a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, we created a Python program that is able to locate and recognize paintings and people present in a video or single image. For the part relating to the paintings, we used the OpenCV library, while to carry out the people detection operation we used YOLO, a real-time object detection system.
+   This work proposes a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, I created a Python program that is able to locate and recognize paintings and people present in a video or single image. For the part relating to the paintings, I used the OpenCV library, while to carry out the people detection operation I used YOLO, a real-time object detection system.
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
@@ -51,12 +52,12 @@ In recent years, many works have been developed that investigate the problems of
 
 Many of these approaches use Deep Learning techniques and are based on the use of Convolutional Neural Networks (CNNs) to carry out operations such as Painting Detection and Identification\cite{hong2019art}. This implies the need to have a large amount of annotated data, necessary to train and test the model.
 
-The approach we propose avoids this problem by submitting the input image through a processing pipeline which, using the OpenCV \cite{bradski2008learning} library, performs a series of operations and transformations that produce the following results:
+The approach I propose avoids this problem by submitting the input image through a processing pipeline which, using the OpenCV \cite{bradski2008learning} library, performs a series of operations and transformations that produce the following results:
 \begin{itemize}
    \item \textbf{Painting Detection}: detects all paintingds in the image.
    \item \textbf{Painting Segmentation}: creates a segmented version of the input, where the paintings, and also any statues, identified are white and the background is black.
    \item \textbf{Painting Rectification}: rectifies each painting detected, through an affine transformation.
-   \item \textbf{Painting Retrieval}: matches each detected and rectified painting to a paintings DB, containing a list of the paintings in the museum or gallery with related information, such as title of the painting, author, room in which the painting is located. We used ORB \cite{rublee2011orb} as feature detector, to find keypoints and execute matching between an input image and the various database images.
+   \item \textbf{Painting Retrieval}: matches each detected and rectified painting to a paintings DB, containing a list of the paintings in the museum or gallery with related information, such as title of the painting, author, room in which the painting is located. I used ORB \cite{rublee2011orb} as feature detector, to find keypoints and execute matching between an input image and the various database images.
    \item \textbf{People Detection}: detect people in the input using YOLOv3 \cite{redmon2018yolov3}, a state-of-the-art real-time object detection system and pre-trained weights.
    \item \textbf{People and Painting Localization}: locates paitning and people using information, using the information discovered during the painting retrieval phase.
 \end{itemize} 
@@ -72,7 +73,7 @@ Pioneer in this sense was R-CNN (Regions with CNN features) \cite{girshick2014ri
 
 In the wake of these pioneers, many other works have been conducted \cite{dai2016r, kim2016pvanet, lin2017feature, liu2016ssd, redmon2017yolo9000, redmon2016you, shrivastava2016training, redmon2018yolov3} aimed at further improving the performance of the architecture.
 
-We decided to use a CNN-based object detector only to perform the people detection task. In particular, we have selected YOLOv3 as it is a balanced system in terms of speed and accuracy, it comes with a well organized code and pre-trained weights.
+I decided to use a CNN-based object detector only to perform the people detection task. In particular, I selected YOLOv3 as it is a balanced system in terms of speed and accuracy, it comes with a well organized code and pre-trained weights.
 
 %------------------------------------------------------------------------
 
@@ -81,7 +82,7 @@ Paintings, statues and all objects present in a museum or art gallery can be fil
 
 Hand-crafted image local features \cite{rublee2011orb,alahi2012freak,bay2006surf,jain2000statistical,leutenegger2011brisk,lowe2004distinctive,morel2009asift} can be used to solve these problems. These are techniques used for object tracking, image stitching, image registration, etc., i.e. all those applications that are based on finding correspondences between two images.
 
-In this work, among the various image local features proposed, we have selected ORB. It is a good alternative to SIFT and SURF in computation cost, matching performance and mainly it's not patented (SIFT and SURF are patented and you are supposed to pay them for its use). ORB is a good choice in low-power devices.
+In this work, among the various image local features proposed, I selected ORB. It is a good alternative to SIFT and SURF in computation cost, matching performance and mainly it's not patented (SIFT and SURF are patented and you are supposed to pay them for its use). ORB is a good choice in low-power devices.
 
 Here we have brief introductions to ORB, for more information and the details about how it works read the original paper \cite{rublee2011orb}.
 
@@ -112,13 +113,13 @@ The data available and representing the inputs of our program are:
 The videos were recorded using different devices, angles and orientations, and during normal museum activity, so they often show people.
 
 It was therefore necessary to create a program that was able to process not only individual images but also videos.
-In the latter case, that is, when the input is a video, the solution we adopted is to consider each frame of the video as an image to submit to our processing pipeline.
+In the latter case, that is, when the input is a video, the solution I adopted is to consider each frame of the video as an image to submit to our processing pipeline.
 
 The processing pipeline, therefore, works with images as input and produces in output, for each of them, another image, on which the obtained information has been reported (painting and people bounding boxes, title of the paintings, number of the room where the paintings and people are located).
 
 The Painting Rectification task represents a particular case. In fact, it requires that for each painting present in an input image or video frames, an image containing the rectified version of the painting is saved as output. So in this case, against a single input there are potentially multiple outputs.
 
-One of the first problems we faced concerns the different resolution of the videos, which are provided in the formats: HD (1280x720), full-HD (1920x1080) and 4K (3840 x 2160).
+One of the first problems I faced concerns the different resolution of the videos, which are provided in the formats: HD (1280x720), full-HD (1920x1080) and 4K (3840 x 2160).
 
 Having inputs with different resolutions posed the problem of making the measures adopted in the various functions of the processing pipeline (often expressed in pixels) invariant with respect to the resolution.
 
@@ -135,10 +136,7 @@ Having obtained from our processing pipeline the various processed images, these
 %------------------------------------------------------------------------
 \subsection{Painting Detection and Segmentation}
 
-%------------------------------------------------------------------------
-\subsubsection{Obtain a Wall Mask}
-
-To aid the description of the processing of locating, rectifing and recognising a painting in an image, we suppose we want to recognize the painting 'TODO', represented in Figure \ref{fig:dbPainting}, inside the image present in Figure \ref{fig:originalImage}.
+To aid the description of the processing of locating, rectifing and recognising a painting in an image, let's suppose we want to recognize the painting 'TODO', represented in Figure \ref{fig:dbPainting}, inside the image present in Figure \ref{fig:originalImage}.
 
 \begin{figure}[t]
    \begin{center}
@@ -158,9 +156,14 @@ To aid the description of the processing of locating, rectifing and recognising 
    \label{fig:originalImage}
 \end{figure}
 
-All'interno di un museo o galleria d'arte i dipinti sono oggetti appesi alle pareti. Quest'ultime, sono assunte essere di un singolo colore uniforme, come di solito avviene nei musei e gallerie d'arte al fine di evitare di distrarre i visitatori dalle opere d'arte. 
+%------------------------------------------------------------------------
+\subsubsection{Obtain a Wall Mask}
 
-Sulla base di questa assunzione, la prima operazione da compiere per individuare e segmentare i dipinti è quella di distinguere quali porzioni dell'immagine non sono muro. Ciò avviene eseguendo l'operazione di Mean Shift Segmentation sull'immagine, la quale clusters nearby pixels with similar pixel values and sets them all to have the value of the local maximum of pixel value. Il risultato è quello di avere i pixel raggruppati per colore e location, come si evince dall'immagine in Figure \ref{fig:meanShiftSegmentation}
+Inside a museum or art gallery the paintings are objects hanging on the walls. These are assumed to be of a single uniform color, as is usually the case in museums and art galleries in order to avoid distracting visitors from artwork.
+
+On the basis of this assumption, the first operation to be carried out to identify and segment the paintings is to distinguish which portions of the image are not walls. 
+
+To achieve this, a sequence of operations must be performed. First I apply the the Mean Shift Segmentation operation on the image, which clusters nearby pixels with similar pixel values and sets them all to have the value of the local maximum of pixels value. The result is to have the pixels grouped by color and location, as can be seen from the image in Figure \ref{fig:meanShiftSegmentation}
 
 \begin{figure}[t]
    \begin{center}
@@ -171,82 +174,80 @@ Sulla base di questa assunzione, la prima operazione da compiere per individuare
    \label{fig:meanShiftSegmentation}
 \end{figure}
 
-Sull'immagine risultante si esegue un'operazione chiamata Flood Fill, la quale assegna lo stesso colore a componenti connessi. 
+On the resulting image I perform a second operation, called Flood Fill, which assigns the same color to connected components.
 
-The connectivity is determined by the color/brightness closeness of the neighbor pixels. That is, to be added to the connected component, a color/brightness of the pixel should be close enough to color/brightness of one of its neighbors that already belong to the connected component.
+The connectivity is determined by the color closeness of the neighbor pixels. That is, to be added to the connected component, the color of the pixel should be close enough to color of one of its neighbors that already belong to the connected component.
 
-Assegnamo ai componenti connessi il valore 255 (bianco) e poniamo a 0 (nero) tutti i restanti pixel. In questo modo ad ogni perazione di Flood Fill si ottiene una maschera con due segmenti, uno bianco e uno nero. Si ripete questo procedimento sui pixel dell'immagine al fine di individuare la maschera in cui il segmento bianco è quello più esteso, assumimao che tale segmento sia il muro e che le componenti nere siano i dipinti.
- 
-Il risultato dell'operazioni di flooding è osservabile in Figura \ref{fig:maskLargestSegment} 
+I assign the connected components the value 255 (white) and set all remaining pixels to 0 (black). In this way, for each Flood Fill operation performed, a mask is obtained in which we can find regions of 2 possible colors, white or black. This process is repeated on the pixels of the image in order to identify the mask in which the white region is the largest and I assume that this region is the wall and that the black regions are the paintings.
+
+The assumption for which the largest region is considered to be the wall, although proving valid in most cases, presents problems when the image contains a very large or very close painting. In this case, the assumption is no longer valid as the largest region will be the one associated with the painting, which will be white, while the wall will be colored black.
+
+Obviously, since this problem occurs right at the beginning of the pipeline, it would cause a chain of incorrect predictions. For this reason, I found a solution to solve the problem. Before proceeding with its description, it is necessary to have subjected the image to a series of other operations.
+
+First, the colors of the mask are inverted, assigning 255 to the pixels having value 0 and vice versa. The result is a mask in which the wall is black and the paintings white, called the \textit{wall mask}. To remove any noise present inside the mask, it is first eroded and then dilated equally.
+
+Erosion involves moving a kernel over the pixels of a binary image. A pixel in the original image (either 1 or 0) will be considered 1 only if all the pixels under the kernel is 1, otherwise it is eroded (made to zero).
+
+Dilation is the opposite of erosion. Dilation involves moving a kernel (a matrix of a given size) over the pixels of a binary image. When the kernel is centered on a pixel with a value of 0 and some of its pixels are on pixels with a value of 1, the center pixel is given a value of 1.
+
+The result of the flooding operations and the wall mask obtained after inversion, erosion and dilatation can be seen in the Figure \ref{fig:maskLargestSegmentInveted} 
 
 \begin{figure}[t]
    \begin{center}
    \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
       %\includegraphics[width=0.8\linewidth]{egfigure.eps}
    \end{center}
-      \caption{Mask showing the wall in white and the painting in black.}
-   \label{fig:maskLargestSegment}
+      \caption{Mask showing the result of the flood fill operation (left) and the wall mask obtained after inversion, erosion and dilatation (right).}
+   \label{fig:maskLargestSegmentInveted}
 \end{figure}
-
-L'assunzione per cui si consiera essere muro il segmento più esteso, pur rivelandosi valida nella maggiorn parte dei casi, presenta dei problemi quando l'immagine ritrae un dipinto molto grande o un dipinto molto da vicino. In questo caso, l'assunzione non è più valida in quanto il segmento più esteso sarà quello associato al dipinto, che sarà bianco, mentre il muro verrà colorato di nero. 
-
-Ovviamente, un problema del genera all'inizio della pipeline causerebbe un catene di predizioni errate. Per questo motivo, abbiamo trovato una soluzione che seppur molto empirica si è rivelata essere valida. Prima di procedere con la sua descrizione è necessario aver sottoposto l'immagine ad una serie di altre operazioni. 
-
-Per rimuovere eventuale rumore presente all'interno della maschera, essa viene prima dilatata e poi erosa in egual misura. Da notare che We have not yet inverted the mask, therefore making dilation at this stage is equivalent to erosion and vice versa.
-
-Dilation involves moving a kernel (a matrix of a given size) over the pixels of a binary image. When the kernel is centered on a pixel with a value of 0 and some of its pixels are on pixels with a value of 1, the centre pixel is given a value of 1.
-
-Erosion is the opposite of dilation. Erosion involves moving a kernel over the pixels of a binary image. A pixel in the original image (either 1 or 0) will be considered 1 only if all the pixels under the kernel is 1, otherwise it is eroded (made to zero).
-
-A questo punto, si invertono i colori della maschera dilatata, assegnando 255 ai pixel aventi valore 0 e viceversa. Si ottiene così una maschera in cui il muro è nero e i dipinti bianchi, chiamata wall mask.
 
 %------------------------------------------------------------------------
 \subsubsection{Connected Component Analysis}
 
-Come si può notare dall'immagine, non tutti i componenti neri sono dei dipinti, ad esempio anche le targe che contengono la descrizione del dipinto vengono considerate esse stesse dei dipinti. Anche evenuali porzioni di soffitto o pavimento presenti nell'immagine potrebbero essere considerati dei dipinti. 
+The Figure \ref{fig:maskLargestSegmentInveted} shows that not all the white components are paintings, for example even the plaques containing the description of the painting are considered to be paintings themselves. Also any portions of the ceiling or floor in the image could be considered paintings.
 
-Per risolvere tali problemi abbiamo introdotto dei criteri che ciascun componente deve rispettare per poter essere considerato un dipinto quali:
+To solve these problems I introduced a selection phase, consisting of some criteria that each component must respect in order to be considered a painting:
 \begin{itemize}
-   \item it should not span the entire image
-   \item their bounding boxes devono avere un'area minima, che abbiamo fissato essere di 150x150 pixels. Questo valore ci ha permesso di eliminare oggetti piccoli come le targe descrittive o piccoli estintori.
-   \item l'area del dipinto deve occupare almeno il 60\% della sua bounding boxe. That means that the paintings are also assumed to be somewhat rectangular. This assumption helps to eliminate parts of the wall and ceiling that may be in the input image.
+   \item it should not span the entire image.
+   \item their bounding boxes devono avere un'area minima di 150x150 pixels. This value allowed me to eliminate small objects such as descriptive targe or small fire extinguishers.
+   \item the area of ​​the painting must occupy at least 60\% of its bounding boxing. That means that the paintings are also assumed to be somewhat rectangular. This assumption helps to eliminate parts of the wall and ceiling that may be in the input image.
 \end{itemize}
 
-If some paintings do not fall under these criteria, they are not be categorised as paintings. Questo potrebbe verificarsi ad esempio per very small paintings or pictures of paintings that have been taken very far away from the painting.
+If some paintings do not fall under these criteria, they are not categorised as paintings. This could occur for example for very small paintings or pictures of paintings that have been taken very far away from the painting.
 
-Per stabilire se un componente rispetta o meno tali criteri, si trovano i contorni di tutti gli oggetti bianci presenti nella maschera invertita precedentemente ricavata. Per ognuno di essi si ricava a rotated rectangle of the minimum area enclosing the contours 2D point set.
-Si considera come area del dipinto, l'area del relativo contorno, e si scartano tutte i contorni che non rispettano i precedenti criteri.
+To determine whether or not a component meets these criteria, the contours of all the white objects in the wall mask are found. For each of them I create a rotated rectangle of the minimum area enclosing the contours 2D point set.
+The area of ​​the contours is considered as the area of ​​the paintings, and all the contours that do not comply with the previous criteria are discarded.
 
-A questo punto abbiamo una lista di contorni ognuno associato ad un dipinto.
+At this point we have a list of outlines each associated with a painting.
 
 %------------------------------------------------------------------------
 \subsubsection{Refine the Wall Mask}
 
-Qui entra in gioco la mia soluzione empirica al problema che si ha quando il flooding considera il muro come dipinti e viceversa. 
+Here comes my solution to the problem that occurs when flood fill considers the wall as paintings and vice versa.
 
-La soluzione che ho adottato può essere così schematizzata:
+The solution I have adopted can be summarized as follows:
 \begin{enumerate}
-   \item Considero nuovamente la wall mask invertita.
-   \item Applico un bordo bianco di un pixel lungo il contorno dell'immagine.
-   \item Calcolo nuovamente tutti i contorni dei componenti bianchi
-   \item Ho due set di contorni, il primo associato alla wall mask invertita il secondo associato alla wall mask invertita con un contorno bianco.
-   \item Considero il set di contorni con il maggior numero di elementi, a parità scelgo il secondo.
-   \item Se il set di contorni selezionato è il primo, allora eseguo la fase di rifinitura dei contorni come descritto precedentemente. Se il set di contorni selezionato è il secondo, allora sono nell'ipotesi in cui il flood fill ha identificato come muro i dipinti e viceversa. Quindi inverto nuovamente la wall mask, in modo da riportarmi alla situazione corretta in cui i dipinti sono bianchi e il muero nero, ed eseguo la fase di rifinitura dei contorni aggiungendo però un nuovo controllo alla fine. Esso consiste nell'eliminare tutti i contorni che hanno al loro interno altri contorni.
+   \item I consider the wall mask.
+   \item I apply a one-pixel white border along the outline of the mask.
+   \item Calculate all contours of the white components again.
+   \item I get two sets of contours, the first associated with the wall mask without white border, the second associated with the wall mask having the white border.
+   \item I consider the set of contours with the largest number of elements. In case they have equal size, I choose the second.
+   \item If the selected contour set is the first, then I perform the contour selection phase as described above. If the set of contours selected is the second, then I am in the situation where the flood fill has identified the paintings as a wall and vice versa. Then I invert the wall mask again, so as to bring back to the correct situation in which the paintings are white and the wall black, and perform the contour selection phas, adding a new control at the end. It consists in eliminating all the contours enclosing other contours within them.
 \end{enumerate}
 
-Per capire perchè la mia soluzione funziona, consideriamo le possibili situazioni che si possono avere:
+To understand why my solution works, let's consider the possible situations that can occur:
 \begin{itemize}
-   \item la wall mask trovata con il flood fill è sbagliata e l'aggiunta del bordo bianco determina l'individuazione di un numero di contorni uguale al caso senza bordo. Sono necessariamente nel caso in cui la flood fill ha sbagliato, perchè se il muro (background dei dipinti) fosse stato nero avrei sicuramente trovato un contorno in più, quello da me aggiunto alla wall mask. Questa situazione si ha anche quando il dipinto individuato in maniera errata (ossia di colore nero nella wall mask) è a diretto contatto con i bordi dell'immagine. La mia soluzione è in grado di gestire anche questo caso, perchè l'aggiunta del contorno bianco separa il dipinto dal bordo e mi permette di individuare correttamente il suo contorno.
+   \item the wall mask found with the flood fill is wrong and the addition of the white border determines the identification of a number of contours equal to the case of wall mask without white border. We are necessarily in case the flood fill worked wrong, because if the wall (background of the paintings) had been correctly black we would certainly have found at least one more contour, the one added to the wall mask. This situation also occurs when the incorrectly identified paintings (i.e. black regions in the wall mask) are in direct contact with the edges of the image. My solution is also able to manage this case, because the addition of the white border separates the paintings from the edge and allows me to correctly identify their contours.
    
-   \item la wall mask trovata con il flood fill è sbagliata e l'aggiunta del bordo bianco determina l'individuazione di un numero di contorni maggiore rispetto al caso senza bordo. Questa situazione si verifica quando la funzione di flood fill ha funzionato in modo errato e ho dei dipinti (porzioni dell'immagine di colore nero) che toccano il contorno dell'immagine. Esattamente come detto per il caso precedente la mia soluzione è in grado di individuare questo errore e correggerlo. 
+   \item the wall mask found with the flood fill is wrong and the addition of the white border determines the identification of a greater number of contours than in the case of wall mask without white border. This situation occurs when the flood fill function  worked incorrectly and we have paintings (in this case black regions of the mask) that touch the edges of the image. Exactly as said for the previous case, my solution is able to detect this error and correct it.
 
-   \item la wall mask trovata con il flood fill è corretta e l'aggiunta del bordo bianco determina l'individuazione di un solo nuovo contorno attorno a tutta l'immagine. Il numero di contorni sarà di uno maggiore rispetto al caso di wall mask senza il bordo bianco. Ciò non rappresenta un problema perchè tale contorno verrà eliminato nella fase di refinizione dei contorni, in quanto grande quanto tutta l'immagine. Escluso il contorno di bordo, gli altri contorni individuati all'interno dell'immagine (quelli dei dipinti) resteranno invariati.
+   \item the wall mask found with the flood fill is correct and the addition of the white border determines the identification of a single new contour around the whole image. The number of contours will be one greater than in the case of wall mask without the white border. This is not a problem because this contour will be eliminated in the phase of contours selection, as large as the whole image. Excluding the border contour, the other contours identified within the image (those of the paintings) will remain unchanged.
    
-   \item la wall mask trovata con il flood fill è corretta e l'aggiunta del bordo bianco fa diminuire il numero di contorni trovati. Siamo nel caso in cui i dipinti (porzioni dell'immagine di colore bianco) si trovano solo in parte all'interno dell'immagine e/o toccano il bordo della stessa. In questo caso, si considerano i contorni trovati con la wall mask senza bordo bianco, perchè in numero superiore. 
+   \item the wall mask found with the flood fill is correct and the addition of the white border decreases the number of contours found. We are in the case in which the paintings (in this case white regions of the mask) are only partially inside the image and/or touch the edge of the same. In this case, I correctly consider the contours found with the wall mask without white border, because in higher numbers. 
 \end{itemize}
 
 
-Un esempio di wall mark invertita e corretta grazie alla mia soluzione è osservabile in figura \ref{fig:wallMaskCorrection}
+An example of an incorrect wall mask where the color of wall and painting are inverted, and the correct version obtained applying my solution can be seen in the Figure \ref{fig:wallMaskCorrection}
 
 
 \begin{figure}[t]
@@ -254,21 +255,23 @@ Un esempio di wall mark invertita e corretta grazie alla mia soluzione è osserv
    \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
       %\includegraphics[width=0.8\linewidth]{egfigure.eps}
    \end{center}
-      \caption{Wall mask errata (a sinistra) e wall corretta applicando la mia soluzione (a destra).}
+      \caption{Incorrect wall mask where the color of wall and painting are inverted (left) and the correct version obtained by applying the solution proposed (right).}
    \label{fig:wallMaskCorrection}
 \end{figure}
 
 
-Il controllo aggiuntivo, che elimina tutti i contorni che hanno altri contorni al loro interno, serve per evitare che l'aggiunta del bordo bianco unito a degli oggetti di disturbo presenti nell'immagine (e.g. una ringhiera messa a protezione di un dipinto) possano generare dei contorni indesiderati che contengano al loro interno uno o più dipinti. Ovviamente, sto supponendo che non sia possibile avere un dipinto all'interno di un altro dipinto, condizione che può considerarsi quasi sempre verificata e che in particolare lo è per quanto riguarda i video e le immagini che ci sono state fornite.
+The additional control, which eliminates all the contours that enclose other contours within them, is necessary to prevent that the addition of the white border combined with disturbing objects in the image (e.g. a railing protecting a painting) from generating unwanted contours that contain one or more paintings inside. Obviously, I am assuming that it is not possible to have a painting within another painting, a condition that can almost always be considered verified and that in particular it is with regard to the videos and images that make up the database.
 
 %------------------------------------------------------------------------
 \subsubsection{Painting Segmentation}
 
-A questo punto, ho ottenuto una lista dei contorni dei dipinti, compresi delle relative cornici, che sono presenti all'interno dell'immagine.
+At this point, I obtained a list of the contours of the paintings, including the relative frames, which are inside the image.
 
-Generare una versione segmentata dell'immagine originale è adesso molto semplice. Genero un'immagine completamente nera avente la stessa risoluzione dell'immagine originale e vi disegno sopra solo i contorni che hanno superato tutti i precedenti tests, riempendoli di bianco. I dipinti, incluse le relative cornici, saranno i soli componenti bianchi dell'immagine. I test effettuati hanno dimostrato che tale metodo è in grado anche di indivisuare e segmentare eventuali statue presenti nell'immagine, se sufficientemente grandi. 
+To segment the original image, I just need to generate a completely black image with the same resolution and draw on it only the contours that have passed all the previous tests, filling them in white. The paintings, including their frames, will be the only white components of the image. 
 
-Il risultato della segmentazione è osservabile in Figura \ref{fig:imageSegmented}
+The tests carried out have shown that this method is also capable of identifying and segmenting any statues present in the image, if sufficiently large. 
+
+The result of the segmentation can be observed in Figure \ref{fig:imageSegmented}
 
 \begin{figure}[t]
    \begin{center}
@@ -281,7 +284,7 @@ Il risultato della segmentazione è osservabile in Figura \ref{fig:imageSegmente
 
 
 
-Il task di Painting detection and Segmentation sembra quindi completato. In realtà il risultato così ottenuto si limita a disegnare delle bounding boxes rettangolari attorno al contorno dei dipinti, come mostrato in Figura \ref{fig:imageRectROI}.
+The Painting detection and Segmentation task therefore appears to have been completed. In reality, the result thus obtained is limited to drawing rectangular bounding boxes around the outline of the paintings, as shown in Figure \ref{fig:imageRectROI}.
 
 \begin{figure}[t]
    \begin{center}
@@ -292,20 +295,21 @@ Il task di Painting detection and Segmentation sembra quindi completato. In real
    \label{fig:imageRectROI}
 \end{figure}
 
-Il risultato che invece vorrei ottenere è quello di avere una Region of Interest (ROI) che fitti al meglio possibile il contorno del dipinto, il quale a causa di distorsioni legate ad esempio alla prospettiva può non essere esattamente rettangolare, soprattutto quando posizionato non esattamente di fronte al dispositivo che ha scattato la foto o registrato il video.
+The result that I would like to achieve is to build a Region of Interest (ROI) that fits the contour of the painting as best as possible, which due to distortions related for example to perspective, may not be exactly rectangular, especially when positioned not exactly in front of the device that took the photo or recorded the video.
 
-Per migliore il risultato della detection. Sono necessari una serie di passi e trasformazioni aggiuntive, che tra l'altro sono propedeutiche all'esecuzione del task successivo, quello della Painting Rectification.
+To improve the detection result, a series of additional steps and transformations are necessary, which are also propaedeutics
+to the execution of the next task, the Painting Rectification.
 
 %------------------------------------------------------------------------
 \subsection{Painting Rectification}
 
 \subsubsection{Find Corners}
 
-La nostra base di partenza è l'immagine segmentata precedentemente costruita , che adesso sarà la nostra maschera, e una lista dei contorni dei dipinti individuati nell'immagine con relative bounding boxes.
+The starting point is the previously constructed segmented image, which will now be our mask, and a list of the contours of the paintings detected in the image with their bounding boxes.
 
-In questa fase, i dipinti precedentemente individuati sono considerati comprendendo anche la cornice. Si renden dunque necessaria l'erosione della maschera, che ci consente di rimuovere buona parte della cornice e isolare solo il dipinto. Adesso le componenti bianche dell'immagine sono proprio i dipinti senza la cornice.
+In this phase, the previously identified paintings are considered also including the frame. It is therefore necessary to erode the mask, in order to remove a large part of the frame and isolate only the painting. After erosion, the white components of the image are the paintings, without the frame.
 
-Da adesso in poi l'oggetto della processing pipeline sarà ognuna di queste componenti, ossia i vari dipinti individuati. Per isolare una componente basta considerare solo la porzione dell'immagine originale e della maschera che si trovano all'interno della bounding box del componente stesso, ottenendo così quelle che chiameremo sum-image e sub-mask rispettivamente. Un esempio, è presente in Figura \ref{fig:subImageMask}
+Let's now consider each of these components individually, that is, each of the detected paintings. To isolate a component just consider only the portion of the original image and the mask enclosed by the bounding box of the component itself. We obtain what I have defined sum-image and sub-mask respectively. An example is present in Figure \ref{fig:subImageMask}
 
 \begin{figure}[t]
    \begin{center}
@@ -316,11 +320,11 @@ Da adesso in poi l'oggetto della processing pipeline sarà ognuna di queste comp
    \label{fig:subImageMask}
 \end{figure}
 
-Descriviamo adesso la sequenza di operazioni necessarie per trovare i corners del dipinto e applicare la trasformazione affine che ci consente di rettificare il dipinto ed essere pronti alla fase successiva, quella del painting Retrieval.
+I now describe the sequence of operations necessary to find the corners of the painting and apply the affine transformation that allows to rectify the painting and be ready for the next phase, the Painting Retrieval.
 
-Partiamo con l'individuare le linee che rappresentano i bordi del painting components. Per far ciò, si applica un Median Filter ai componenti al fine di smussarne gli outline. The median filter run through each pixel of an image and replace its value with the median of its neighboring pixels (located in a square neighborhood around the evaluated pixel). 
+First we identify the lines that represent the edges of the painting components. To do this, a Median Filter is applied to the components in order to smooth the outline. The median filter run through each pixel of an image and replace its value with the median of its neighboring pixels (located in a square neighborhood around the evaluated pixel). 
 
-Il risultato delle operazioni di ersoione e smoothing è osservabile in Figura \ref{fig:erosionAndMedianFilter}
+The result of the erosion and smoothing operations can be seen in Figure \ref{fig:erosionAndMedianFilter}
 
 \begin{figure}[t]
    \begin{center}
@@ -331,19 +335,19 @@ Il risultato delle operazioni di ersoione e smoothing è osservabile in Figura \
    \label{fig:erosionAndMedianFilter}
 \end{figure}
 
-Al fine di applicare la Hough Line Transform to detect straight lines che rappresentano i bordi del dipinto, abbiamo bisogno di costruire un'immagine in cui siano presenti solo i bordi. 
+In order to apply the Hough Line Transform to detect straight lines representing the edges of the painting, we need to build an image in which only the edges of the painting are present.
 
-Per fare ciò, si esegue il Canny Edge Detection \cite{canny1986computational} algorithm sul componente per ottenere un edge image. 
+To do this, run the Canny Edge Detection \cite{canny1986computational} algorithm on the smoothed sub-mask to obtain an edge image. 
 
 Canny edge detection examines the rate of change of brightness values in pixels in versions of the image to which a 5x5 Gaussian Filter has been applied to remove the noise. Gaussian Filter involves setting the value of each pixel on a weighted average of the values of the neighboring pixel. In Canny Edge Detection, each pixel is checked to see how much the brightness changes from side to side for many orientations and in many gaussian filtered versions of the image. Since the edges can be represented as a gradual change in brightness over many pixels, Canny uses local maxima
 
-Sulla edge image si applica la Hough Tranform \cite{ballard1987generalizing} to detect straight lines. 
+On the edge image is applied the Hough Tranform \cite{ballard1987generalizing} to detect straight lines. 
 
 Lines can be represented as an orthogonal distance to the origin and an angle of the line with respect to an axis. In Hough Lines, an "accumulator" of "cells" is created that represents different combinations of distance and angle. For each point on the edge of the image, all cells representing a line that crosses that point are incremented. Then the local maximum of the accumulator are sought.
 
-Dalle linee ottenute, si crea una maschera che isola il painting component racchiuso tra le linee. Tale maschera è ottenuta partendo da un'immagine nera avente la stessa dimensione della sub mask. Ciascuna linea trovata viene diegnata di colore bianco su questa maschera, con una lunghezza tale da attraversare tutta la maschera. Questa operazione porta con se un'altro vantaggio, che consiste nel rimuovere altri possibili frane pixels nel painting component e permette di accorpare molteplici linee che rappresentano lo stesso edge del dipinto.
+From the lines obtained, a mask is created starting from a black image having the same size as the sub mask. Each line found is drawn in white and with a certain tickness on this mask, with a length such as to cross the whole mask. This operation brings with it another advantage. In fact, the tickness with which the lines are drawn allows us to remove other possible frame pixels from the painting component and to merge multiple lines that represent the same edge of the painting.
 
-Il risultato delle operazioni di edge detection e la maschera ricavata dalle Hough lines è osservabile in figura \ref{fig:cannyHough}.
+The result of the edge detection operations and the mask obtained from the Hough lines can be seen in the Figure \ref{fig:cannyHough}.
 
 \begin{figure}[t]
    \begin{center}
@@ -355,25 +359,25 @@ Il risultato delle operazioni di edge detection e la maschera ricavata dalle Hou
 \end{figure}
 
 
-La maschera costruita partendo dalle linee di Hough ci consente di isolare il painting component con poche semplici operazioni. Per prima cosa di trovano tutti i contorni all'interno della maschera. Di questi si considera il contorno che racchiude l'area più ampia, la quale rappresenta il dipinto che stiamo cercando.
+The mask built using the Hough lines allows us to isolate the painting component with a few simple operations. First of all find all the contours inside the mask. Of these I consider the contours that encloses the largest area, which represents the painting I am looking for.
 
-Disegno questo contorno su una maschera nera della stessa dimensione della sub-mask e lo riempio di bianco. Ho così isolato il mio painting component.
+I draw this outline on a black mask of the same size as the sub-mask and fill it in white. So I isolated the painting component.
 
-La maschera del painting component è usata per individuare i corners necessari a trasformare il detected painting prima di compararlo con le immagini presenti nel database.
+The painting component mask is used to identify the corners necessary to transform the detected painting before comparing it with the images in the database.
 
-Il programma utilizza lo Shi-Tomasi Corner Detector \cite{shi1994good}. Esso shows better results compared to Harris Corner Detector \cite{harris1988combined} e consente di individuare gli $N$ corners più forti presenti nell'immagine. Nel mio caso, ho posto $N=4$, in quanto interessato a trovare i quattro angoli di un dipinto. Ovviamente, sto supponendo che i dipinti siano tutti in qualche modo rettangolari e che dunque sia sempre possibile ottenere quattro corner. Nella realtà, i dipinti possono presentare forme più disparate e avere un numero di corner maggiore o inferiore a 4. 
+The program uses the Shi-Tomasi Corner Detector \cite{shi1994good}. It shows better results compared to Harris Corner Detector \cite{harris1988combined} and allows me to identify the strongest $N$ corners in the image. In my case, I placed $N = 4$, as interested in finding the four corners of a painting. Obviously, I am assuming that the paintings are all somewhat rectangular and therefore it is always possible to obtain four corners. In reality, paintings can have more disparate shapes and have a number of corners greater than or less than 4.
 
-Per risolvere questo problema eseguo una fase di check sui corner trovati dallo Shi-Tomasi Corner Detector. Infatti, questi vengono considerati validi solo se rispettano le seguenti condizioni:
+To solve this problem I perform a check phase on the corners found by the Shi-Tomasi Corner Detector. In fact, these are considered valid only if they meet the following conditions:
 \begin{itemize}
-   \item sono esattamente 4
-   \item l'area del poligono avente come vertici i corner individuati deve essere maggiore o uguale ad una certa soglia ottenuta come percentuale dell'area del contorno del painting component presente nella sub-image.
+   \item are exactly 4
+   \item the area of ​​the polygon having as vertices the identified corners must be greater than or equal to a certain threshold obtained as a percentage of the area of ​​the contour of the painting component.
 \end{itemize}
 
-Se non vengono rispettare le seguenti condizioni, si considerano come corners i quantro vertici (top-left, top-right, bottom-right, bottom-left) della sub-image. 
+If the above conditions are not respected, the four vertices (top-left, top-right, bottom-right, bottom-left) of the sub-image are considered as corners of the painting component.
 
-Questo mi permette di gestire senza errori anche immagini non squarish. Il drawback di questa soluzione è che, nal caso in cui non vengano rispettate le precedenti condizioni, impostando come corner i vertici dell'immagine, la fase successiva di rectification, lascerà invariati i painting components.
+This allows me to manage without errors even non-rectangular images. The drawback of this solution is that, if the previous conditions are not respected, after setting the vertices of the sub-image as corners, the next phase of rectification will leave the painting components unchanged.
 
-La Figura \ref{fig:cornersDetect} mostra una maschera in cui sono strati disegnati i corners correttamente individuati.
+Figure \ref{fig:cornersDetect} shows a mask in which the correctly identified corners have been drawn.
 
 \begin{figure}[t]
    \begin{center}
@@ -387,22 +391,21 @@ La Figura \ref{fig:cornersDetect} mostra una maschera in cui sono strati disegna
 %------------------------------------------------------------------------
 \subsubsection{Rectify Painting}
 
-Abbiamo tutti gli ingredienti necessari per poter effettuare la rectification del dipinto individuato. 
+We have all the necessary ingredients to be able to rectify the identified painting.
 
-Infatti, per poter comparare le features del detected painting con quelle dei dipinti che costituiscono il db, è opportuno effettuare una trasformazione affine che utilizza i corners precedentemente trovati.
+In fact, in order to compare the features of detected painting with those of the paintings in the database, it is advisable to carry out an Affine Transformation that uses the previously found corners.
 
-An Affine Transformation is done by translating every pixel in an image to a new location. The transformation is defined by a matrix multiplication, that can be found when the translation of some points are known. Quindi, per ricavare questa matrice, abbiamo bisogno di conoscere un set di punti sorgente e un set di punti destinazione.
+This Affine Transformation is done by translating every pixel in an image to a new location. The transformation is defined by a matrix multiplication, that can be found when the translation of some points are known. So to obtain this matrix, we need to know a set of source points and a set of destination points.
 
-I punti sorgente sono sempre i corners precedentemente trovati. Per quanto riguarda i punti destinazione, questi vengono determinati nel seguente modo:
+The source points are the previously found corners. As for the destination points, these are determined in the following way:
 \begin{enumerate}
-   \item Si ordinano i corner secondo the top-left, top-right, bottom-right, and bottom-left order. 
+   \item The corners are sorted according to the top-left, top-right, bottom-right, and bottom-left order.
    
-   \item Si calcola the width $w$ of the new image, which will be the
-   maximum distance between bottom-right and bottom-left x-coordiates or the top-right and top-left x-coordinates. 
+   \item I calculate the width $w$ of the new image, which will be the maximum distance between bottom-right and bottom-left x-coordiates or the top-right and top-left x-coordinates
    
-   \item Si calcola the height $h$ of the new image, which will be the maximum distance between the top-right and bottom-right y-coordinates or the top-left and bottom-left y-coordinates. 
+   \item I calculate the height $h$ of the new image, which will be the maximum distance between the top-right and bottom-right y-coordinates or the top-left and bottom-left y-coordinates. 
    
-   \item Now that we have the dimensions of the new image, construct the set of destination points ($dst\_points$) to obtain a top-down view of the image, again specifying points in the top-left, top-right, bottom-right, and bottom-left order:
+   \item Now that I have the dimensions of the new image, I construct the set of destination points ($dst\ _points$) to obtain a top-down view of the image, again specifying points in the top-left, top-right, bottom-right, and bottom-left order:
    \begin{equation}
       dst\_points = [[0, 0], [w, 0], [w, h], [0, h]]
       \label{eq:1}
@@ -410,7 +413,7 @@ I punti sorgente sono sempre i corners precedentemente trovati. Per quanto rigua
 \end{enumerate}
 
 
-La Figura \ref{fig:rectifyComparison} mostra un cinfronto tra l'immagine originale e la sua vrsione rettificata.
+Figura \ref{fig:rectifyComparison} shows a comparison between the original image of a painting and its rectified version.
 
 \begin{figure}[t]
    \begin{center}
@@ -421,22 +424,21 @@ La Figura \ref{fig:rectifyComparison} mostra un cinfronto tra l'immagine origina
    \label{fig:rectifyComparison}
 \end{figure}
 
-Il programma consente di accettare come destinazione della trasformazione affine, non solo un set di punti ma anche un'intera immagine. In questo caso il programma sa che i corner del painting component individuato devono essere traslati nei quattro vertici dell'immagine destinazione, sempre seguendo the top-left, top-right, bottom-right, and bottom-left order. 
+The program accept as a target for the affine transformation, not only a set of points but also an entire image. In this case the program translates the corners of the painting component identified to the four vertices of the destination image, always following the top-left, top-right, bottom-right, and bottom-left order. 
 
-Questa ulteriore funzionalità è utile per eseguire il task successivo quello di Painting Retireval.
+This additional functionality is useful for performing the next task,the Painting Retrieval.
 
-
+%------------------------------------------------------------------------
 \subsubsection{Improve Paintings ROI}
 
-Prima di procedere con task successivo, riprendiamo per un attimo in considerazione il task di painting detection. Come precedentemente detto, la bounding boxe che è associata ad ogni dipinto detected è rappresentata fino a questo momento da un rettangolo. Adesso però abbiamo l'ingrediente che ci serve per costruire delle ROI che fittino al meglio possibile il contorno del dipinto e la sua prospettiva. Tale ingrediente sono appunto i corner. Tracciando una retta che congiunge i vari corner, siamo infatti in grado di costruire un poligono che costituisce proprio la ROI che stavamo cercando. In Figura \ref{fig:improvedROI} si può ammirare il risultato ottenuto, e in particolare si può apprezzare come esso sia migliore del precedente risultato basato su bounding box rettangolari. 
-
+Before proceeding to the next task, let's briefly consider the Painting Detection task again. As previously said, the bounding box that is associated with each detected painting is represented so far by a rectangle. Now, however, I have the ingredient I need to build ROIs that best fit the outline of the painting, respecting the perspective. This ingredient is precisely the corners. By drawing a straight line that connects the various corners, I am in fact able to build a polygon that constitutes the ROI I was looking for. In Figure \ref{fig: improvedROI} you can see the result obtained, and in particular you can appreciate how it is better than the previous result based on rectangular bounding boxes.
 
 \begin{figure}[t]
    \begin{center}
    \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
       %\includegraphics[width=0.8\linewidth]{egfigure.eps}
    \end{center}
-      \caption{ROI of the detected points obtained using paintings corners.}
+      \caption{ROI of the detected paintings obtained using the paintings corners.}
    \label{fig:improvedROI}
 \end{figure}
 
@@ -444,15 +446,13 @@ Prima di procedere con task successivo, riprendiamo per un attimo in considerazi
 %------------------------------------------------------------------------
 \subsection{Painting Retieval}
 
-Arrivati a questa fase, siamo in possesso di una versione reffiticata di un dipinto detected all'interno dell'immagine originale. Non rimane che confrontarlo con tutti i dipinti presenti nel database al fine di trovare quello che genera il match migliore.
+At this stage, we have a rectified version of a painting detected within the original image. All that remains is to compare it with all the paintings in the database in order to find the one that generates the best match.
 
-Problemi di illuminazione,riflessione delle luci, image exposure and image saturation dovuti all'esposizone di dipinti in esibizioni e mostre, potrebbero tuttavia influenzare negativamente le possibilità di individuare correttamente un dipinto tra quelli presenti nel database. 
+Lighting problems, light reflection, image exposure and image saturation due to the exposure of paintings in exhibitions, however, could negatively influence the chances of correctly identifying a painting among those present in the database.
 
-Per queste ragioni, prima di procedere all'utilizzo di ORB per effettuare il matching dei dipinti, è opportuno cercare di migliorare la luminosità e il contrasto dell'immagine.
+For these reasons, before using ORB to match the paintings, it is advisable to try to improve the brightness and contrast of the image.
 
-Per fare ciò, il programma aggiusta automaticamente la luminosità e il constrato dell'immagine.
-
-Brightness and contrast is linear operator with parameter $\alpha$ and $\beta$:
+To do this, the program is able to automatically adjust the brightness and construction of the image. Brightness and contrast are linear operator with parameter $\alpha$ and $\beta$:
 \begin{equation} 
    g(x,y)= \alpha * f(x,y)+ \beta 
    \label{eq:2}
@@ -476,51 +476,49 @@ To calculate $\beta$, we plug it into the formula \ref{eq:2} where $g(x, y)=0$ a
    \label{eq:4}
 \end{equation}
 
-Ottenuta la versione auto-adjusted dell'immagine rettificata si procede alla fase di matching con il database. Il programma utilizza ORB per individuare i keypoints nei dipinti, e calcola quanti matches il auto-adjusted painting ha con ciascun dipinto del database.
+Once the auto-adjusted version of the rectified image has been obtained, the matching with the database is carried out. The program uses ORB to locate the keypoints in the paintings, and calculates how many matches the auto-adjusted painting has produced with each painting in the database.
 
-I key point vengono calcolati per ogni coppia di immagini che si sta confrontando e il programma verifica quali keypoints sono condivisi tra le due immagini. 
+The key points are calculated for each pair of images you are comparing and the program checks which keypoints are shared between the two images. 
 
-
-Al fine di ridurre il numero di falsi positivi, ossia di match con dipinti errati, il programma non si limita a selezionare il dipinto del database che ha prodotto il numero più alto di match, ma determina il match migliore nel modo seguente:
-\begin{itemize}
-   \item per ogni dipinto del databse, calcola i match con il painting component che si sta anlizzando. I matches ottenuti vengono ordinati in ordine crescente sulla base della distanza (i primi sono i match migliori). Di questi considera i primi $N$ (parametro settabile) e ne calcola il valore medio. Se non si è registrato nessun match si ritorna un valore che funge da flag e che permette di capire che non c'è stato nessun match (i.e. un valore molto elevato).
+In order to reduce the number of false positives, i.e. matches with incorrect paintings, the program does not just select the database painting that produced the highest number of matches, but determines the best match in the following way:
+\begin{enumerate}
+   \item For each painting in the database, calculate the matches with the painting component that is being analyzed. The matches obtained are sorted in ascending order based on the distance (the first are the best matches). Of these, it considers the first $N$ (settable parameter) and calculates the average value, i.e. the average distance. If no match has been recorded, a value is returned which acts as a flag and which allows to understand that there was no match (i.e. a very high value).
    
-   \item Si crea una lista con la distanza media registrata per ogni dipinto del database e la si ordina in modo crescente.
+   \item Create a list with the average distance recorded for each painting in the database and order it in increasing order.
    
-   \item Se il primo valore della lista, quello inferiore, è il valore flag, allora significa che non c'è stato alcun match con il database.
+   \item If the first value of the list, the lower one, is the flag value, then it means that there was no match with the database.
    
-   \item Se il primo valore della lista è diverso dal valore flag allora tale match si considera valido solo se il rapporto tra il il primo valore della lista e il secondo valore della lista è inferiore ad una certa soglia. Ossia, voglio che il primo valore, quello che mi determina quale dipinto del db assegnare, sia sufficientemente più piccolo del secondo valore della lista. Se ciò è verificato allora posso considerare il primo match della lista sufficientemente robusto e affidabile, altrimenti vuorrà dirre che il match è debole e poco affidabile e non lo considero.
-\end{itemize}
+   \item If the first value of the list is different from the flag value then this match is considered valid only if the ratio between the first value of the list and the second value of the list is lower than a certain threshold. That is, I want the first value, the one that determines which painting of the database is assigned to the painting component, is sufficiently smaller than the second value in the list. If this is verified then I can consider the first match of the list sufficiently robust and reliable, otherwise it will mean that the match is weak and not very reliable and I drop it.
+\end{enumerate}
 
-Nel caso in cui ORB non abbia prodotto alcun match con nessuno dei dipinti presenti nel databse per un determinato detected painting, il programma offre anche la possibilità effettuare un histogram comparison per ogni dipinto salvato nel database, in modo da individuare quale dipinto ha l'istogramma più simile a quello del detected painting. Il dipinto con il migliore matching histogram is chosen as a painting to classify the detected painting
+In the event that ORB has not produced any match with any of the paintings in the database for a given detected painting, the program also offers the possibility to perform a histogram comparison for each painting saved in the database, in order to identify which painting has the histogram more similar to that of the detected painting. The painting with the best matching histogram is chosen as a painting to classify the detected painting
 
 Histograms are made for the Hue and Saturation of each image. This involves making 'bins' for each possible Hue or Saturation value in the image, counting up the amount of pixels in the image that have that Hue or Saturation value. The images' histograms are then compared to see which of the saved painting images has the the most similar histogram to the histogram of the located painting.  
 
-To compare two histograms ($H_1$ and $H_2$), first we choose as a metric ($d(H_1, H_2)$) to express how well both histograms match, the histogram Intersection:
+To compare two histograms ($H_1$ and $H_2$), first we choose the histogram Intersection as a metric ($d(H_1, H_2)$) to express how well both histograms match:
 \begin{equation}
    d(H_1, H_2) = \sum_{I} min(H_1(I), H_2(I))
    \label{eq:5}
 \end{equation}
 
-In quest'ultimo caso si considera come match migliore quello che ha dati il valore di intersezione più elevato.
+In the case of histogram matching, the match that produced the highest intersection value is considered the best match.
 
-Supponiamo di essere stati in grado di aver individuato un match col database. Adessiamo possiamo accedere accedere a tutte le informazioni asoziate al dipinto quali titolo, autore, filename e stanza in cui si trova. 
+Suppose we were able to find a match with the database. We can now access all the information associated with the painting such as title, author, filename and room in which it is located.
 
-Tutte informazioni molto utili che ci serviranno per eseguire il task di Painting and People Detection.
+All very useful information that are necessary to perform the Painting and People Localization task.
 
 %------------------------------------------------------------------------
 \subsection{People Detection}
 
-Questo task viene eseguito in modo del tutto dipendente dai precedenti anche perchè utilizza un approccio profondamente diverso. Esso infatti sfrutta il real-time object detection YOLOv3 per individuare le eventuali persone presenti all'interno dell'immagine.
+This task is performed independently from the previous ones also because it uses a different approach. In fact, it uses the real-time object detection YOLOv3 to identify any people present in the image.
 
-YOLOv3 produce in output una lista di bounding boxes ognuna delle quali associata ad una persona individuata nell'immagine.
+YOLOv3 outputs a list of bounding boxes each of which associated with a person identified in the image.
 
-Siamo però all'interno di un museo o galleria d'arte, molti dipinti ritraggono delle persone, quindi accade spesso che YOLO individui delle persone che in realta sono i soggetti dei dipinti. 
+However, we are inside a museum or art gallery, many paintings portray people, so it often happens that YOLO identifies the subjects of the paintings as people. This, although logically correct, is not the result we want to achieve.
 
-Per risolvere questo problema, considero come non accetabili, e di conseguenza scarto, tutte le baounding boxes which overlap more than
-a fixed threshold with any one of bounding boxes of the detected paintings.
+To solve this problem, I consider unacceptable and consequently rejected all bounding boxes which overlap more than a fixed threshold with any one of bounding boxes of the detected paintings.
 
-La Figure \ref{fig:peopleDetection} mostra un esempio di risultato dell'operazione di People detection eseguita su un'immagine. Da notare come nonostante copra con il proprio copro una porzione del dipinto, sia il dipinto che la persona vengono individuate correttamente.
+Figure \ref{fig:peopleDetection} shows an example of the result of the People Detection operation performed on an image. It should be noted that although the person covers a portion of the painting with his body, both the painting and the person are correctly identified.
 
 \begin{figure}[t]
    \begin{center}
@@ -534,22 +532,22 @@ La Figure \ref{fig:peopleDetection} mostra un esempio di risultato dell'operazio
 %------------------------------------------------------------------------
 \subsection{Painting and People Localization}
 
-L'ultimo tassello della processing pipeline, il task di Painting and People Localization, si pone come obiettivo quello di determinare in quale stanza del museo si trovano i dipinti e le persone presenti nell'immagine di input. 
+The last step of the pipeline is the Painting and People Localization task. It aims to determine which room in the museum the paintings and people in the input image are located in.
 
-Sfruttando le informazioni che abbiamo ricavato per giungere a questo punto, tale task può essere risolto con una soluzione trivial ma efficace.
+By taking advantage of the information we got to reach this point, this task can be solved with a trivial but effective solution.
 
-L'idea di base è, le persone e i dipinti presenti nell'immagine si trovano nella stessa camera. Quindi, se sono in grado di determinare in quale camera si trovano i dipinti presenti nell'immagine allora ho di conseguenza individuato anche dove si trovano le persone.
+The basic idea is, the people and paintings in the image are in the same room. So, if I am able to determine in which room the paintings in the image are located, I have consequently also identified where the people are.
 
-Questa assunzione, può non essere verificata nel caso in cui l'immagine ritragga porzioni di camere differenti, perchè magari scattata includendo una porta o un accesso ad una camera adiacente.
-Si tratta però di casi particolari, che non si verificano troppo di frequente all'interno del dataset a disposizone.
+This assumption may not be verified in the event that the image contains portions of different rooms, because perhaps taken by including a door or access to an adjacent room.
+However, these are particular cases, which do not occur too frequently within the available dataset.
 
-Per ognuno dei dipinti riconosciuti nell'immagine, grazie alle informazioni ricavate dal db nella fase di painting retireval, il programma è in grado di determinare in quel stanza del museo si trova. 
+For each of the paintings recognized in the image, thanks to the information obtained from the database during the painting retireval phase, the program is able to determine in which museum room it is located.
 
-Il programma crea una lista delle camere di tutti i dipinti individuati all'interno dell'immagine. A causa di errori di identificazione dei dipinti, può accadere che la lista contenga valori differenti.
+The program creates a list of the rooms of all the paintings identified within the image. Due to incorrect identification of the paintings, it may happen that the list contains different values.
 
-Si conta quante volte ogni numero di camera eè presente nella lista e si considera quello che è èresenta il maggior numero di occorrenze. Si tratta di una decisione presa a maggioranza. Se la maggior parte dei dipinti individuati si trovano in una determinata camera, allora è molto probabile che sia quella la camera corretta.
+The program counts how many times each room number is present in the list and considers the one that has the most occurrences. It is a majority decision. If most of the paintings detected are in a particular room, then it is very likely that it is the correct room.
 
-La Figura \ref{fig:paintingPeopleLocalization} mostra il risultato del processo di Painting and People Localization, che consiste nello stampare in sovraimpressione l'informazione della camera dove dipinti e persone si trovano.
+Figure \ref{fig:paintingPeopleLocalization} shows the result of the Painting and People Localization process, which consists in superimposing the information of the room where paintings and people are located on the original image.
 
 \begin{figure}[t]
    \begin{center}
@@ -563,26 +561,39 @@ La Figura \ref{fig:paintingPeopleLocalization} mostra il risultato del processo 
 %------------------------------------------------------------------------
 \section{Results}
 
-Il programma proposto in questo lavoro constente di elaborare video e foto al fine di produrre 
+\begin{figure*}
+   \begin{center}
+   \fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
+   \end{center}
+      \caption{Example of final output produced by the proposed pipeline.}
+   \label{fig:finalPipelineOutput}
+\end{figure*}
 
+The tests carried out have shown that the program performs well for most of the data in the dataset. An example of complete output showing the final result produced by the pipeline can be seen in Figure \ref{fig:finalPipelineOutput}.
 
-Mostra i risultati complessivi e dove l'approccio fallisce quando non vengono rispettate le premesse e i presupposti fatti precedentemente (vedi ad esempio il flooding della parete).
-Inserire tempistiche e che precisa che YOLO gira su GPU.
+The results obtained are great although the system has some difficulties in dealing with particularly difficult situations. This is due to the fact that common image processing techniques suffer from some problems (lighting, scale changes, distortion, etc.) which become even more relevant in the case of moving cameras, which in turn introduce further undesirable effects, e.g. blur, noise, motion.
 
+In addition, the exhibition of paintings in museums and art galleries, adds problems such as light reflection, image exposure and image saturation, and involves the presence of people who overlap, to a greater or lesser extent, with the paintings.
 
-Un fattore molto importante da evidenziare riguarda la suscettibilità del risultato ottenuto al variare dei parametri con cui sono state invocate le funzioni della libreria OpenCV. In alcuni casi, modificare anche leggermente un paramtro, porta ad una netta variazione dell'output. Ciò ha richiesto molti test al fine di trovare la combinazione di valori dei parametri che mi permettesse di ottenre i risultati migliori. Questo però apre la strada a molti altri test che possono ancora essere fatti al fine di migliorare i risultati ottenuti con questo lavoro.
+Although the problem of brightness and contrast have been solved using auto-adjusting techniques, there are some problems that are instead related to the assumptions made during the implementation of the various tasks.
+
+For example, the program may work not correctly when the frames of the paintings overlap, when the paintings are too small or taken from afar, when the frame is particularly wide. The latter case could adversely affect the result as the erosion phase could not be able to remove enough frame, which could compromise the features matching or histogram comparison phase, making the result less accurate.
+
+However, the program is able to correctly manage situations in which the painting is very close or is very large and occupies the largest portion of the image (i.e. the flood fill operation mistake the wall and paintings in the Painting Detection phase) and the situation in which YOLO identifies as persons the subjects portrayed within the paintings.
+
+A very important factor to highlight is that the various functions of the OpenCV library that have been used to implement the various tasks, often require a large number of parameters as input. This overall determines a very large number of possible combinations of these parameters. Each of these combinations determines a different set-up of the program and therefore different final results.
+Again, numerous tests were carried out in order to find the right trade-off, that is the combination that produced the best results in the various presentable situations.
+
+This, at the same time, opens the way to many other tests that can still be done in order to improve the results obtained with this work.
 
 %------------------------------------------------------------------------
 \section{Conclusions}
-Questo lavoro ha mostrato come sia possibile portare a termine i task di painting Detection, Retrieval and Localization senza l'utilizzo di tecniche di deep learning, ma attraverso delle operazioni e trasformazioni di image processing and analysis. I risultati ottenuti sono degni di nota seppur il sistema mostri il fianco in situazioni particolarmente ostiche.
 
-Ciò è legato al fatto che le tecniche comuni di image processing soffrono di alcuni problemi (illuminazione, scale changes, distorsione, etc.) che diventano ancora più rilevanti nel caso di moving cameras, le quali a loro volta introducono ulteriori effetti indesiderati, e.g. blur, noise, motion. 
-In aggiunta a ciò, l'esposione dei dipinti in esibizioni e mostre aggiunge problemi di riflessione delle luci, image exposure and image saturation, nonchè la presenza di persone che si sovrappongono in misura più o meno rilevante ai dipinti esposti.
+This work has shown how it is possible to complete the Painting Detection, Retrieval and Localization tasks without the use of deep learning techniques, but through operations and transformations of image processing and analysis.
 
-Sono riuscito ad affrontare alcuni di questi problemi, come ad esempio il problema del flooding errato che riconosceva in modo invertito il muro e i dipinti, oppure i problemi di contrasto e illuminazione delle immagine, risolti attraverso tecniche di auto-adjusting che mi hanno inoltre permesso di migliorare i risultati di match corretti con il DB.
+I was able to face many of the challenges presented to me, such as the problem of incorrect flooding that recognized the wall and paintings in an inverted way, the problem of people detection that identified the subjects within the paintings or the contrast and lighting problems of the images, solved through auto-adjusting techniques that also allowed me to improve the match results with the database.
 
-Questo lavoro presenta buoni risultati ma apre anche la strada a una serie di nuove strade e soluzioni alternative e differenti combinazioni delle operazioni svolte che fanno sperare nella possibilità di poter ottenere un miglioramento dei risultati e delle performance.
-
+This work presents great results but also opens the way to a series of new possibilities and alternative solutions and different combinations of the operations carried out in the proposed pipeline, which bode well in the possibility that future works will be able to obtain an improvement in results and performance.
 
 {\small
 \bibliographystyle{ieee_fullname}

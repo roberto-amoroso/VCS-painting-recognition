@@ -247,7 +247,7 @@ def main():
     # IMAGES
     # input_filename += 'wall_mask_test.jpg'  # CRITIC
     # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
-    # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
+    input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
     # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
@@ -368,11 +368,15 @@ def main():
     print("--------------   START PROCESSING   --------------")
     print("--------------------------------------------------")
 
+    verbosity_image_backup = verbosity_image
+
     for input_filename in inputs_list:
 
         media, media_type = check_media_file(input_filename)
         if media_type == MediaType.video:
             verbosity_image = 0
+        else:
+            verbosity_image = verbosity_image_backup
 
         # ---------------------------------------------------------------------------------------------
         # Managing verbosity

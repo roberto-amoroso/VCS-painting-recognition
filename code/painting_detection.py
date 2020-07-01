@@ -240,31 +240,29 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     print_time(start_time)
     show_image(f'image_mask_largest_segment', wall_mask, height=405, width=720)
 
-    # Step 3: Dilate and Erode the wall mask to remove noise
-    # ----------------------------
-    # IMPORTANT: We have not yet inverted the mask, therefore making
-    # dilation at this stage is equivalent to erosion and vice versa
-    # (we dilate the white pixels that are those of the wall).
-    # ----------------------------
-    print_next_step(generator, "Dilate and Erode")
-    kernel_size = 20  # 18 or 20
-    start_time = time.time()
-    dilated_wall_mask = image_dilation(wall_mask, kernel_size)
-    print_time(start_time)
-    show_image('image_dilation', dilated_wall_mask, height=405, width=720)
-
-    start_time = time.time()
-    eroded_wall_mask = image_erosion(dilated_wall_mask, kernel_size)
-    print_time(start_time)
-    show_image('image_erosion', eroded_wall_mask, height=405, width=720)
-
     # Step 4: Invert the wall mask
     # ----------------------------
     print_next_step(generator, "Invert Wall Mask")
     start_time = time.time()
-    wall_mask_inverted = invert_image(eroded_wall_mask)
+    wall_mask_inverted = invert_image(wall_mask)
     print_time(start_time)
     show_image('image_inversion', wall_mask_inverted, height=405, width=720)
+
+    # Step 3: Erode and Dilate the wall mask to remove noise
+    print_next_step(generator, "Erode and Dilate")
+    kernel_size = 20  # 18 or 20
+
+    start_time = time.time()
+    eroded_wall_mask = image_erosion(wall_mask_inverted, kernel_size)
+    print_time(start_time)
+    show_image('image_erosion', eroded_wall_mask, height=405, width=720)
+
+    start_time = time.time()
+    dilated_wall_mask = image_dilation(eroded_wall_mask, kernel_size)
+    print_time(start_time)
+    show_image('image_dilation', dilated_wall_mask, height=405, width=720)
+
+    wall_mask_inverted = dilated_wall_mask
 
     # ----------------------------
     # Connected Components Analysis:

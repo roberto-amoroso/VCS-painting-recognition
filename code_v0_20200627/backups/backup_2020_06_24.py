@@ -2,8 +2,10 @@
 from yolo.people_detection import PeopleDetection
 from models.painting import Painting
 import pandas as pd
-from utils.math_utils import print_next_step, step_generator, show_image, draw_lines, draw_corners, order_points, translate_points, \
-    calculate_polygon_area, draw_people_bounding_box
+from utils.math_utils import order_points, translate_points, calculate_polygon_area
+from utils.draw import step_generator, draw_lines, draw_corners, draw_people_bounding_box
+from utils.draw import show_image_window_blocking as show_image
+from utils.draw import print_next_step_info as print_next_step
 import cv2
 import numpy as np
 import os
@@ -1504,7 +1506,7 @@ def clean_people_bounding_box(img, paintings, people_bounding_boxes, max_percent
 if __name__ == '__main__':
 
     # YOLO People Detector
-    people_detector = PeopleDetection()
+    # people_detector = PeopleDetection()
 
     photos_path = '../dataset/photos'
     recognized_painting_path = '../dataset/recognized_paintings'
@@ -1521,7 +1523,7 @@ if __name__ == '__main__':
     # filename = "VID_20180529_112517_0005.jpg"
     # filename = "VID_20180529_112553_0002.jpg"  # Wall inverted
     # filename = "VID_20180529_112739_0004.jpg"  # Wall inverted
-    # filename = "VID_20180529_112627_0000.jpg"  # Wall correct
+    filename = "VID_20180529_112627_0000.jpg"  # Wall correct
     # filename = "VID_20180529_112517_0002.jpg"  # strange case
     # filename = "VID_20180529_112553_0005.jpg"
     # filename = "IMG_2646_0004.jpg"
@@ -1660,8 +1662,13 @@ if __name__ == '__main__':
             print("\ttime: {:.3f} s".format(exe_time_contours))
             # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
             img_contours = img.copy()
-            cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
-            show_image('image_contours_1', img_contours, height=405, width=720)
+            # cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
+            # show_image('image_contours_1', img_contours, height=405, width=720)
+
+            # # Print every contour step-by-step
+            for contour in contours_1:
+                cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
+                show_image('image_contours_1', img_contours, height=405, width=720)
 
             # Add a white border to manage cases when `find_largest_segment`
             # works the opposite way (wall black and painting white)
@@ -1681,8 +1688,12 @@ if __name__ == '__main__':
             print("\ttime: {:.3f} s".format(exe_time_contours))
             # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
             img_contours = img.copy()
-            cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
-            show_image('image_contours_2', img_contours, height=405, width=720)
+            # cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
+            # show_image('image_contours_2', img_contours, height=405, width=720)
+
+            for contour in contours_2:
+                cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
+                show_image('image_contours_2', img_contours, height=405, width=720)
 
             remove_overlapping = False
             error_in_wall_mask = False

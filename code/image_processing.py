@@ -591,10 +591,14 @@ def image_resize(img, width, height, interpolation=cv2.INTER_CUBIC):
         (ndarray, float) = (the resized image, the scale factor)
     """
 
+    scale_factor = 1.
+    resized_img = img
     h_img, w_img, c_img = img.shape
-    scale_factor = h_img / height
-    height_scaled = np.min((h_img, height))
-    width_scaled = np.min((w_img, width))
-    resized_img = cv2.resize(img, (width_scaled, height_scaled), interpolation)
+
+    if h_img > height and w_img > width:
+        scale_factor = h_img / height
+        height_scaled = height
+        width_scaled = width
+        resized_img = cv2.resize(img, (width_scaled, height_scaled), interpolation)
 
     return resized_img, scale_factor

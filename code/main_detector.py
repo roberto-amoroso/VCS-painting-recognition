@@ -233,7 +233,7 @@ def main():
 
     verbosity_print = 0
     verbosity_image = 2
-    task = Task(0)
+    task = Task(5)
     match_db_image = False
     histo_mode = True
     frame_occurrence = 40
@@ -245,7 +245,14 @@ def main():
     # ----------------------
     # DIR of images and videos
     input_filename = "dataset/paper_images/"
-    input_filename += "20180206_113716_0009.jpg"
+    # input_filename += "20180206_113716_0009.jpg"
+    # input_filename += "VID_20180529_112849_0002.jpg"
+    # input_filename += "VID_20180529_112553_0002.jpg"
+    # input_filename += "IMG_2660_0017.jpg"
+    # input_filename += "IMG_2662_0007.jpg"
+    # input_filename += "VID_20180529_112627_0001.jpg"
+    # input_filename += "VIRB0392_0014.jpg"
+    input_filename += "test_2.jpg"
     # input_filename += "VID_20180529_112627_0001.jpg"
     # input_filename = "dataset/small_test/"
     # input_filename += "20180206_112930_0022.jpg"

@@ -224,7 +224,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     print_next_step(generator, "Mean Shift Segmentation")
     start_time = time.time()
     spatial_radius = 7  # 8 # 8 # 5 #8 or 7
-    color_radius = 15  # 15 # 40 #40 #35 or 15
+    color_radius = 40  # 15 # 40 #40 #35 or 15
     maximum_pyramid_level = 1  # 1
     img_mss = mean_shift_segmentation(img, spatial_radius, color_radius, maximum_pyramid_level)
     print_time(start_time)
@@ -234,7 +234,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     # ----------------------------
     print_next_step(generator, "Mask the Wall")
     start_time = time.time()
-    color_difference = 2  # 2 # 1
+    color_difference = 1  # 2 # 1
     x_samples = 8  # 8 or 16
     wall_mask = find_largest_segment(img_mss, color_difference, x_samples)
     print_time(start_time)
@@ -249,6 +249,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     show_image('mask_inverted', wall_mask_inverted, height=405, width=720)
 
     # Step 3: Erode and Dilate the wall mask to remove noise
+    # ----------------------------
     print_next_step(generator, "Erode and Dilate")
     kernel_size = 20  # 18 or 20
 
@@ -278,9 +279,13 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     contours_method = cv2.CHAIN_APPROX_NONE  # cv2.CHAIN_APPROX_SIMPLE
     contours_1, hierarchy_1 = find_image_contours(wall_mask_inverted, contours_mode, contours_method)
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-    # img_contours = img.copy()
+    img_contours = img.copy()
     # cv2.drawContours(img_contours, contours_1, -1, (0, 255, 0), 3)
     # show_image('image_contours_1', img_contours, height=405, width=720)
+
+    # for contour in contours_1:
+    #     cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
+    #     show_image('image_contours_1', img_contours, height=405, width=720)
 
     # Add a white border to manage cases when `find_largest_segment`
     # works the opposite way (wall black and painting white)
@@ -295,9 +300,13 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
     contours_2, hierarchy_2 = find_image_contours(wall_mask_inverted_2, contours_mode, contours_method)
     print_time(start_time)
     # Draw the contours on the image (https://docs.opencv.org/trunk/d4/d73/tutorial_py_contours_begin.html)
-    # img_contours = img.copy()
+    img_contours = img.copy()
     # cv2.drawContours(img_contours, contours_2, -1, (0, 255, 0), 3)
     # show_image('image_contours_2', img_contours, height=405, width=720)
+
+    # for contour in contours_2:
+    #     cv2.drawContours(img_contours, [contour], 0, (0, 255, 0), 3)
+    #     show_image('image_contours_2', img_contours, height=405, width=720)
 
     # Print every contour step-by-step
     # img_contours = img.copy()

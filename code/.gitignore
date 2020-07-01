@@ -1,6 +1,7 @@
 data/estensi.glb
 dataset/videos/*
 dataset/photos/*
+dataset/photos_paper/*
 dataset/videos_backup/*
 dataset/small_test/*
 yolov3.weights

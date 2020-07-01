@@ -89,11 +89,11 @@ def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
 
         label = "Person"
         color = (96, 128, 0)
-        bbox_line_thickness = int(3 * scale_factor)
+        bbox_line_thickness = round(3 * scale_factor)
         cv2.rectangle(img, (x, y), (x + w, y + h), color, bbox_line_thickness)
 
         font_scale = 1.5 * scale_factor
-        line_thickness = int(2 * scale_factor)
+        line_thickness = round(2 * scale_factor)
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, font_scale, line_thickness)[0]
         c2 = x + t_size[0] + 3, y + t_size[1] + 4
         cv2.rectangle(img, (x, y), c2, color, -1)
@@ -174,7 +174,7 @@ def draw_room_info(img, people_room, scale_factor):
         # Draw the room of the painting
         font = cv2.FONT_HERSHEY_PLAIN
         font_scale = 2 * scale_factor
-        line_thickness = int(2 * scale_factor)
+        line_thickness = round(2 * scale_factor)
         font_color = (0, 0, 0)
         room_width, room_height = cv2.getTextSize(
             room,
@@ -235,9 +235,9 @@ def draw_paintings_info(img, paintings, scale_factor):
     w = img.shape[1]
 
     font = cv2.FONT_HERSHEY_PLAIN
-    font_scale = 1. * scale_factor
+    font_scale = 1.5 * scale_factor
     font_color = (255, 255, 255)
-    line_thickness = int(1 * scale_factor)
+    line_thickness = round(1 * scale_factor)
 
     for painting in paintings:
         corner_points = painting.corners
@@ -256,7 +256,7 @@ def draw_paintings_info(img, paintings, scale_factor):
         tr = tuple(corner_points[1])
         bl = tuple(corner_points[3])
         br = tuple(corner_points[2])
-        bbox_line_thickness = int(3 * scale_factor)
+        bbox_line_thickness = round(3 * scale_factor)
         cv2.line(img, tl, tr, bbox_color, bbox_line_thickness)
         cv2.line(img, tr, br, bbox_color, bbox_line_thickness)
         cv2.line(img, br, bl, bbox_color, bbox_line_thickness)

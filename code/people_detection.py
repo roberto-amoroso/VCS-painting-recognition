@@ -110,7 +110,8 @@ def detect_people(img, people_detector, paintings_detected, generator, show_imag
             img,
             paintings_detected,
             people_bounding_boxes,
-            max_percentage=max_percentage
+            max_percentage=max_percentage,
+            scale_factor=scale_factor
         )
 
     people_bounding_boxes = np.int32(np.array(people_bounding_boxes) * scale_factor)

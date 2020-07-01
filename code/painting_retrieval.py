@@ -209,12 +209,14 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
 
     Returns
     -------
-    ndarray
-        Returns a NumPy array of tuple (id, num_matches), where id is the
+    tuple[ndarray, bool]
+        Returns:
+        - a NumPy array of tuple (id, mean_distance), where id is the
         identification number of the current painting of the DB and
-        num_matches is the amount of matches that `img` has with the current
-        painting. The array is sorted in descending order of the number of
-        matches.
+        mean_distance is the mean distance between `img` and the current
+        painting of the DB. The array is sorted in ascending order of distance.
+        - a boolean representing if a good match was found or not
+
 
     Notes
     -----
@@ -289,10 +291,7 @@ def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step
             if matches_rank[0][1] < np.inf and matches_rank[0][1] < matches_rank[1][1] * threshold:
                 good_match_found = True
 
-    if good_match_found:
-        return matches_rank
-    else:
-        return None
+    return matches_rank, good_match_found
 
 
 def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, print_next_step, print_time,
@@ -361,7 +360,7 @@ def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, 
         threshold = 0.92
         print_next_step(generator, "Painting DB lookup")
         max_matches = 30  # 40
-        matches_rank = painting_db_lookup(
+        matches_rank, good_match_found = painting_db_lookup(
             sub_img,
             paintings_db,
             generator=generator,
@@ -372,19 +371,22 @@ def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, 
             max_matches=max_matches,
             match_db_image=match_db_image,
         )
-        if matches_rank is None and histo_mode:
-            matches_rank = painting_db_lookup(
-                sub_img,
-                paintings_db,
-                generator=generator,
-                show_image=show_image,
-                print_next_step=print_next_step,
-                print_time=print_time,
-                max_matches=max_matches,
-                match_db_image=match_db_image,
-                histo_mode=histo_mode
-            )
-        if matches_rank is not None:
+        if not good_match_found and histo_mode:
+            if matches_rank[0][1] == np.inf:
+                matches_rank, good_match_found = painting_db_lookup(
+                    sub_img,
+                    paintings_db,
+                    generator=generator,
+                    show_image=show_image,
+                    print_next_step=print_next_step,
+                    print_time=print_time,
+                    max_matches=max_matches,
+                    match_db_image=match_db_image,
+                    histo_mode=histo_mode
+                )
+            else:
+                good_match_found = True
+        if good_match_found:
             painting_id = matches_rank[0][0]
             # Manage case when I find duplicated painting in the current video frame
             if painting_id is not None and painting_id not in paintings_retieved:

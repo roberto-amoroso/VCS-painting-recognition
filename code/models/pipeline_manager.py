@@ -8,7 +8,8 @@ Class managing the order of execution of the functions necessary to perform:
     - People and Paintings Localization
 """
 from models.media_type import MediaType
-from utils.draw import draw_paintings_info, draw_people_bounding_box, show_image_window, print_nicer, print_time_info
+from utils.draw import draw_paintings_info, draw_people_bounding_box, show_image_window, print_nicer, print_time_info, \
+    draw_room_info
 from image_processing import create_segmented_image, image_resize
 from utils.math_utils import translate_points
 from painting_detection import detect_paintings
@@ -95,8 +96,8 @@ class PipelineManager:
         else:
             out_name = self.out_filename
 
-        out_path = os.path.join(self.output_path, out_name)
-        cv2.imwrite(out_path, img)
+        save_path = os.path.join(self.output_path, out_name)
+        cv2.imwrite(save_path, img)
 
     def __resize_image(self, img_original):
         """
@@ -112,8 +113,9 @@ class PipelineManager:
         )
         print_time_info(start_time, "RESIZE IMAGE - END")
         print(f"\tResized image shape: {img.shape}")
+        print(f"\tScale factor: {scale_factor}")
         print("-" * 50)
-        self.show_image_main('image_resized', img, height=405, width=720)
+        self.show_image_main('pipeline_input', img, height=405, width=720)
 
         return img, scale_factor
 
@@ -154,7 +156,7 @@ class PipelineManager:
         print_time_info(start_time, "PAINTING SEGMENTATION - END")
         print("  Segmented shape: ", segmented_img_original.shape)
         print("-" * 50)
-        self.show_image_main('segmented_img_original_size', segmented_img_original, height=405, width=720)
+        # self.show_image_main('segmented_img_original_size', segmented_img_original, height=405, width=720)
 
         return segmented_img_original
 
@@ -172,7 +174,7 @@ class PipelineManager:
         print_time_info(start_time, "PAINTING RECTIFICATION - END")
         print("-" * 50)
 
-        if self.show_image_main == show_image_window:
+        if self.task == Task.painting_rectification:
             for i, painting in enumerate(paintings_detected):
                 x, y, w_rect, h_rect = painting.bounding_box
                 sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
@@ -255,9 +257,11 @@ class PipelineManager:
         print_nicer("DRAW PAINTINGS AND PEOPLE INFORMATION - START")
         start_time = time.time()
         # First draw the info on the paintings...
-        draw_paintings_info(img_original, paintings_detected, people_room, scale_factor)
-        # ...and then the info on the people, so as to respect the prospect.
+        draw_paintings_info(img_original, paintings_detected, scale_factor)
+        # ...and then the info on the people, so as to respect the prospect...
         draw_people_bounding_box(img_original, people_bounding_boxes, scale_factor)
+        # ...at the end the information about the room
+        draw_room_info(img_original, people_room, scale_factor)
         print_time_info(start_time, "DRAW PAINTINGS AND PEOPLE INFORMATION - END")
         print("-" * 50)
 
@@ -359,9 +363,10 @@ class PipelineManager:
             scale_factor
         )
 
-        # print("\n# Final frame shape: ", img_original.shape)
-        self.show_image_main('pipeline_output', img_original, height=405, width=720)
-        if self.media_type == MediaType.image:
-            self.save_image(img_original)
+        if self.task != Task.painting_rectification:
+            # print("\n# Final frame shape: ", img_original.shape)
+            self.show_image_main('pipeline_output_' + self.task.name, img_original, height=405, width=720)
+            if self.media_type == MediaType.image:
+                self.save_image(img_original)
 
         return img_original

@@ -440,11 +440,11 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         # ----------------------------
         print_next_step(generator, "Hough Lines")
         start_time = time.time()
-        probabilistic_mode = True
+        probabilistic_mode = False
         rho = 1
         theta = np.pi / 180
         threshold = 50  # 50 or 30 or 40 or 0
-        ratio_percentage = 0.15
+        ratio_percentage = 0.10
         lines = find_hough_lines(
             img=edges,
             probabilistic_mode=probabilistic_mode,
@@ -455,7 +455,7 @@ def detect_paintings(img, generator, show_image, print_next_step, print_time, sc
         )
         print_time(start_time)
         img_lines = draw_lines(edges, lines, probabilistic_mode)
-        show_image("Detected Lines (in red)", img_lines)
+        # show_image("Detected Lines (in red)", img_lines)
 
         if lines is None:
             # I can't find lines in special situation, e.g the painting is not squared (rounded, octagonal, ...)

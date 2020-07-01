@@ -5,6 +5,8 @@ Module containing functions to perform Painting Rectification.
 import cv2
 import numpy as np
 
+from utils.draw import show_image_window_blocking
+
 
 def rectify_painting(src_img, corners, dst_img=None):
     """Executes Painting Rectification through an Affine Transformation.
@@ -78,6 +80,11 @@ def rectify_painting(src_img, corners, dst_img=None):
     retval, mask = cv2.findHomography(src_points, dst_points)
 
     # Apply perspective transformation to the image
-    im_warped = cv2.warpPerspective(src_img, retval, (w_dst, h_dst), cv2.RANSAC)
+    img_rectified = cv2.warpPerspective(src_img, retval, (w_dst, h_dst), cv2.RANSAC)
 
-    return im_warped
+    # show_image_window_blocking("rect_src", src_img)
+    # print("src_shape: ", src_img.shape)
+    # show_image_window_blocking("rect_dst", img_rectified)
+    # print("dst_shape: ", img_rectified.shape)
+
+    return img_rectified

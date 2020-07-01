@@ -164,14 +164,15 @@ in case `--frame_occurrence` is $> 1$, the frame rate of the output video will b
 A full example could be:
     
 
-    $ python main_detector.py dataset/videos/014/VID_20180529_112627.mp4 painting_db/ data/data.csv -o output -t 5 -fo 30 -vp 1 -vi 2 --match_db_image --histo_mode
+    $ python main_detector.py dataset/videos/014/VID_20180529_112627.mp4 painting_db/ data/data.csv -o output -t 5 -fo 30 -vp 1 -vi 2 --histo_mode
     
  In this case, the input is a video and we want to perform the *Painting and People Localization* task. This implies that all tasks (0 to 5) will be performed. The video will be processed  considering one frame every 30 occurrences. 
  
  All intermediate results will be printed, but no  image will be displayed during processing because we are working with a video and `-vi`  is automatically set equal to 0 (read `-vi` for details). 
  
- The rectification of each detected  painting will be carried out to match the aspect ratio of each image of the DB. 
- In the event that ORB does not produce any match, a match based on histogram will be executed. 
+ The rectification of each detected painting will be carried out only one time (better performance). 
+ 
+ If ORB does not produce any match, a match based on histogram will be executed. 
  
  The output is a video stored in `'./output/paintings_and_people_localization/VID_20180529_112627.mp4'` whose frames show the results of the tasks performed on the frames of the input video.
 

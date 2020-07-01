@@ -88,14 +88,14 @@ def args_parse():
                "# EXAMPLE:\n"
                "\tA full example could be:\n"
                "\t\"$ python main_detector.py dataset/videos/014/VID_20180529_112627.mp4"
-               " painting_db/ data/data.csv -o output -t 5 -fo 30 -vp 1 -vi 2 --match_db_image --histo_mode\"\n\n"
+               " painting_db/ data/data.csv -o output -t 5 -fo 30 -vp 1 -vi 1 --histo_mode\"\n\n"
                "\tIn this case, the input is a video and we want to perform the Painting and People Localization\n"
-               "\ttask. This implies that all tasks (0 to 5) will be performed. The video will be processed \n"
+               "\ttask. This implies that all tasks (from 0 to 5) will be performed. The video will be processed \n"
                "\tconsidering one frame every 30 occurrences. All intermediate results will be printed, but no\n"
                "\timage will be displayed during processing because we are working with a video and '-vi' \n"
                "\tis automatically set equal to 0 (read '-vi' for details). The rectification of each detected\n"
-               "\tpainting will be carried out to match the aspect ratio of each image of the db. In the event \n"
-               "\tthat ORB does not produce any match, a match based on histogram will be executed. The output\n"
+               "\tpainting will be carried out only one time (better performance).\n"
+               "\tIf ORB does not produce any match, a match based on histogram will be executed. The output\n"
                "\tis a video stored in './output/paintings_and_people_localization/VID_20180529_112627.mp4' whose\n"
                "\tframes show the results of the tasks performed on the frames of the input video.\n\n",
         formatter_class=argparse.RawTextHelpFormatter
@@ -231,31 +231,32 @@ def main():
     # match_db_image = args.match_db_image
     # histo_mode = args.histo_mode
 
-    verbosity_print = 1
-    verbosity_image = 2
+    verbosity_print = 0
+    verbosity_image = 1
     task = Task(5)
     match_db_image = False
-    histo_mode = False
-    frame_occurrence = 10
+    histo_mode = True
+    frame_occurrence = 40
     painting_db_path = "paintings_db/"
     painting_data_path = "data/data.csv"
-    output_base_path = "output"
+    output_base_path = "output_test"
     # ----------------------
     # TESTING TODO remove it
     # ----------------------
     # DIR of images and videos
-    input_filename = "dataset/small_test/"
+    # input_filename = "dataset/small_test/"
+    # input_filename += '1.mp4'
     # VIDEOS
     # input_filename = "dataset/videos/014/"
     # input_filename += "VID_20180529_112627.mp4"
     # input_filename += "20180206_114604.mp4"
     # IMAGES
-    # input_filename = "dataset/photos/test/"
+    input_filename = "dataset/photos/test/"
     # input_filename += 'wall_mask_test.jpg'  # CRITIC
     # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
     # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
     # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
-    # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
+    input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
     # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
     # input_filename += "IMG_2646_0003.jpg"  # overlapping contours
     # input_filename += "IMG_2646_0006.jpg"  # overlapping contours
@@ -333,6 +334,8 @@ def main():
     print("# SCRIPT CONFIGURATION:")
     print("\t{:25s} {}".format("-Task:", task.name))
     print("\t{:25s} {}".format("-Input:", input_filename))
+    if len(inputs_list) > 1:
+        print("\t{:25s} {}".format("-Num input files:", len(inputs_list)))
     print("\t{:25s} {}".format("-DB path:", painting_db_path))
     print("\t{:25s} {}".format("-Data path:", painting_data_path))
     print("\t{:25s} {}".format("-Output base path:", output_base_path))
@@ -418,6 +421,7 @@ def main():
 
         if task == Task.painting_rectification:
             out_path_info = output_path = os.path.join(output_path, ntpath.basename(input_filename).split('.')[0])
+            create_directory(output_path)
         else:
             filename, ext = ntpath.basename(input_filename).split('.')
             ext = "." + ext if media_type == MediaType.image else ".mp4"
@@ -429,7 +433,7 @@ def main():
             input_filename=input_filename,
             output_path=output_path,
             task=task,
-            media_type=None,
+            media_type=media_type,
             paintings_db=paintings_db,
             people_detector=people_detector,
             resize_height=resize_height,
@@ -548,6 +552,9 @@ def main():
     print()
     print("================   FINAL RESULT   ================")
     print("{:25s} {:.4f} s".format("# Total execution time:", time.time() - script_time_start))
+
+    if len(inputs_list) > 1:
+        print("\t{:25s} {}".format("-Num files processed:", len(inputs_list)))
 
     if task != Task.people_detection:
         print("{:25s} {}".format("# Painting detections:", tot_paintings_detected))

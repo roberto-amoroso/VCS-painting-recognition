@@ -1,16 +1,16 @@
-
-# VCS 2020: Locate and Recognize Paintings and People
+﻿
+# ArTection: an Art Detection Tool to Locate and Recognize Paintings and People in Museums and Art Galleries
 
 This document describes the structure and functionality of the software I created as the final project of the course of Vision and Cognitive Systems AY 2019/2020.
 
-I propose a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, I created a ***Python*** program that is able to locate and recognize paintings and people present in a video or single image. For the part relating to the paintings, I used the ***OpenCV*** library, while to carry out the people detection operation I used [***YOLO***](https://pjreddie.com/darknet/yolo/), a real-time object detection system.
+I propose a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, I created a ***Python*** program that is able to locate and recognize paintings and people in a video or image. For the part relating to the paintings, I used the ***OpenCV*** library, while to carry out the people detection operation I used [***YOLO***](https://pjreddie.com/darknet/yolo/), a real-time object detection system.
 
 Before proceeding to the detailed description of the functionalities of the program and the possible arguments accepted, the prototype invocation of the main script follows:
 
     $ python main_detector.py [-h] [-o OUTPUT] [-t {0,1,2,3,4,5}]
                             [-fo FRAME_OCCURRENCE] [-vp {0,1}] [-vi {0,1,2}]
                             [-mdbi] [-hm]
-                            input_filename db_path data_filename
+                            input db_path data_filename
 
 The program, calleble through the script `main_detector.py`,  allows you to perform the following tasks:
 
@@ -23,7 +23,7 @@ The program, calleble through the script `main_detector.py`,  allows you to perf
 
 
 ## Code Documentation
-The documentation relating to the code implemented, with a wide description of all functions, classes, modules contained in them, is available by accessing the `Documentation.html` file.  
+The documentation relating to the code implemented, with a wide description of all functions, classes, modules contained in them, is available by accessing the `Documentation.html` file in the project directory folder.  
 It is an HTML interface that makes it easy and immediate to consult the documentation and navigate between the various modules within the project.
 
 For the realization of the documentation I used [pdoc](https://pdoc3.github.io/pdoc/), a software package for the generation of API documentation for Python.
@@ -69,11 +69,11 @@ For convenience, we report again the program invocation prototype:
     $ python main_detector.py [-h] [-o OUTPUT] [-t {0,1,2,3,4,5}]
                             [-fo FRAME_OCCURRENCE] [-vp {0,1}] [-vi {0,1,2}]
                             [-mdbi] [-hm]
-                            input_filename db_path data_filename
+                            input db_path data_filename
 
 ### Positional Arguments:
 
- - `input_filename`        filename of the input image or video
+ - `input`        image or video filename or folder containing images, videos or a mix of both
  - `db_path`     path of the directory where the images that make up  the DB are located
  - `data_filename`       file containing all the information about the  paintings: *(Title, Author, Room, Image)*
 
@@ -108,17 +108,17 @@ set the verbosity of the information displayed (description of the operation  ex
  - `-vi {0,1,2}, --verbosity_image {0,1,2}`<br> 
 set the verbosity of the images displayed.<br> 
 ***NOTE***: if the input is a video, is automatically set to '0' (in order to avoid  an excessive number of images displayed on the screen).<br> 
-                          0 = no image shown **(default)**<br> 
-                          1 = shows main steps final images, at the end of the script execution ***(NOT BLOCKING)***<br> 
-                          2 = shows each final and intermediate image when it is created and a button
-                              must be pressed to continue the execution (mainly used for debugging) ***(BLOCKING)***
+0 = no image shown during processing (DEFAULT)<br> 
+1 = shows output images of the main pipeline steps when they are created. A button must be pressed to continue the execution (used for DEBUGGING)<br> 
+2 = like `-v1 1`, but it also shows output images of the intermediate pipeline steps<br> 
 
  - `-mdbi, --match_db_image`<br> 
- if present, to perform *Painting Retrieval*, the program rectifies each painting  to match the aspect ration of every painting in `db_path`. Otherwise, it rectifies each painting one time using a calculated aspect ratio.
+ if present, to perform *Painting Retrieval*, the program rectifies each painting  to match the aspect ration of every painting in `db_path`. Otherwise, it rectifies each painting one time using a calculated aspect ratio.<br>
+ ***WARNING***: setting `--match_db_image` slows down the image processing as it introduces a new rectification operation for each painting in the DB.
 
  - `-hm, --histo_mode`<br> 
 if present indicates that, during *Painting Retrieval*, the program will executes  *Histogram Matching* in the case *ORB* does not produce any match.<br> 
-***WARNINGS***: setting `--histo_mode` increases the percentage of matches with the DB, but decreases the precision, i.e. increases the number of false positives (incorrect matches).
+***WARNING***: setting `--histo_mode` increases the percentage of matches with the DB, but decreases the precision, i.e. increases the number of false positives (incorrect matches).
 
 
 
@@ -126,9 +126,13 @@ if present indicates that, during *Painting Retrieval*, the program will execute
 
 ### \# TASKS:
 
-Given the mutual dependency of the tasks, to execute the $i-th$ task, with $i>1$, it is necessary that the j-th tasks are executed first, for each $j$ such that $0<=j<i$.
-For example, if you want to perform *Painting Rectification* ($i = 2$) it is necessary that you first execute *Painting Segmentation* ($j = 1$) and *Painting Detection* ($j = 0$).
-The *People Detection* task is an **exception**. It runs independently of the other tasks.
+The tasks in the pipeline are performed in succession. Therefore, to execute the i-th task, with i>1, it is necessary that the j-th tasks are executed first, for each j such that 0<=j<i.
+
+For example, if you want to perform *Painting Rectification* (i = 2) it is necessary that you first execute *Painting Segmentation* (j = 1) and *Painting Detection* (j = 0).
+
+This implies that the *Painting and People Detection* task involves performing all the tasks. This is also reflected in the output, which will be the union of the outputs of all the tasks in the pipeline.
+
+The *People Detection* task is an exception. It runs independently of the other tasks.
 
 ### \# OUTPUT:
    
@@ -143,11 +147,11 @@ The *People Detection* task is an **exception**. It runs independently of the ot
                  |-- people_detection/
                  |-- paintings_and_people_localization/
 
-Each sub-directory will contain the output of the related task (indicated by the name of the sub-directory itself). The output filename will be the same of the input (`input_filename`).
+Each sub-directory will contain the output of the related task (indicated by the name of the sub-directory itself). The output filename will be the same of the input file processed.
 
 The type of the output follows that of the input: `image -> image` and `video -> video`. The exception is the *Painting Rectification* task, which produces only images as output, specifically one image for each individual painting detected. 
 
-It is clear that the number of images produced can be very high, especially in the case of videos. To improve the organization and access to data, the rectified images produced are stored in a directory that has the same as `input_filename`. Inside this directory, the images are named as follows (the extension is neglected):
+It is clear that the number of images produced can be very high, especially in the case of videos. To improve the organization and access to data, the rectified images produced are stored in a directory that has the same name as the input file  processed. Inside this directory, the images are named as follows (the extension is neglected):
 
       input = image -> '<input_filename>_NN' where NN is a progressive number assigned to each
                         painting found in the image.
@@ -165,7 +169,7 @@ A full example could be:
     
 
     $ python main_detector.py dataset/videos/014/VID_20180529_112627.mp4 painting_db/ data/data.csv -o output -t 5 -fo 30 -vp 1 -vi 2 --histo_mode
-    
+
  In this case, the input is a video and we want to perform the *Painting and People Localization* task. This implies that all tasks (0 to 5) will be performed. The video will be processed  considering one frame every 30 occurrences. 
  
  All intermediate results will be printed, but no  image will be displayed during processing because we are working with a video and `-vi`  is automatically set equal to 0 (read `-vi` for details). 

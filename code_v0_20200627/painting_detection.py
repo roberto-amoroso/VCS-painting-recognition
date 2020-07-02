@@ -3,7 +3,7 @@ Module containing functions to perform Painting Detection.
 """
 
 from utils.draw import draw_corners, draw_lines
-from image_processing import image_dilation, image_erosion, invert_image, find_image_contours, image_blurring, \
+from tasks.image_processing import image_dilation, image_erosion, invert_image, find_image_contours, image_blurring, \
     canny_edge_detection, find_hough_lines, extend_image_lines, find_corners, \
     mean_shift_segmentation, find_largest_segment, create_segmented_image
 from utils.math_utils import order_points, calculate_polygon_area, translate_points

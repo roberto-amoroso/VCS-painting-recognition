@@ -2,8 +2,8 @@
 Module containing functions to perform Painting Retrieval.
 """
 from utils.draw import print_nicer
-from image_processing import automatic_brightness_and_contrast
-from painting_rectification import rectify_painting
+from tasks.image_processing import automatic_brightness_and_contrast
+from tasks.painting_rectification import rectify_painting
 from models.painting import Painting
 
 import pandas as pd

@@ -52,10 +52,10 @@ from models.task import Task
 from models.media_type import MediaType
 from models.pipeline_manager import PipelineManager
 from utils.utils import check_media_file, create_directory
-from utils.draw import step_generator, show_image_window, print_next_step_info, \
+from utils.draw import step_generator, print_next_step_info, \
     print_nicer, print_time_info, show_image_window_blocking
 
-from painting_retrieval import create_paintings_db
+from tasks.painting_retrieval import create_paintings_db
 from yolo.people_detection import PeopleDetection
 
 import cv2
@@ -64,61 +64,215 @@ import ntpath
 import time
 import matplotlib.pyplot as plt
 import sys
+import argparse
 
 
-def main(args):
+def args_parse():
+    # ---------------------------------------------------------------------------------------------
+    # Argument Parser
+    # ---------------------------------------------------------------------------------------------
+
+    parser = argparse.ArgumentParser(
+        description=&#34;Main script to execute the following tasks, depending on the value of the optional argument &#39;-t&#39; (or\n&#34;
+                    &#34;&#39;--task&#39;):\n&#34;
+                    &#34;- Painting Detection:               detects all paintings.\n&#34;
+                    &#34;- Painting Segmentation:            creates a segmented version of the input, where the paintings,\n&#34;
+                    &#34;                                    and also any statues, identified are white and the background\n&#34;
+                    &#34;                                    is black.\n&#34;
+                    &#34;- Painting Rectification:           rectifies each painting detected, through an affine transformation\n&#34;
+                    &#34;- Painting Retrieval:               matches each detected and rectified painting to the paintings DB\n&#34;
+                    &#34;                                    found in `db_path`\n&#34;
+                    &#34;- People Detection:                 detects people in the input\n&#34;
+                    &#34;- People and Painting Localization: locates paintings and people using information found in\n&#34;
+                    &#34;                                    `data_filename`\n&#34;,
+        epilog=&#34;# TASKS:\n&#34;
+               &#34;\tThe tasks in the pipeline are performed in succession. Therefore, to execute the i-th task,\n&#34;
+               &#34;\twith i&gt;1, it is necessary that the j-th tasks are executed first, for each j such that 0&lt;=j&lt;i.\n&#34;
+               &#34;\tFor example, if you want to perform Painting Rectification (i = 2) it is necessary that you\n&#34;
+               &#34;\tfirst execute Painting Segmentation (j = 1) and Painting Detection (j = 0).\n&#34;
+               &#34;\n&#34;
+               &#34;\tThis implies that the Painting and People Detection task involves performing all the tasks.\n&#34;
+               &#34;\tThis is also reflected in the output, which will be the union of the outputs of all the tasks\n&#34;
+               &#34;\tin the pipeline.\n&#34;
+               &#34;\n&#34;
+               &#34;\tThe People Detection task is an exception. It runs independently of the other tasks.\n\n&#34;
+               &#34;# OUTPUT:\n&#34;
+               &#34;\tthe program output paths are structured as follows (let&#39;s consider &#39;--output = \&#34;output\&#34;&#39;):\n\n&#34;
+               &#34;\t\toutput/\n&#34;
+               &#34;\t\t |-- painting_detection/\n&#34;
+               &#34;\t\t |-- painting_segmentation/\n&#34;
+               &#34;\t\t |-- painting_rectification/\n&#34;
+               &#34;\t\t |  |-- &lt;input_filename&gt;/\n&#34;
+               &#34;\t\t |-- painting_retrieval/\n&#34;
+               &#34;\t\t |-- people_detection/\n&#34;
+               &#34;\t\t |-- paintings_and_people_localization/\n\n&#34;
+               &#34;\tEach sub-directory will contain the output of the related task (indicated by the name of the\n&#34;
+               &#34;\tsub-directory itself). The output filename will be the same of the input file processed.\n&#34;
+               &#34;\tThe type of the output follows that of the input: &#39;image -&gt; image&#39; and &#39;video -&gt; video&#39;.\n&#34;
+               &#34;\tThe exception is the Painting Rectification task, which produces only images as output,\n&#34;
+               &#34;\tspecifically one image for each individual painting detected. It is clear that the number of \n&#34;
+               &#34;\timages produced can be very high, especially in the case of videos. To improve the organization\n&#34;
+               &#34;\tand access to data, the rectified images produced are stored in a directory that has the same\n&#34;
+               &#34;\tas the input file processed. Inside this directory, the images are named as follows (the\n&#34;
+               &#34;\textension is neglected):\n&#34;
+               &#34;\t  input = image -&gt; &#39;&lt;input_filename&gt;_NN&#39; where NN is a progressive number assigned to each\n&#34;
+               &#34;\t                    painting found in the image.\n&#34;
+               &#34;\t  input = video -&gt; &#39;&lt;input_filename&gt;_FFFFF_NN&#39; where NN has the same meaning as before but\n&#34;
+               &#34;\t                    applied to each video frame, while FFFFF is a progressive number assigned\n&#34;
+               &#34;\t                    to each frame of the video that is processed.\n\n&#34;
+               &#34;# FRAME_OCCURRENCE:\n&#34;
+               &#34;\tin case &#39;--frame_occurrence&#39; is &gt; 1, the frame rate of the output video will be set so that it\n&#34;
+               &#34;\thas the same duration as the input video.\n\n&#34;
+               &#34;# EXAMPLE:\n&#34;
+               &#34;\tA full example could be:\n&#34;
+               &#34;\t\&#34;$ python main_detector.py dataset/videos/014/VID_20180529_112627.mp4&#34;
+               &#34; painting_db/ data/data.csv -o output -t 5 -fo 30 -vp 1 -vi 1 --histo_mode\&#34;\n\n&#34;
+               &#34;\tIn this case, the input is a video and we want to perform the Painting and People Localization\n&#34;
+               &#34;\ttask. This implies that all tasks (from 0 to 5) will be performed. The video will be processed \n&#34;
+               &#34;\tconsidering one frame every 30 occurrences. All intermediate results will be printed, but no\n&#34;
+               &#34;\timage will be displayed during processing because we are working with a video and &#39;-vi&#39; \n&#34;
+               &#34;\tis automatically set equal to 0 (read &#39;-vi&#39; for details). The rectification of each detected\n&#34;
+               &#34;\tpainting will be carried out only one time (better performance).\n&#34;
+               &#34;\tIf ORB does not produce any match, a match based on histogram will be executed. The output\n&#34;
+               &#34;\tis a video stored in &#39;./output/paintings_and_people_localization/VID_20180529_112627.mp4&#39; whose\n&#34;
+               &#34;\tframes show the results of the tasks performed on the frames of the input video.\n\n&#34;,
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+
+    parser.add_argument(
+        &#34;input&#34;,
+        type=str,
+        help=&#34;image or video filename or folder containing images, videos or a mix of both\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;db_path&#34;,
+        type=str,
+        help=&#34;path of the directory where the images that make up the DB are located\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;data_filename&#34;,
+        type=str,
+        help=&#34;file containing all the information about the paintings:\n&#34;
+             &#34;(Title, Author, Room, Image)\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-o&#34;,
+        &#34;--output&#34;,
+        type=str,
+        default=&#34;output&#34;,
+        help=&#34;path used as base to determine where the outputs are stored. For details,\n&#34;
+             &#34;read the epilogue at the bottom, section &#39;# OUTPUT&#39; \n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-t&#34;,
+        &#34;--task&#34;,
+        type=int,
+        choices=list(range(6)),
+        default=5,
+        help=&#34;determines which task will be performed on the input.\n&#34;
+             &#34;NOTE: for details on how the tasks are performed and for some examples, read\n&#34;
+             &#34;the epilogue at the bottom of the page, section &#39;# TASKS&#39;\n&#34;
+             &#34;  0 = Painting Detection\n&#34;
+             &#34;  1 = Painting Segmentation\n&#34;
+             &#34;  2 = Painting Rectification\n&#34;
+             &#34;  3 = Painting Retrieval\n&#34;
+             &#34;  4 = People Detection\n&#34;
+             &#34;  5 = People and Paintings Localization (DEFAULT)\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-fo&#34;,
+        &#34;--frame_occurrence&#34;,
+        type=int,
+        default=1,
+        help=&#34;integer &gt;=1 (default =1). In case the input is a video, it establishes with \n&#34;
+             &#34;which occurrence to consider the frames of the video itself.\n&#34;
+             &#34;Example: frame_occurrence = 30 (VALUE RECOMMENDED DURING TESTING) means that\n&#34;
+             &#34;it considers one frame every 30.\n&#34;
+             &#34;NOTE: for more details read the epilogue at the bottom of the page, section \n&#34;
+             &#34;&#39;# FRAME_OCCURRENCE&#39;\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-vp&#34;,
+        &#34;--verbosity_print&#34;,
+        type=int,
+        choices=[0, 1],
+        default=0,
+        help=&#34;set the verbosity of the information displayed (description of the operation\n&#34;
+             &#34;executed and its execution time)\n&#34;
+             &#34;  0 = ONLY main processing steps info (DEFAULT)\n&#34;
+             &#34;  1 = ALL processing steps info\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-vi&#34;,
+        &#34;--verbosity_image&#34;,
+        type=int,
+        choices=[0, 1, 2],
+        default=0,
+        help=&#34;set the verbosity of the images displayed.\n&#34;
+             &#34;NOTE: if the input is a video, is automatically set to &#39;0&#39; (in order to avoid\n&#34;
+             &#34;an excessive number of images displayed on the screen).\n&#34;
+             &#34;  0 = no image shown during processing (DEFAULT)\n&#34;
+             &#34;  1 = shows output images of the main pipeline steps when they are created.\n&#34;
+             &#34;      A button must be pressed to continue the execution (used for DEBUGGING)\n&#34;
+             &#34;  2 = like &#39;-v1 1&#39;, but it also shows output images of the intermediate\n&#34;
+             &#34;      pipeline steps.\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-mdbi&#34;,
+        &#34;--match_db_image&#34;,
+        action=&#34;store_true&#34;,
+        help=&#34;if present, to perform Painting Retrieval, the program rectifies each painting\n&#34;
+             &#34;to match the aspect ration of every painting in &#39;db_path&#39;. Otherwise, it\n&#34;
+             &#34;rectifies each painting one time using a calculated aspect ratio.\n&#34;
+             &#34;WARNING: setting &#39;--match_db_image&#39; slows down image processing as it\n&#34;
+             &#34;introduces a new rectification operation for each painting in the DB.\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-hm&#34;,
+        &#34;--histo_mode&#34;,
+        action=&#34;store_true&#34;,
+        help=&#34;if present indicates that, during Painting Retrieval, the program will executes\n&#34;
+             &#34;Histogram Matching in the case ORB does not produce any match.\n&#34;
+             &#34;WARNINGS: setting &#39;--histo_mode&#39; increases the percentage of matches with the \n&#34;
+             &#34;DB, but decreases the precision, i.e. increases the number of false positives\n&#34;
+             &#34;(incorrect matches).\n\n&#34;
+    )
+
+    return parser.parse_args()
+
+
+def main():
     &#34;&#34;&#34;
     Main function executing the pipeline necessary to perform the main tasks.
     It receives the arguments from `ArgumentParser`
     &#34;&#34;&#34;
 
-    # input_filename = args.input_filename
-    # painting_db_path = args.db_path
-    # painting_data_path = args.data_filename
-    # output_base_path = args.output
-    # task = Task(args.task)
-    # frame_occurrence = args.frame_occurrence
-    # verbosity_print = args.verbosity_print
-    # verbosity_image = args.verbosity_image
-    # match_db_image = args.match_db_image
-    # histo_mode = args.histo_mode
+    args = args_parse()
 
-    verbosity_print = 0
-    verbosity_image = 0
-    task = Task(5)
-    match_db_image = False
-    histo_mode = False
-    frame_occurrence = 30
-    painting_db_path = &#34;paintings_db/&#34;
-    painting_data_path = &#34;data/data.csv&#34;
-    output_base_path = &#34;output&#34;
-    # ----------------------
-    # TESTING TODO remove it
-    # ----------------------
-    # input_filename = &#34;dataset/photos/test/&#34;
-    # VIDEOS
-    input_filename = &#34;dataset/videos/002/&#34;
-    # input_filename += &#34;VID_20180529_112627.mp4&#34;
-    input_filename += &#34;20180206_114604.mp4&#34;
-    # IMAGES
-    # input_filename += &#39;IMG_2659_0012.jpg&#39;  # CRITIC
-    # input_filename += &#39;VID_20180529_113001_0000.jpg&#39;  # LOTS painting not recognized
-    # input_filename += &#34;VID_20180529_112553_0002.jpg&#34;  # Wall inverted
-    # input_filename += &#34;VID_20180529_112739_0004.jpg&#34;  # Wall inverted
-    # input_filename += &#34;VID_20180529_112627_0000.jpg&#34;  # Wall correct
-    # input_filename += &#34;VID_20180529_112517_0002.jpg&#34;  # strange case
-    # input_filename += &#34;IMG_2646_0003.jpg&#34;  # overlapping contours
-    # input_filename += &#34;IMG_2646_0006.jpg&#34;  # overlapping contours
-    # input_filename += &#34;20180206_114604_0000.jpg&#34;  # people
-    # input_filename += &#34;VID_20180529_112553_0004.jpg&#34;  # wall inverted and cutted painting
-    # input_filename += &#34;IMG_2646_0018.jpg&#34;  # wall inverted and cutted painting
-    # input_filename += &#34;VID_20180529_112553_0003.jpg&#34;  # painting with error people detection
+    input_filename = args.input
+    painting_db_path = args.db_path
+    painting_data_path = args.data_filename
+    output_base_path = args.output
+    task = Task(args.task)
+    frame_occurrence = args.frame_occurrence
+    verbosity_print = args.verbosity_print
+    verbosity_image = args.verbosity_image
+    match_db_image = args.match_db_image
+    histo_mode = args.histo_mode
 
     # ---------------------------------------------------------------------------------------------
     # Script execution time
     # ---------------------------------------------------------------------------------------------
     script_time_start = time.time()
-    total_time = 0
 
     if frame_occurrence &lt; 1:
         sys.exit(&#34;frame_occurrence should be &gt;= 1\n&#34;)
@@ -134,24 +288,41 @@ def main(args):
         resize_width = None
 
     # ---------------------------------------------------------------------------------------------
+    # Check if input is valid
+    # ---------------------------------------------------------------------------------------------
+
+    try:
+        inputs_list = [ntpath.join(ntpath.realpath(&#39;.&#39;), input_filename, file) for file in os.listdir(input_filename)]
+        inputs_list = [f for f in inputs_list if os.path.isfile(f)]
+        if len(inputs_list) == 0:
+            sys.exit(f&#34;No images or video inside directory: {input_filename}&#34;)
+    except NotADirectoryError:
+        inputs_list = []
+        inputs_list.append(ntpath.join(ntpath.realpath(&#39;.&#39;), input_filename))
+    except FileNotFoundError:
+        sys.exit(&#34;No file or directory with the name {}&#34;.format(input_filename))
+
+    # ---------------------------------------------------------------------------------------------
     # Check if DB path and Data filename are valid
     # ---------------------------------------------------------------------------------------------
 
     if not os.path.isdir(painting_db_path):
-        sys.exit(f&#34;\nError in DB path: &#39;{painting_db_path}&#39;\n&#34;)
+        sys.exit(f&#34;\nError in DB path, should be a directory: &#39;{painting_db_path}&#39;\n&#34;)
     if not os.path.exists(painting_data_path):
         sys.exit(f&#34;\nError in Data file: &#39;{painting_data_path}&#39;\n&#34;)
 
     # ---------------------------------------------------------------------------------------------
-    # Check if input file is valid
+    # Instantiating output path
     # ---------------------------------------------------------------------------------------------
 
-    media, media_type = check_media_file(input_filename)
-    if media_type == MediaType.video:
-        verbosity_image = 0
+    # Output path info
+    print_nicer(&#34;Creating output path&#34;)
+    output_path = os.path.join(output_base_path, task.name)
+    create_directory(output_path)
+    print(&#34;-&#34; * 50)
 
     # ---------------------------------------------------------------------------------------------
-    # Managing verbosity
+    # Managing prints verbosity
     # ---------------------------------------------------------------------------------------------
 
     if verbosity_print &gt;= 1:
@@ -160,14 +331,6 @@ def main(args):
     else:
         print_next_step = print_time = lambda *a, **k: None
 
-    if verbosity_image &gt;= 2:
-        show_image_main = show_image = show_image_window_blocking
-    elif verbosity_image &gt;= 1:
-        show_image_main = show_image_window
-        show_image = lambda *a, **k: None
-    else:
-        show_image_main = show_image = lambda *a, **k: None
-
     # ---------------------------------------------------------------------------------------------
     # Print a summary of the invocation arguments
     # ---------------------------------------------------------------------------------------------
@@ -175,21 +338,23 @@ def main(args):
     print()
     print(&#34;-&#34; * 50)
     print(&#34;# SCRIPT CONFIGURATION:&#34;)
-    print(f&#34;\t-Task:                 {task.name}&#34;)
-    print(f&#34;\t-Filename:             {input_filename}&#34;)
-    print(f&#34;\t-Media_type:           {media_type.name}&#34;)
-    print(f&#34;\t-DB path:              {painting_db_path}&#34;)
-    print(f&#34;\t-Data path:            {painting_data_path}&#34;)
-    print(f&#34;\t-Output base path:     {output_base_path}&#34;)
-    print(f&#34;\t-Verbosity_print:      {verbosity_print}&#34;)
-    print(f&#34;\t-Verbosity_image:      {verbosity_image}&#34;)
-    print(f&#34;\t-Match DB images:      {match_db_image}&#34;)
-    print(f&#34;\t-Histo mode:           {histo_mode}&#34;)
-    if media_type == MediaType.video:
-        if frame_occurrence &gt; 1:
-            print(f&#34;\t-Saving 1 frame every: {frame_occurrence}&#34;)
-        else:
-            print(&#39;\t-Saving all frames&#39;)
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Task:&#34;, task.name))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Input:&#34;, input_filename))
+    if len(inputs_list) &gt; 1:
+        print(&#34;\t{:25s} {}&#34;.format(&#34;-Num input files:&#34;, len(inputs_list)))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-DB path:&#34;, painting_db_path))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Data path:&#34;, painting_data_path))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Output base path:&#34;, output_base_path))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Verbosity_print:&#34;, verbosity_print))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Verbosity_image:&#34;, verbosity_image))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Task:&#34;, task.name))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Histo mode:&#34;, histo_mode))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Match DB images:&#34;, match_db_image))
+
+    if frame_occurrence &gt; 1:
+        print(&#34;\t{:25s} {}&#34;.format(&#34;-Saving 1 frame every:&#34;, frame_occurrence))
+    else:
+        print(&#34;\t{:25s}&#34;.format(&#34;-Saving all video frames&#34;))
 
     print(&#34;-&#34; * 50)
 
@@ -200,341 +365,225 @@ def main(args):
     # Generator to keep track of the current step number
     generator = step_generator()
 
-    # YOLO People Detector
+    # ---------------------------------------------------------------------------------------------
+    # Instantiating DB
+    # ---------------------------------------------------------------------------------------------
+    if task == Task.painting_retrieval or task == Task.paintings_and_people_localization:
+        # DB path info
+        print_nicer(&#39;Loading paintings from DB&#39;)
+        start_time = time.time()
+        paintings_db = create_paintings_db(painting_db_path, painting_data_path)
+        print(f&#34;\tPaintings loaded:  {len(paintings_db)}&#34;)
+        print_time_info(start_time)
+        print(&#34;-&#34; * 50)
+    else:
+        paintings_db = []
+
+    # ---------------------------------------------------------------------------------------------
+    # Instantiating YOLO People Detector
+    # ---------------------------------------------------------------------------------------------
     if task.value &gt;= Task.people_detection.value:
         print_nicer(&#34;Creating YOLO People Detector&#34;)
         start_time = time.time()
         people_detector = PeopleDetection()
-        print_time(start_time)
+        print_time_info(start_time)
         print(&#34;-&#34; * 50)
     else:
         people_detector = None
-
-    # ---------------------------------------------------------------------------------------------
-    # Instantiating DB
-    # ---------------------------------------------------------------------------------------------
-
-    # DB path info
-    paintings_db = create_paintings_db(painting_db_path, painting_data_path)
-
-    # ---------------------------------------------------------------------------------------------
-    # Instantiating output path
-    # ---------------------------------------------------------------------------------------------
-
-    # Output path info
-    print_nicer(&#34;Creating output path&#34;)
-    output_path = os.path.join(output_base_path, task.name)
-
-    if task == Task.painting_rectification:
-        out_path_info = output_path = os.path.join(output_path, ntpath.basename(input_filename).split(&#39;.&#39;)[0])
-    else:
-        filename, ext = ntpath.basename(input_filename).split(&#39;.&#39;)
-        ext = &#34;.&#34; + ext if media_type == MediaType.image else &#34;.mp4&#34;
-        out_path_info = os.path.join(output_path, filename + ext)
-
-    out_path_info = os.path.abspath(out_path_info).replace(&#39;\\&#39;, &#39;/&#39;)
-
-    create_directory(output_path)
-
-    print(&#34;-&#34; * 50)
 
     print(&#34;\n\n&#34;)
     print(&#34;--------------------------------------------------&#34;)
     print(&#34;--------------   START PROCESSING   --------------&#34;)
     print(&#34;--------------------------------------------------&#34;)
 
-    pipeline_manager = PipelineManager(
-        input_filename=input_filename,
-        output_path=output_path,
-        task=task,
-        media_type=media_type,
-        paintings_db=paintings_db,
-        people_detector=people_detector,
-        resize_height=resize_height,
-        resize_width=resize_width,
-        match_db_image=match_db_image,
-        histo_mode=histo_mode,
-        generator=generator,
-        show_image_main=show_image_main,
-        show_image=show_image,
-        print_next_step=print_next_step,
-        print_time=print_time
-    )
+    verbosity_image_backup = verbosity_image
+    tot_paintings_detected = 0
+    tot_paintings_retrieved = 0
+    tot_people_detected = 0
 
-    if media_type == MediaType.image:
-        img_original = media
+    for counter, input_filename in enumerate(inputs_list):
 
-        print()
-        print(&#34;-&#34; * 50)
-        print(&#34;# IMAGE INFO:&#34;)
-        print(f&#34;\t-Height: {img_original.shape[0]}&#34;)
-        print(f&#34;\t-Width:  {img_original.shape[1]}&#34;)
-        print(&#34;-&#34; * 50)
+        if len(inputs_list) &gt; 1:
+            print()
+            print(&#34;#&#34; * 50)
+            print(f&#34;# PROCESSING FILE #{counter + 1}/{len(inputs_list)}&#34;)
+            print(&#34;#&#34; * 50)
 
-        pipeline_manager.run(img_original)
-    else:
-        current_frame = 0
-        frame_number = 0
-        videoCapture = media
-        frame_count = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
-        in_fps = videoCapture.get(cv2.CAP_PROP_FPS)
-        frame_process = int(frame_count // frame_occurrence)
-        # In order to have an output video of the same duration as the input one
-        out_fps = (frame_process / frame_count) * in_fps
-        duration = frame_count / in_fps
+        file_time_start = time.time()
 
-        print()
-        print(&#34;-&#34; * 50)
-        print(&#34;# VIDEO INFO:&#34;)
-        print(&#39;\t-Duration:           {:.2f} s&#39;.format(duration))
-        print(f&#34;\t-Frame count:        {int(frame_count)}&#34;)
-        print(f&#34;\t-Frames to process:  {frame_process}&#34;)
-        print(&#34;\t-Input FPS:          {:.2f}&#34;.format(in_fps))
-        print(&#34;\t-Output FPS:         {:.2f}&#34;.format(out_fps))
-        print(&#34;-&#34; * 50)
+        media, media_type = check_media_file(input_filename)
+        if media_type == MediaType.video:
+            verbosity_image = 0
+        else:
+            verbosity_image = verbosity_image_backup
 
-        success, img_original = videoCapture.read()
-        if not success:
-            sys.exit(&#34;Error while processing video frames.\n&#34;)
-        height = img_original.shape[0]
-        width = img_original.shape[1]
-        filename, ext = pipeline_manager.out_filename.split(&#39;.&#39;)
+        # ---------------------------------------------------------------------------------------------
+        # Managing images verbosity
+        # ---------------------------------------------------------------------------------------------
 
-        # Credits: https://github.com/ContinuumIO/anaconda-issues/issues/223#issuecomment-285523938
-        if task != Task.painting_rectification:
-            video = cv2.VideoWriter(
-                os.path.join(output_path, &#39;.&#39;.join([filename, &#39;mp4&#39;])),
-                cv2.VideoWriter_fourcc(*&#34;mp4v&#34;),
-                out_fps,
-                (width, height)
-            )
-        while success and current_frame &lt; frame_process:
+        if verbosity_image &gt;= 2:
+            show_image_main = show_image = show_image_window_blocking
+        elif verbosity_image &gt;= 1:
+            show_image_main = show_image_window_blocking
+            show_image = lambda *a, **k: None
+        else:
+            show_image_main = show_image = lambda *a, **k: None
+
+        # ---------------------------------------------------------------------------------------------
+        # Managing output information
+        # ---------------------------------------------------------------------------------------------
+
+        if task == Task.painting_rectification:
+            out_path_info = output_path = os.path.join(output_path, ntpath.basename(input_filename).split(&#39;.&#39;)[0])
+            create_directory(output_path)
+        else:
+            filename, ext = ntpath.basename(input_filename).split(&#39;.&#39;)
+            ext = &#34;.&#34; + ext if media_type == MediaType.image else &#34;.mp4&#34;
+            out_path_info = os.path.join(output_path, filename + ext)
+
+        out_path_info = os.path.abspath(out_path_info).replace(&#39;\\&#39;, &#39;/&#39;)
+
+        pipeline_manager = PipelineManager(
+            input_filename=input_filename,
+            output_path=output_path,
+            task=task,
+            media_type=media_type,
+            paintings_db=paintings_db,
+            people_detector=people_detector,
+            resize_height=resize_height,
+            resize_width=resize_width,
+            match_db_image=match_db_image,
+            histo_mode=histo_mode,
+            generator=generator,
+            show_image_main=show_image_main,
+            show_image=show_image,
+            print_next_step=print_next_step,
+            print_time=print_time
+        )
+
+        if media_type == MediaType.image:
+            img_original = media
 
             print()
-            print(&#34;=&#34; * 50)
-            print(f&#34;# PROCESSING FRAME #{current_frame + 1}/{frame_process}&#34;)
-            print(&#34;=&#34; * 50)
-            current_filename = &#34;_&#34;.join([filename, &#34;{:05d}&#34;.format(current_frame)])
-            pipeline_manager.out_filename = &#39;.&#39;.join([current_filename, &#34;png&#34;])
+            print(&#34;-&#34; * 50)
+            print(&#34;# IMAGE INFO:&#34;)
+            print(&#34;\t{:10s} {}&#34;.format(&#34;-Filename:&#34;, input_filename.replace(&#39;\\&#39;, &#39;/&#39;)))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;-Height:&#34;, img_original.shape[0]))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;-Width:&#34;, img_original.shape[1]))
+            print(&#34;-&#34; * 50)
 
-            # Process current frame
-            img_original = pipeline_manager.run(img_original)
+            pipeline_manager.run(img_original)
+        else:
+            current_frame = 0
+            frame_number = 0
+            videoCapture = media
+            frame_count = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
+            in_fps = videoCapture.get(cv2.CAP_PROP_FPS)
+            frame_process = int(frame_count // frame_occurrence)
+            # In order to have an output video of the same duration as the input one
+            out_fps = (frame_process / frame_count) * in_fps
+            duration = frame_count / in_fps
 
-            # Write elaborated frame to create a video
-            if task != Task.painting_rectification:
-                video.write(img_original)
+            print()
+            print(&#34;-&#34; * 50)
+            print(&#34;# VIDEO INFO:&#34;)
+            print(&#34;\t{:25s} {}&#34;.format(&#34;-Filename:&#34;, input_filename.replace(&#39;\\&#39;, &#39;/&#39;)))
+            print(&#34;\t{:25s} {:.2f} s&#34;.format(&#34;-Duration:&#34;, duration))
+            print(&#34;\t{:25s} {}&#34;.format(&#34;-Frame count:&#34;, int(frame_count)))
+            print(&#34;\t{:25s} {}&#34;.format(&#34;-Frames to process:&#34;, frame_process))
+            print(&#34;\t{:25s} {:.2f}&#34;.format(&#34;-Input FPS:&#34;, in_fps))
+            print(&#34;\t{:25s} {}&#34;.format(&#34;-Output FPS:&#34;, out_fps))
+            print(&#34;-&#34; * 50)
 
-            current_frame += 1
-            frame_number += frame_occurrence
-            videoCapture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             success, img_original = videoCapture.read()
+            if not success:
+                sys.exit(&#34;Error while processing video frames.\n&#34;)
+            height = img_original.shape[0]
+            width = img_original.shape[1]
+            filename, ext = pipeline_manager.out_filename.split(&#39;.&#39;)
 
-        if current_frame != frame_process:
-            sys.exit(&#34;Error while processing video frames.\n&#34;)
-        if task != Task.painting_rectification:
-            video.release()
+            # Credits: https://github.com/ContinuumIO/anaconda-issues/issues/223#issuecomment-285523938
+            if task != Task.painting_rectification:
+                video = cv2.VideoWriter(
+                    os.path.join(output_path, &#39;.&#39;.join([filename, &#39;mp4&#39;])),
+                    cv2.VideoWriter_fourcc(*&#34;mp4v&#34;),
+                    out_fps,
+                    (width, height)
+                )
+            while success and current_frame &lt; frame_process:
 
-    print()
-    print(&#34;===================   RESULT   ===================&#34;)
-    print(&#34;# Total execution time:   {:.4f} s&#34;.format(time.time() - script_time_start))
-    print(f&#34;# Output path:            {out_path_info}&#34;)
-    if media_type == MediaType.video:
-        print(f&#34;# Total frames processed: {current_frame}&#34;)
-    if task != Task.people_detection:
-        print(f&#34;# Painting detections:    {pipeline_manager.num_paintings_detected}&#34;)
-    if task.value &gt; Task.painting_rectification.value and task != Task.people_detection:
-        print(f&#34;# Painting retrievals:    {pipeline_manager.num_paintings_retrieved}&#34;)
-    if task.value &gt; Task.painting_retrieval.value or task == Task.people_detection:
-        print(f&#34;# People detections:      {pipeline_manager.num_people_detected}&#34;)
-    print(&#34;=&#34; * 50)
+                print()
+                print(&#34;=&#34; * 50)
+                print(f&#34;# PROCESSING FRAME #{current_frame + 1}/{frame_process}&#34;)
+                print(&#34;=&#34; * 50)
+                current_filename = &#34;_&#34;.join([filename, &#34;{:05d}&#34;.format(current_frame)])
+                pipeline_manager.out_filename = &#39;.&#39;.join([current_filename, &#34;png&#34;])
+
+                # Process current frame
+                img_original = pipeline_manager.run(img_original)
+
+                # Write elaborated frame to create a video
+                if task != Task.painting_rectification:
+                    video.write(img_original)
+
+                current_frame += 1
+                frame_number += frame_occurrence
+                videoCapture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+                success, img_original = videoCapture.read()
+
+            if current_frame != frame_process:
+                sys.exit(&#34;Error while processing video frames.\n&#34;)
+            if task != Task.painting_rectification:
+                video.release()
+
+        print()
+        print(&#34;===================   RESULT   ===================&#34;)
+        print(&#34;{:25s} {:.4f} s&#34;.format(&#34;# Total execution time:&#34;, time.time() - file_time_start))
+        print(&#34;{:25s} {}&#34;.format(&#34;# Output path:&#34;, out_path_info))
+
+        if media_type == MediaType.video:
+            print(&#34;{:25s} {}&#34;.format(&#34;# Total frames processed:&#34;, current_frame))
+        if task != Task.people_detection:
+            print(&#34;{:25s} {}&#34;.format(&#34;# Painting detections:&#34;, pipeline_manager.num_paintings_detected))
+        if task.value &gt; Task.painting_rectification.value and task != Task.people_detection:
+            print(&#34;{:25s} {}&#34;.format(&#34;# Painting retrievals:&#34;, pipeline_manager.num_paintings_retrieved))
+        if task.value &gt; Task.painting_retrieval.value or task == Task.people_detection:
+            print(&#34;{:25s} {}&#34;.format(&#34;# People detections:&#34;, pipeline_manager.num_people_detected))
+        print(&#34;=&#34; * 50)
+
+        tot_paintings_detected += pipeline_manager.num_paintings_detected
+        tot_paintings_retrieved += pipeline_manager.num_paintings_retrieved
+        tot_people_detected += pipeline_manager.num_people_detected
+
+        plt.show()
+        cv2.destroyAllWindows()
 
     print(&#34;\n\n&#34;)
     print(&#34;--------------------------------------------------&#34;)
     print(&#34;---------------   END PROCESSING   ---------------&#34;)
     print(&#34;--------------------------------------------------&#34;)
 
+    print()
+    print(&#34;================   FINAL RESULT   ================&#34;)
+    print(&#34;{:25s} {:.4f} s&#34;.format(&#34;# Total execution time:&#34;, time.time() - script_time_start))
+
+    if len(inputs_list) &gt; 1:
+        print(&#34;{:25s} {}&#34;.format(&#34;# Num files processed:&#34;, len(inputs_list)))
+
+    if task != Task.people_detection:
+        print(&#34;{:25s} {}&#34;.format(&#34;# Painting detections:&#34;, tot_paintings_detected))
+    if task.value &gt; Task.painting_rectification.value and task != Task.people_detection:
+        print(&#34;{:25s} {}&#34;.format(&#34;# Painting retrievals:&#34;, tot_paintings_retrieved))
+    if task.value &gt; Task.painting_retrieval.value or task == Task.people_detection:
+        print(&#34;{:25s} {}&#34;.format(&#34;# People detections:&#34;, tot_people_detected))
+    print(&#34;=&#34; * 50)
+
     plt.show()
-    cv2.waitKey()
     cv2.destroyAllWindows()
 
 
 if __name__ == &#39;__main__&#39;:
-    # ---------------------------------------------------------------------------------------------
-    # Argument Parser
-    # ---------------------------------------------------------------------------------------------
-
-    # parser = argparse.ArgumentParser(
-    #     description=&#34;Main script to execute the following tasks, depending on the value of the optional argument &#39;-t&#39; (or\n&#34;
-    #                 &#34;&#39;--task&#39;):\n&#34;
-    #                 &#34;- Painting Detection:               detects all paintings.\n&#34;
-    #                 &#34;- Painting Segmentation:            creates a segmented version of the input, where the paintings\n&#34;
-    #                 &#34;                                    and statues identified are white and the background is black.\n&#34;
-    #                 &#34;- Painting Rectification:           rectifies each painting detected, through an affine transformation\n&#34;
-    #                 &#34;- Painting Retrieval:               matches each detected and rectified painting to the paintings DB\n&#34;
-    #                 &#34;                                    found in `db_path`\n&#34;
-    #                 &#34;- People Detection:                 detects people in the input\n&#34;
-    #                 &#34;- People and Painting Localization: locates paintings and people using information found in\n&#34;
-    #                 &#34;                                    `data_filename`\n&#34;,
-    #     epilog=&#34;# TASKS:\n&#34;
-    #            &#34;\tGiven the mutual dependency of the tasks, to execute the i-th task, with i&gt;1, it is necessary\n&#34;
-    #            &#34;\tthat the j-th tasks are executed first, for each j such that 0&lt;=j&lt;i.\n&#34;
-    #            &#34;\tFor example, if you want to perform Painting Rectification (i = 2) it is necessary that you\n&#34;
-    #            &#34;\tfirst execute Painting Segmentation (j = 1) and Painting Detection (j = 0).\n&#34;
-    #            &#34;\tThe People Detection task is an exception. It runs independently of the other tasks.\n\n&#34;
-    #            &#34;# OUTPUT:\n&#34;
-    #            &#34;\tthe program output paths are structured as follows (let&#39;s consider &#39;--output = \&#34;output\&#34;&#39;):\n\n&#34;
-    #            &#34;\t\toutput/\n&#34;
-    #            &#34;\t\t |-- painting_detection/\n&#34;
-    #            &#34;\t\t |-- painting_segmentation/\n&#34;
-    #            &#34;\t\t |-- painting_rectification/\n&#34;
-    #            &#34;\t\t |  |-- &lt;input_filename&gt;/\n&#34;
-    #            &#34;\t\t |-- painting_retrieval/\n&#34;
-    #            &#34;\t\t |-- people_detection/\n&#34;
-    #            &#34;\t\t |-- paintings_and_people_localization/\n\n&#34;
-    #            &#34;\tEach sub-directory will contain the output of the related task (indicated by the name of the\n&#34;
-    #            &#34;\tsub-directory itself). The output filename will be the same of the input (&#39;input_filename&#39;).\n&#34;
-    #            &#34;\tThe type of the output follows that of the input: &#39;image -&gt; image&#39; and &#39;video -&gt; video&#39;.\n&#34;
-    #            &#34;\tThe exception is the Painting Rectification task, which produces only images as output,\n&#34;
-    #            &#34;\tspecifically one image for each individual painting detected. it is clear that the number of \n&#34;
-    #            &#34;\timages produced can be very high, especially in the case of videos. To improve the organization\n&#34;
-    #            &#34;\tand access to data, the rectified images produced are stored in a directory that has the same\n&#34;
-    #            &#34;\tas &#39;input_filename&#39;. Inside this directory, the images are named as follows (the extension is\n&#34;
-    #            &#34;\tneglected):\n&#34;
-    #            &#34;\t  input = image -&gt; &#39;&lt;input_filename&gt;_NN&#39; where NN is a progressive number assigned to each\n&#34;
-    #            &#34;\t                    painting found in the image.\n&#34;
-    #            &#34;\t  input = video -&gt; &#39;&lt;input_filename&gt;_FFFFF_NN&#39; where NN has the same meaning as before but\n&#34;
-    #            &#34;\t                    applied to each video frame, while FFFFF is a progressive number assigned\n&#34;
-    #            &#34;\t                    to each frame of the video that is processed.\n\n&#34;
-    #            &#34;# FRAME_OCCURRENCE:\n&#34;
-    #            &#34;\tin case &#39;--frame_occurrence&#39; is &gt; 1, the frame rate of the output video will be set so that it\n&#34;
-    #            &#34;\thas the same duration as the input video.\n\n&#34;
-    #            &#34;# EXAMPLE:\n&#34;
-    #            &#34;\tA full example could be:\n&#34;
-    #            &#34;\t\&#34;$ python main_detector.py dataset/videos/014/VID_20180529_112627.mp4&#34;
-    #            &#34; painting_db/ data/data.csv -o output -t 5 -fo 30 -vp 1 -vi 2 --match_db_image --histo_mode\&#34;\n\n&#34;
-    #            &#34;\tEXPLANATION:\n&#34;
-    #            &#34;\tIn this case, the input is a video and we want to perform the Painting and People Localization\n&#34;
-    #            &#34;\ttask. This implies that all tasks (0 to 5) will be performed. The video will be processed \n&#34;
-    #            &#34;\tconsidering one frame every 30 occurrences. All intermediate results will be printed, but no\n&#34;
-    #            &#34;\timage will be displayed during processing because we are working with a video and &#39;-vi&#39; \n&#34;
-    #            &#34;\tis automatically set equal to 0 (read &#39;-vi&#39; for details). The rectification of each detected\n&#34;
-    #            &#34;\tpainting will be carried out to match the aspect ratio of each image of the db. In the event \n&#34;
-    #            &#34;\tthat ORB does not produce any match, a match based on histogram will be executed. The output\n&#34;
-    #            &#34;\tis a video stored in &#39;./output/paintings_and_people_localization/VID_20180529_112627.mp4&#39; whose\n&#34;
-    #            &#34;\tframes show the results of the various tasks performed.\n\n&#34;,
-    #     formatter_class=argparse.RawTextHelpFormatter
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;input_filename&#34;,
-    #     type=str,
-    #     help=&#34;filename of the input image or video\n\n&#34;
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;db_path&#34;,
-    #     type=str,
-    #     help=&#34;path of the directory where the images that make up the DB are located\n\n&#34;
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;data_filename&#34;,
-    #     type=str,
-    #     help=&#34;file containing all the information about the paintings:\n&#34;
-    #          &#34;(Title, Author, Room, Image)\n\n&#34;
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;-o&#34;,
-    #     &#34;--output&#34;,
-    #     type=str,
-    #     default=&#34;output&#34;,
-    #     help=&#34;path used as base to determine where the outputs are stored. For details,\n&#34;
-    #          &#34;read the epilogue at the bottom, section &#39;# OUTPUT&#39; \n\n&#34;
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;-t&#34;,
-    #     &#34;--task&#34;,
-    #     type=int,
-    #     choices=list(range(6)),
-    #     default=5,
-    #     help=&#34;determines which task will be performed on the input.\n&#34;
-    #          &#34;NOTE: for details on how the tasks are performed and for some examples, read\n&#34;
-    #          &#34;the epilogue at the bottom of the page, section &#39;# TASKS&#39;\n&#34;
-    #          &#34;  0 = Painting Detection\n&#34;
-    #          &#34;  1 = Painting Segmentation\n&#34;
-    #          &#34;  2 = Painting Rectification\n&#34;
-    #          &#34;  3 = Painting Retrieval\n&#34;
-    #          &#34;  4 = People Detection\n&#34;
-    #          &#34;  5 = People and Paintings Localization (default)\n\n&#34;
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;-fo&#34;,
-    #     &#34;--frame_occurrence&#34;,
-    #     type=int,
-    #     default=1,
-    #     help=&#34;integer &gt;=1 (default =1). In case the input is a video, it establishes with \n&#34;
-    #          &#34;which occurrence to consider the frames of the video itself.\n&#34;
-    #          &#34;Example: frame_occurrence = 30 (value recommended during debugging) means that\n&#34;
-    #          &#34;it considers one frame every 30.\n&#34;
-    #          &#34;NOTE: for more details read the epilogue at the bottom of the page, section \n&#34;
-    #          &#34;&#39;# FRAME_OCCURRENCE&#39;\n\n&#34;
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;-vp&#34;,
-    #     &#34;--verbosity_print&#34;,
-    #     type=int,
-    #     choices=[0, 1],
-    #     default=0,
-    #     help=&#34;set the verbosity of the information displayed (description of the operation\n&#34;
-    #          &#34;executed and its execution time)\n&#34;
-    #          &#34;  0 = ONLY main processing steps info (default)\n&#34;
-    #          &#34;  1 = ALL processing steps info\n\n&#34;
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;-vi&#34;,
-    #     &#34;--verbosity_image&#34;,
-    #     type=int,
-    #     choices=[0, 1, 2],
-    #     default=0,
-    #     help=&#34;set the verbosity of the images displayed.\n&#34;
-    #          &#34;NOTE: if the input is a video, is automatically set to &#39;0&#39; (in order to avoid\n&#34;
-    #          &#34;an excessive number of images displayed on the screen).\n&#34;
-    #          &#34;  0 = no image shown (default)\n&#34;
-    #          &#34;  1 = shows main steps final images, at the end of the script execution\n&#34;
-    #          &#34;      (NOT BLOCKING)\n&#34;
-    #          &#34;  2 = shows each final and intermediate image when it is created and a button\n&#34;
-    #          &#34;      must be pressed to continue the execution (mainly used for debugging)\n&#34;
-    #          &#34;      (BLOCKING)\n\n&#34;
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;-mdbi&#34;,
-    #     &#34;--match_db_image&#34;,
-    #     action=&#34;store_true&#34;,
-    #     help=&#34;if present, to perform Painting Retrieval, the program rectifies each painting\n&#34;
-    #          &#34;to match the aspect ration of every painting in &#39;db_path&#39;. Otherwise, it\n&#34;
-    #          &#34;rectifies each painting one time using a calculated aspect ratio.\n\n&#34;
-    # )
-    #
-    # parser.add_argument(
-    #     &#34;-hm&#34;,
-    #     &#34;--histo_mode&#34;,
-    #     action=&#34;store_true&#34;,
-    #     help=&#34;if present indicates that, during Painting Retrieval, the program will executes\n&#34;
-    #          &#34;Histogram Matching in the case ORB does not produce any match.\n&#34;
-    #          &#34;WARNINGS: setting &#39;--histo_mode&#39; increases the percentage of matches with the DB,\n&#34;
-    #          &#34;but decreases the precision, i.e. increases the number of false positives (incorrect\n&#34;
-    #          &#34;matches).\n\n&#34;
-    # )
-    #
-    # args = parser.parse_args()
-    # main(args)
-    main(None)</code></pre>
+    main()</code></pre>
 </details>
 </section>
 <section>
@@ -544,8 +593,200 @@ if __name__ == &#39;__main__&#39;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="code.main_detector.args_parse"><code class="name flex">
+<span>def <span class="ident">args_parse</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def args_parse():
+    # ---------------------------------------------------------------------------------------------
+    # Argument Parser
+    # ---------------------------------------------------------------------------------------------
+
+    parser = argparse.ArgumentParser(
+        description=&#34;Main script to execute the following tasks, depending on the value of the optional argument &#39;-t&#39; (or\n&#34;
+                    &#34;&#39;--task&#39;):\n&#34;
+                    &#34;- Painting Detection:               detects all paintings.\n&#34;
+                    &#34;- Painting Segmentation:            creates a segmented version of the input, where the paintings,\n&#34;
+                    &#34;                                    and also any statues, identified are white and the background\n&#34;
+                    &#34;                                    is black.\n&#34;
+                    &#34;- Painting Rectification:           rectifies each painting detected, through an affine transformation\n&#34;
+                    &#34;- Painting Retrieval:               matches each detected and rectified painting to the paintings DB\n&#34;
+                    &#34;                                    found in `db_path`\n&#34;
+                    &#34;- People Detection:                 detects people in the input\n&#34;
+                    &#34;- People and Painting Localization: locates paintings and people using information found in\n&#34;
+                    &#34;                                    `data_filename`\n&#34;,
+        epilog=&#34;# TASKS:\n&#34;
+               &#34;\tThe tasks in the pipeline are performed in succession. Therefore, to execute the i-th task,\n&#34;
+               &#34;\twith i&gt;1, it is necessary that the j-th tasks are executed first, for each j such that 0&lt;=j&lt;i.\n&#34;
+               &#34;\tFor example, if you want to perform Painting Rectification (i = 2) it is necessary that you\n&#34;
+               &#34;\tfirst execute Painting Segmentation (j = 1) and Painting Detection (j = 0).\n&#34;
+               &#34;\n&#34;
+               &#34;\tThis implies that the Painting and People Detection task involves performing all the tasks.\n&#34;
+               &#34;\tThis is also reflected in the output, which will be the union of the outputs of all the tasks\n&#34;
+               &#34;\tin the pipeline.\n&#34;
+               &#34;\n&#34;
+               &#34;\tThe People Detection task is an exception. It runs independently of the other tasks.\n\n&#34;
+               &#34;# OUTPUT:\n&#34;
+               &#34;\tthe program output paths are structured as follows (let&#39;s consider &#39;--output = \&#34;output\&#34;&#39;):\n\n&#34;
+               &#34;\t\toutput/\n&#34;
+               &#34;\t\t |-- painting_detection/\n&#34;
+               &#34;\t\t |-- painting_segmentation/\n&#34;
+               &#34;\t\t |-- painting_rectification/\n&#34;
+               &#34;\t\t |  |-- &lt;input_filename&gt;/\n&#34;
+               &#34;\t\t |-- painting_retrieval/\n&#34;
+               &#34;\t\t |-- people_detection/\n&#34;
+               &#34;\t\t |-- paintings_and_people_localization/\n\n&#34;
+               &#34;\tEach sub-directory will contain the output of the related task (indicated by the name of the\n&#34;
+               &#34;\tsub-directory itself). The output filename will be the same of the input file processed.\n&#34;
+               &#34;\tThe type of the output follows that of the input: &#39;image -&gt; image&#39; and &#39;video -&gt; video&#39;.\n&#34;
+               &#34;\tThe exception is the Painting Rectification task, which produces only images as output,\n&#34;
+               &#34;\tspecifically one image for each individual painting detected. It is clear that the number of \n&#34;
+               &#34;\timages produced can be very high, especially in the case of videos. To improve the organization\n&#34;
+               &#34;\tand access to data, the rectified images produced are stored in a directory that has the same\n&#34;
+               &#34;\tas the input file processed. Inside this directory, the images are named as follows (the\n&#34;
+               &#34;\textension is neglected):\n&#34;
+               &#34;\t  input = image -&gt; &#39;&lt;input_filename&gt;_NN&#39; where NN is a progressive number assigned to each\n&#34;
+               &#34;\t                    painting found in the image.\n&#34;
+               &#34;\t  input = video -&gt; &#39;&lt;input_filename&gt;_FFFFF_NN&#39; where NN has the same meaning as before but\n&#34;
+               &#34;\t                    applied to each video frame, while FFFFF is a progressive number assigned\n&#34;
+               &#34;\t                    to each frame of the video that is processed.\n\n&#34;
+               &#34;# FRAME_OCCURRENCE:\n&#34;
+               &#34;\tin case &#39;--frame_occurrence&#39; is &gt; 1, the frame rate of the output video will be set so that it\n&#34;
+               &#34;\thas the same duration as the input video.\n\n&#34;
+               &#34;# EXAMPLE:\n&#34;
+               &#34;\tA full example could be:\n&#34;
+               &#34;\t\&#34;$ python main_detector.py dataset/videos/014/VID_20180529_112627.mp4&#34;
+               &#34; painting_db/ data/data.csv -o output -t 5 -fo 30 -vp 1 -vi 1 --histo_mode\&#34;\n\n&#34;
+               &#34;\tIn this case, the input is a video and we want to perform the Painting and People Localization\n&#34;
+               &#34;\ttask. This implies that all tasks (from 0 to 5) will be performed. The video will be processed \n&#34;
+               &#34;\tconsidering one frame every 30 occurrences. All intermediate results will be printed, but no\n&#34;
+               &#34;\timage will be displayed during processing because we are working with a video and &#39;-vi&#39; \n&#34;
+               &#34;\tis automatically set equal to 0 (read &#39;-vi&#39; for details). The rectification of each detected\n&#34;
+               &#34;\tpainting will be carried out only one time (better performance).\n&#34;
+               &#34;\tIf ORB does not produce any match, a match based on histogram will be executed. The output\n&#34;
+               &#34;\tis a video stored in &#39;./output/paintings_and_people_localization/VID_20180529_112627.mp4&#39; whose\n&#34;
+               &#34;\tframes show the results of the tasks performed on the frames of the input video.\n\n&#34;,
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+
+    parser.add_argument(
+        &#34;input&#34;,
+        type=str,
+        help=&#34;image or video filename or folder containing images, videos or a mix of both\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;db_path&#34;,
+        type=str,
+        help=&#34;path of the directory where the images that make up the DB are located\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;data_filename&#34;,
+        type=str,
+        help=&#34;file containing all the information about the paintings:\n&#34;
+             &#34;(Title, Author, Room, Image)\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-o&#34;,
+        &#34;--output&#34;,
+        type=str,
+        default=&#34;output&#34;,
+        help=&#34;path used as base to determine where the outputs are stored. For details,\n&#34;
+             &#34;read the epilogue at the bottom, section &#39;# OUTPUT&#39; \n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-t&#34;,
+        &#34;--task&#34;,
+        type=int,
+        choices=list(range(6)),
+        default=5,
+        help=&#34;determines which task will be performed on the input.\n&#34;
+             &#34;NOTE: for details on how the tasks are performed and for some examples, read\n&#34;
+             &#34;the epilogue at the bottom of the page, section &#39;# TASKS&#39;\n&#34;
+             &#34;  0 = Painting Detection\n&#34;
+             &#34;  1 = Painting Segmentation\n&#34;
+             &#34;  2 = Painting Rectification\n&#34;
+             &#34;  3 = Painting Retrieval\n&#34;
+             &#34;  4 = People Detection\n&#34;
+             &#34;  5 = People and Paintings Localization (DEFAULT)\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-fo&#34;,
+        &#34;--frame_occurrence&#34;,
+        type=int,
+        default=1,
+        help=&#34;integer &gt;=1 (default =1). In case the input is a video, it establishes with \n&#34;
+             &#34;which occurrence to consider the frames of the video itself.\n&#34;
+             &#34;Example: frame_occurrence = 30 (VALUE RECOMMENDED DURING TESTING) means that\n&#34;
+             &#34;it considers one frame every 30.\n&#34;
+             &#34;NOTE: for more details read the epilogue at the bottom of the page, section \n&#34;
+             &#34;&#39;# FRAME_OCCURRENCE&#39;\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-vp&#34;,
+        &#34;--verbosity_print&#34;,
+        type=int,
+        choices=[0, 1],
+        default=0,
+        help=&#34;set the verbosity of the information displayed (description of the operation\n&#34;
+             &#34;executed and its execution time)\n&#34;
+             &#34;  0 = ONLY main processing steps info (DEFAULT)\n&#34;
+             &#34;  1 = ALL processing steps info\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-vi&#34;,
+        &#34;--verbosity_image&#34;,
+        type=int,
+        choices=[0, 1, 2],
+        default=0,
+        help=&#34;set the verbosity of the images displayed.\n&#34;
+             &#34;NOTE: if the input is a video, is automatically set to &#39;0&#39; (in order to avoid\n&#34;
+             &#34;an excessive number of images displayed on the screen).\n&#34;
+             &#34;  0 = no image shown during processing (DEFAULT)\n&#34;
+             &#34;  1 = shows output images of the main pipeline steps when they are created.\n&#34;
+             &#34;      A button must be pressed to continue the execution (used for DEBUGGING)\n&#34;
+             &#34;  2 = like &#39;-v1 1&#39;, but it also shows output images of the intermediate\n&#34;
+             &#34;      pipeline steps.\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-mdbi&#34;,
+        &#34;--match_db_image&#34;,
+        action=&#34;store_true&#34;,
+        help=&#34;if present, to perform Painting Retrieval, the program rectifies each painting\n&#34;
+             &#34;to match the aspect ration of every painting in &#39;db_path&#39;. Otherwise, it\n&#34;
+             &#34;rectifies each painting one time using a calculated aspect ratio.\n&#34;
+             &#34;WARNING: setting &#39;--match_db_image&#39; slows down image processing as it\n&#34;
+             &#34;introduces a new rectification operation for each painting in the DB.\n\n&#34;
+    )
+
+    parser.add_argument(
+        &#34;-hm&#34;,
+        &#34;--histo_mode&#34;,
+        action=&#34;store_true&#34;,
+        help=&#34;if present indicates that, during Painting Retrieval, the program will executes\n&#34;
+             &#34;Histogram Matching in the case ORB does not produce any match.\n&#34;
+             &#34;WARNINGS: setting &#39;--histo_mode&#39; increases the percentage of matches with the \n&#34;
+             &#34;DB, but decreases the precision, i.e. increases the number of false positives\n&#34;
+             &#34;(incorrect matches).\n\n&#34;
+    )
+
+    return parser.parse_args()</code></pre>
+</details>
+</dd>
 <dt id="code.main_detector.main"><code class="name flex">
-<span>def <span class="ident">main</span></span>(<span>args)</span>
+<span>def <span class="ident">main</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Main function executing the pipeline necessary to perform the main tasks.
@@ -554,59 +795,29 @@ It receives the arguments from <code>ArgumentParser</code></p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def main(args):
+<pre><code class="python">def main():
     &#34;&#34;&#34;
     Main function executing the pipeline necessary to perform the main tasks.
     It receives the arguments from `ArgumentParser`
     &#34;&#34;&#34;
 
-    # input_filename = args.input_filename
-    # painting_db_path = args.db_path
-    # painting_data_path = args.data_filename
-    # output_base_path = args.output
-    # task = Task(args.task)
-    # frame_occurrence = args.frame_occurrence
-    # verbosity_print = args.verbosity_print
-    # verbosity_image = args.verbosity_image
-    # match_db_image = args.match_db_image
-    # histo_mode = args.histo_mode
+    args = args_parse()
 
-    verbosity_print = 0
-    verbosity_image = 0
-    task = Task(5)
-    match_db_image = False
-    histo_mode = False
-    frame_occurrence = 30
-    painting_db_path = &#34;paintings_db/&#34;
-    painting_data_path = &#34;data/data.csv&#34;
-    output_base_path = &#34;output&#34;
-    # ----------------------
-    # TESTING TODO remove it
-    # ----------------------
-    # input_filename = &#34;dataset/photos/test/&#34;
-    # VIDEOS
-    input_filename = &#34;dataset/videos/002/&#34;
-    # input_filename += &#34;VID_20180529_112627.mp4&#34;
-    input_filename += &#34;20180206_114604.mp4&#34;
-    # IMAGES
-    # input_filename += &#39;IMG_2659_0012.jpg&#39;  # CRITIC
-    # input_filename += &#39;VID_20180529_113001_0000.jpg&#39;  # LOTS painting not recognized
-    # input_filename += &#34;VID_20180529_112553_0002.jpg&#34;  # Wall inverted
-    # input_filename += &#34;VID_20180529_112739_0004.jpg&#34;  # Wall inverted
-    # input_filename += &#34;VID_20180529_112627_0000.jpg&#34;  # Wall correct
-    # input_filename += &#34;VID_20180529_112517_0002.jpg&#34;  # strange case
-    # input_filename += &#34;IMG_2646_0003.jpg&#34;  # overlapping contours
-    # input_filename += &#34;IMG_2646_0006.jpg&#34;  # overlapping contours
-    # input_filename += &#34;20180206_114604_0000.jpg&#34;  # people
-    # input_filename += &#34;VID_20180529_112553_0004.jpg&#34;  # wall inverted and cutted painting
-    # input_filename += &#34;IMG_2646_0018.jpg&#34;  # wall inverted and cutted painting
-    # input_filename += &#34;VID_20180529_112553_0003.jpg&#34;  # painting with error people detection
+    input_filename = args.input
+    painting_db_path = args.db_path
+    painting_data_path = args.data_filename
+    output_base_path = args.output
+    task = Task(args.task)
+    frame_occurrence = args.frame_occurrence
+    verbosity_print = args.verbosity_print
+    verbosity_image = args.verbosity_image
+    match_db_image = args.match_db_image
+    histo_mode = args.histo_mode
 
     # ---------------------------------------------------------------------------------------------
     # Script execution time
     # ---------------------------------------------------------------------------------------------
     script_time_start = time.time()
-    total_time = 0
 
     if frame_occurrence &lt; 1:
         sys.exit(&#34;frame_occurrence should be &gt;= 1\n&#34;)
@@ -622,24 +833,41 @@ It receives the arguments from <code>ArgumentParser</code></p></div>
         resize_width = None
 
     # ---------------------------------------------------------------------------------------------
+    # Check if input is valid
+    # ---------------------------------------------------------------------------------------------
+
+    try:
+        inputs_list = [ntpath.join(ntpath.realpath(&#39;.&#39;), input_filename, file) for file in os.listdir(input_filename)]
+        inputs_list = [f for f in inputs_list if os.path.isfile(f)]
+        if len(inputs_list) == 0:
+            sys.exit(f&#34;No images or video inside directory: {input_filename}&#34;)
+    except NotADirectoryError:
+        inputs_list = []
+        inputs_list.append(ntpath.join(ntpath.realpath(&#39;.&#39;), input_filename))
+    except FileNotFoundError:
+        sys.exit(&#34;No file or directory with the name {}&#34;.format(input_filename))
+
+    # ---------------------------------------------------------------------------------------------
     # Check if DB path and Data filename are valid
     # ---------------------------------------------------------------------------------------------
 
     if not os.path.isdir(painting_db_path):
-        sys.exit(f&#34;\nError in DB path: &#39;{painting_db_path}&#39;\n&#34;)
+        sys.exit(f&#34;\nError in DB path, should be a directory: &#39;{painting_db_path}&#39;\n&#34;)
     if not os.path.exists(painting_data_path):
         sys.exit(f&#34;\nError in Data file: &#39;{painting_data_path}&#39;\n&#34;)
 
     # ---------------------------------------------------------------------------------------------
-    # Check if input file is valid
+    # Instantiating output path
     # ---------------------------------------------------------------------------------------------
 
-    media, media_type = check_media_file(input_filename)
-    if media_type == MediaType.video:
-        verbosity_image = 0
+    # Output path info
+    print_nicer(&#34;Creating output path&#34;)
+    output_path = os.path.join(output_base_path, task.name)
+    create_directory(output_path)
+    print(&#34;-&#34; * 50)
 
     # ---------------------------------------------------------------------------------------------
-    # Managing verbosity
+    # Managing prints verbosity
     # ---------------------------------------------------------------------------------------------
 
     if verbosity_print &gt;= 1:
@@ -648,14 +876,6 @@ It receives the arguments from <code>ArgumentParser</code></p></div>
     else:
         print_next_step = print_time = lambda *a, **k: None
 
-    if verbosity_image &gt;= 2:
-        show_image_main = show_image = show_image_window_blocking
-    elif verbosity_image &gt;= 1:
-        show_image_main = show_image_window
-        show_image = lambda *a, **k: None
-    else:
-        show_image_main = show_image = lambda *a, **k: None
-
     # ---------------------------------------------------------------------------------------------
     # Print a summary of the invocation arguments
     # ---------------------------------------------------------------------------------------------
@@ -663,21 +883,23 @@ It receives the arguments from <code>ArgumentParser</code></p></div>
     print()
     print(&#34;-&#34; * 50)
     print(&#34;# SCRIPT CONFIGURATION:&#34;)
-    print(f&#34;\t-Task:                 {task.name}&#34;)
-    print(f&#34;\t-Filename:             {input_filename}&#34;)
-    print(f&#34;\t-Media_type:           {media_type.name}&#34;)
-    print(f&#34;\t-DB path:              {painting_db_path}&#34;)
-    print(f&#34;\t-Data path:            {painting_data_path}&#34;)
-    print(f&#34;\t-Output base path:     {output_base_path}&#34;)
-    print(f&#34;\t-Verbosity_print:      {verbosity_print}&#34;)
-    print(f&#34;\t-Verbosity_image:      {verbosity_image}&#34;)
-    print(f&#34;\t-Match DB images:      {match_db_image}&#34;)
-    print(f&#34;\t-Histo mode:           {histo_mode}&#34;)
-    if media_type == MediaType.video:
-        if frame_occurrence &gt; 1:
-            print(f&#34;\t-Saving 1 frame every: {frame_occurrence}&#34;)
-        else:
-            print(&#39;\t-Saving all frames&#39;)
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Task:&#34;, task.name))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Input:&#34;, input_filename))
+    if len(inputs_list) &gt; 1:
+        print(&#34;\t{:25s} {}&#34;.format(&#34;-Num input files:&#34;, len(inputs_list)))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-DB path:&#34;, painting_db_path))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Data path:&#34;, painting_data_path))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Output base path:&#34;, output_base_path))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Verbosity_print:&#34;, verbosity_print))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Verbosity_image:&#34;, verbosity_image))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Task:&#34;, task.name))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Histo mode:&#34;, histo_mode))
+    print(&#34;\t{:25s} {}&#34;.format(&#34;-Match DB images:&#34;, match_db_image))
+
+    if frame_occurrence &gt; 1:
+        print(&#34;\t{:25s} {}&#34;.format(&#34;-Saving 1 frame every:&#34;, frame_occurrence))
+    else:
+        print(&#34;\t{:25s}&#34;.format(&#34;-Saving all video frames&#34;))
 
     print(&#34;-&#34; * 50)
 
@@ -688,161 +910,220 @@ It receives the arguments from <code>ArgumentParser</code></p></div>
     # Generator to keep track of the current step number
     generator = step_generator()
 
-    # YOLO People Detector
+    # ---------------------------------------------------------------------------------------------
+    # Instantiating DB
+    # ---------------------------------------------------------------------------------------------
+    if task == Task.painting_retrieval or task == Task.paintings_and_people_localization:
+        # DB path info
+        print_nicer(&#39;Loading paintings from DB&#39;)
+        start_time = time.time()
+        paintings_db = create_paintings_db(painting_db_path, painting_data_path)
+        print(f&#34;\tPaintings loaded:  {len(paintings_db)}&#34;)
+        print_time_info(start_time)
+        print(&#34;-&#34; * 50)
+    else:
+        paintings_db = []
+
+    # ---------------------------------------------------------------------------------------------
+    # Instantiating YOLO People Detector
+    # ---------------------------------------------------------------------------------------------
     if task.value &gt;= Task.people_detection.value:
         print_nicer(&#34;Creating YOLO People Detector&#34;)
         start_time = time.time()
         people_detector = PeopleDetection()
-        print_time(start_time)
+        print_time_info(start_time)
         print(&#34;-&#34; * 50)
     else:
         people_detector = None
-
-    # ---------------------------------------------------------------------------------------------
-    # Instantiating DB
-    # ---------------------------------------------------------------------------------------------
-
-    # DB path info
-    paintings_db = create_paintings_db(painting_db_path, painting_data_path)
-
-    # ---------------------------------------------------------------------------------------------
-    # Instantiating output path
-    # ---------------------------------------------------------------------------------------------
-
-    # Output path info
-    print_nicer(&#34;Creating output path&#34;)
-    output_path = os.path.join(output_base_path, task.name)
-
-    if task == Task.painting_rectification:
-        out_path_info = output_path = os.path.join(output_path, ntpath.basename(input_filename).split(&#39;.&#39;)[0])
-    else:
-        filename, ext = ntpath.basename(input_filename).split(&#39;.&#39;)
-        ext = &#34;.&#34; + ext if media_type == MediaType.image else &#34;.mp4&#34;
-        out_path_info = os.path.join(output_path, filename + ext)
-
-    out_path_info = os.path.abspath(out_path_info).replace(&#39;\\&#39;, &#39;/&#39;)
-
-    create_directory(output_path)
-
-    print(&#34;-&#34; * 50)
 
     print(&#34;\n\n&#34;)
     print(&#34;--------------------------------------------------&#34;)
     print(&#34;--------------   START PROCESSING   --------------&#34;)
     print(&#34;--------------------------------------------------&#34;)
 
-    pipeline_manager = PipelineManager(
-        input_filename=input_filename,
-        output_path=output_path,
-        task=task,
-        media_type=media_type,
-        paintings_db=paintings_db,
-        people_detector=people_detector,
-        resize_height=resize_height,
-        resize_width=resize_width,
-        match_db_image=match_db_image,
-        histo_mode=histo_mode,
-        generator=generator,
-        show_image_main=show_image_main,
-        show_image=show_image,
-        print_next_step=print_next_step,
-        print_time=print_time
-    )
+    verbosity_image_backup = verbosity_image
+    tot_paintings_detected = 0
+    tot_paintings_retrieved = 0
+    tot_people_detected = 0
 
-    if media_type == MediaType.image:
-        img_original = media
+    for counter, input_filename in enumerate(inputs_list):
 
-        print()
-        print(&#34;-&#34; * 50)
-        print(&#34;# IMAGE INFO:&#34;)
-        print(f&#34;\t-Height: {img_original.shape[0]}&#34;)
-        print(f&#34;\t-Width:  {img_original.shape[1]}&#34;)
-        print(&#34;-&#34; * 50)
+        if len(inputs_list) &gt; 1:
+            print()
+            print(&#34;#&#34; * 50)
+            print(f&#34;# PROCESSING FILE #{counter + 1}/{len(inputs_list)}&#34;)
+            print(&#34;#&#34; * 50)
 
-        pipeline_manager.run(img_original)
-    else:
-        current_frame = 0
-        frame_number = 0
-        videoCapture = media
-        frame_count = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
-        in_fps = videoCapture.get(cv2.CAP_PROP_FPS)
-        frame_process = int(frame_count // frame_occurrence)
-        # In order to have an output video of the same duration as the input one
-        out_fps = (frame_process / frame_count) * in_fps
-        duration = frame_count / in_fps
+        file_time_start = time.time()
 
-        print()
-        print(&#34;-&#34; * 50)
-        print(&#34;# VIDEO INFO:&#34;)
-        print(&#39;\t-Duration:           {:.2f} s&#39;.format(duration))
-        print(f&#34;\t-Frame count:        {int(frame_count)}&#34;)
-        print(f&#34;\t-Frames to process:  {frame_process}&#34;)
-        print(&#34;\t-Input FPS:          {:.2f}&#34;.format(in_fps))
-        print(&#34;\t-Output FPS:         {:.2f}&#34;.format(out_fps))
-        print(&#34;-&#34; * 50)
+        media, media_type = check_media_file(input_filename)
+        if media_type == MediaType.video:
+            verbosity_image = 0
+        else:
+            verbosity_image = verbosity_image_backup
 
-        success, img_original = videoCapture.read()
-        if not success:
-            sys.exit(&#34;Error while processing video frames.\n&#34;)
-        height = img_original.shape[0]
-        width = img_original.shape[1]
-        filename, ext = pipeline_manager.out_filename.split(&#39;.&#39;)
+        # ---------------------------------------------------------------------------------------------
+        # Managing images verbosity
+        # ---------------------------------------------------------------------------------------------
 
-        # Credits: https://github.com/ContinuumIO/anaconda-issues/issues/223#issuecomment-285523938
-        if task != Task.painting_rectification:
-            video = cv2.VideoWriter(
-                os.path.join(output_path, &#39;.&#39;.join([filename, &#39;mp4&#39;])),
-                cv2.VideoWriter_fourcc(*&#34;mp4v&#34;),
-                out_fps,
-                (width, height)
-            )
-        while success and current_frame &lt; frame_process:
+        if verbosity_image &gt;= 2:
+            show_image_main = show_image = show_image_window_blocking
+        elif verbosity_image &gt;= 1:
+            show_image_main = show_image_window_blocking
+            show_image = lambda *a, **k: None
+        else:
+            show_image_main = show_image = lambda *a, **k: None
+
+        # ---------------------------------------------------------------------------------------------
+        # Managing output information
+        # ---------------------------------------------------------------------------------------------
+
+        if task == Task.painting_rectification:
+            out_path_info = output_path = os.path.join(output_path, ntpath.basename(input_filename).split(&#39;.&#39;)[0])
+            create_directory(output_path)
+        else:
+            filename, ext = ntpath.basename(input_filename).split(&#39;.&#39;)
+            ext = &#34;.&#34; + ext if media_type == MediaType.image else &#34;.mp4&#34;
+            out_path_info = os.path.join(output_path, filename + ext)
+
+        out_path_info = os.path.abspath(out_path_info).replace(&#39;\\&#39;, &#39;/&#39;)
+
+        pipeline_manager = PipelineManager(
+            input_filename=input_filename,
+            output_path=output_path,
+            task=task,
+            media_type=media_type,
+            paintings_db=paintings_db,
+            people_detector=people_detector,
+            resize_height=resize_height,
+            resize_width=resize_width,
+            match_db_image=match_db_image,
+            histo_mode=histo_mode,
+            generator=generator,
+            show_image_main=show_image_main,
+            show_image=show_image,
+            print_next_step=print_next_step,
+            print_time=print_time
+        )
+
+        if media_type == MediaType.image:
+            img_original = media
 
             print()
-            print(&#34;=&#34; * 50)
-            print(f&#34;# PROCESSING FRAME #{current_frame + 1}/{frame_process}&#34;)
-            print(&#34;=&#34; * 50)
-            current_filename = &#34;_&#34;.join([filename, &#34;{:05d}&#34;.format(current_frame)])
-            pipeline_manager.out_filename = &#39;.&#39;.join([current_filename, &#34;png&#34;])
+            print(&#34;-&#34; * 50)
+            print(&#34;# IMAGE INFO:&#34;)
+            print(&#34;\t{:10s} {}&#34;.format(&#34;-Filename:&#34;, input_filename.replace(&#39;\\&#39;, &#39;/&#39;)))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;-Height:&#34;, img_original.shape[0]))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;-Width:&#34;, img_original.shape[1]))
+            print(&#34;-&#34; * 50)
 
-            # Process current frame
-            img_original = pipeline_manager.run(img_original)
+            pipeline_manager.run(img_original)
+        else:
+            current_frame = 0
+            frame_number = 0
+            videoCapture = media
+            frame_count = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
+            in_fps = videoCapture.get(cv2.CAP_PROP_FPS)
+            frame_process = int(frame_count // frame_occurrence)
+            # In order to have an output video of the same duration as the input one
+            out_fps = (frame_process / frame_count) * in_fps
+            duration = frame_count / in_fps
 
-            # Write elaborated frame to create a video
-            if task != Task.painting_rectification:
-                video.write(img_original)
+            print()
+            print(&#34;-&#34; * 50)
+            print(&#34;# VIDEO INFO:&#34;)
+            print(&#34;\t{:25s} {}&#34;.format(&#34;-Filename:&#34;, input_filename.replace(&#39;\\&#39;, &#39;/&#39;)))
+            print(&#34;\t{:25s} {:.2f} s&#34;.format(&#34;-Duration:&#34;, duration))
+            print(&#34;\t{:25s} {}&#34;.format(&#34;-Frame count:&#34;, int(frame_count)))
+            print(&#34;\t{:25s} {}&#34;.format(&#34;-Frames to process:&#34;, frame_process))
+            print(&#34;\t{:25s} {:.2f}&#34;.format(&#34;-Input FPS:&#34;, in_fps))
+            print(&#34;\t{:25s} {}&#34;.format(&#34;-Output FPS:&#34;, out_fps))
+            print(&#34;-&#34; * 50)
 
-            current_frame += 1
-            frame_number += frame_occurrence
-            videoCapture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             success, img_original = videoCapture.read()
+            if not success:
+                sys.exit(&#34;Error while processing video frames.\n&#34;)
+            height = img_original.shape[0]
+            width = img_original.shape[1]
+            filename, ext = pipeline_manager.out_filename.split(&#39;.&#39;)
 
-        if current_frame != frame_process:
-            sys.exit(&#34;Error while processing video frames.\n&#34;)
-        if task != Task.painting_rectification:
-            video.release()
+            # Credits: https://github.com/ContinuumIO/anaconda-issues/issues/223#issuecomment-285523938
+            if task != Task.painting_rectification:
+                video = cv2.VideoWriter(
+                    os.path.join(output_path, &#39;.&#39;.join([filename, &#39;mp4&#39;])),
+                    cv2.VideoWriter_fourcc(*&#34;mp4v&#34;),
+                    out_fps,
+                    (width, height)
+                )
+            while success and current_frame &lt; frame_process:
 
-    print()
-    print(&#34;===================   RESULT   ===================&#34;)
-    print(&#34;# Total execution time:   {:.4f} s&#34;.format(time.time() - script_time_start))
-    print(f&#34;# Output path:            {out_path_info}&#34;)
-    if media_type == MediaType.video:
-        print(f&#34;# Total frames processed: {current_frame}&#34;)
-    if task != Task.people_detection:
-        print(f&#34;# Painting detections:    {pipeline_manager.num_paintings_detected}&#34;)
-    if task.value &gt; Task.painting_rectification.value and task != Task.people_detection:
-        print(f&#34;# Painting retrievals:    {pipeline_manager.num_paintings_retrieved}&#34;)
-    if task.value &gt; Task.painting_retrieval.value or task == Task.people_detection:
-        print(f&#34;# People detections:      {pipeline_manager.num_people_detected}&#34;)
-    print(&#34;=&#34; * 50)
+                print()
+                print(&#34;=&#34; * 50)
+                print(f&#34;# PROCESSING FRAME #{current_frame + 1}/{frame_process}&#34;)
+                print(&#34;=&#34; * 50)
+                current_filename = &#34;_&#34;.join([filename, &#34;{:05d}&#34;.format(current_frame)])
+                pipeline_manager.out_filename = &#39;.&#39;.join([current_filename, &#34;png&#34;])
+
+                # Process current frame
+                img_original = pipeline_manager.run(img_original)
+
+                # Write elaborated frame to create a video
+                if task != Task.painting_rectification:
+                    video.write(img_original)
+
+                current_frame += 1
+                frame_number += frame_occurrence
+                videoCapture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+                success, img_original = videoCapture.read()
+
+            if current_frame != frame_process:
+                sys.exit(&#34;Error while processing video frames.\n&#34;)
+            if task != Task.painting_rectification:
+                video.release()
+
+        print()
+        print(&#34;===================   RESULT   ===================&#34;)
+        print(&#34;{:25s} {:.4f} s&#34;.format(&#34;# Total execution time:&#34;, time.time() - file_time_start))
+        print(&#34;{:25s} {}&#34;.format(&#34;# Output path:&#34;, out_path_info))
+
+        if media_type == MediaType.video:
+            print(&#34;{:25s} {}&#34;.format(&#34;# Total frames processed:&#34;, current_frame))
+        if task != Task.people_detection:
+            print(&#34;{:25s} {}&#34;.format(&#34;# Painting detections:&#34;, pipeline_manager.num_paintings_detected))
+        if task.value &gt; Task.painting_rectification.value and task != Task.people_detection:
+            print(&#34;{:25s} {}&#34;.format(&#34;# Painting retrievals:&#34;, pipeline_manager.num_paintings_retrieved))
+        if task.value &gt; Task.painting_retrieval.value or task == Task.people_detection:
+            print(&#34;{:25s} {}&#34;.format(&#34;# People detections:&#34;, pipeline_manager.num_people_detected))
+        print(&#34;=&#34; * 50)
+
+        tot_paintings_detected += pipeline_manager.num_paintings_detected
+        tot_paintings_retrieved += pipeline_manager.num_paintings_retrieved
+        tot_people_detected += pipeline_manager.num_people_detected
+
+        plt.show()
+        cv2.destroyAllWindows()
 
     print(&#34;\n\n&#34;)
     print(&#34;--------------------------------------------------&#34;)
     print(&#34;---------------   END PROCESSING   ---------------&#34;)
     print(&#34;--------------------------------------------------&#34;)
 
+    print()
+    print(&#34;================   FINAL RESULT   ================&#34;)
+    print(&#34;{:25s} {:.4f} s&#34;.format(&#34;# Total execution time:&#34;, time.time() - script_time_start))
+
+    if len(inputs_list) &gt; 1:
+        print(&#34;{:25s} {}&#34;.format(&#34;# Num files processed:&#34;, len(inputs_list)))
+
+    if task != Task.people_detection:
+        print(&#34;{:25s} {}&#34;.format(&#34;# Painting detections:&#34;, tot_paintings_detected))
+    if task.value &gt; Task.painting_rectification.value and task != Task.people_detection:
+        print(&#34;{:25s} {}&#34;.format(&#34;# Painting retrievals:&#34;, tot_paintings_retrieved))
+    if task.value &gt; Task.painting_retrieval.value or task == Task.people_detection:
+        print(&#34;{:25s} {}&#34;.format(&#34;# People detections:&#34;, tot_people_detected))
+    print(&#34;=&#34; * 50)
+
     plt.show()
-    cv2.waitKey()
     cv2.destroyAllWindows()</code></pre>
 </details>
 </dd>
@@ -859,11 +1140,12 @@ It receives the arguments from <code>ArgumentParser</code></p></div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="code" href="index.html">code</a></code></li>
+<li><code><a title="code" href="../../Documentation.html">code</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="code.main_detector.args_parse" href="#code.main_detector.args_parse">args_parse</a></code></li>
 <li><code><a title="code.main_detector.main" href="#code.main_detector.main">main</a></code></li>
 </ul>
 </li>

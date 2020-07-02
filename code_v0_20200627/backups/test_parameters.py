@@ -1,4 +1,4 @@
-from image_processing import mean_shift_segmentation, find_largest_segment, image_dilation, image_erosion, invert_image
+from tasks.image_processing import mean_shift_segmentation, find_largest_segment, image_dilation, image_erosion, invert_image
 from utils.math_utils import print_next_step, step_generator, show_image
 import cv2
 import numpy as np

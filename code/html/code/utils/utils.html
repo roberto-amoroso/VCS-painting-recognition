@@ -33,6 +33,7 @@ Module containing general utility functions.
 import sys
 import cv2
 import os
+import ntpath
 
 from models.media_type import MediaType
 
@@ -42,7 +43,7 @@ def create_directory(path):
     Create directory at the given path, checking for errors and if the directory
     already exists.
     &#34;&#34;&#34;
-
+    path = ntpath.realpath(path)
     if not os.path.exists(path):
         try:
             os.makedirs(path)
@@ -70,13 +71,14 @@ def check_media_file(filename):
 
     &#34;&#34;&#34;
     media_type = MediaType(0)
+    filename = ntpath.realpath(filename)
     media = cv2.imread(filename, cv2.IMREAD_COLOR)
     if media is None:
         try:
             media_type = MediaType(1)
             media = cv2.VideoCapture(filename)
             if not media.isOpened():
-                sys.exit(&#34;The input file should be a valid image or video.\n&#34;)
+                sys.exit(f&#34;The input file should be a valid image or video: &#39;{filename}&#39;\n&#34;)
         except cv2.error as e:
             print(&#34;cv2.error:&#34;, e)
         except Exception as e:
@@ -132,13 +134,14 @@ def check_media_file(filename):
 
     &#34;&#34;&#34;
     media_type = MediaType(0)
+    filename = ntpath.realpath(filename)
     media = cv2.imread(filename, cv2.IMREAD_COLOR)
     if media is None:
         try:
             media_type = MediaType(1)
             media = cv2.VideoCapture(filename)
             if not media.isOpened():
-                sys.exit(&#34;The input file should be a valid image or video.\n&#34;)
+                sys.exit(f&#34;The input file should be a valid image or video: &#39;{filename}&#39;\n&#34;)
         except cv2.error as e:
             print(&#34;cv2.error:&#34;, e)
         except Exception as e:
@@ -166,7 +169,7 @@ already exists.</p></div>
     Create directory at the given path, checking for errors and if the directory
     already exists.
     &#34;&#34;&#34;
-
+    path = ntpath.realpath(path)
     if not os.path.exists(path):
         try:
             os.makedirs(path)

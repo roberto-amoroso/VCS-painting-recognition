@@ -9,13 +9,13 @@ Class managing the order of execution of the functions necessary to perform:
 """
 from models.media_type import MediaType
 from utils.draw import draw_paintings_info, draw_people_bounding_box, show_image_window, print_nicer, print_time_info
-from image_processing import create_segmented_image, image_resize
+from tasks.image_processing import create_segmented_image, image_resize
 from utils.math_utils import translate_points
-from painting_detection import detect_paintings
-from painting_rectification import rectify_painting
-from painting_retrieval import retrieve_paintings
-from people_detection import detect_people
-from paintings_and_people_localization import locale_paintings_and_people
+from tasks.painting_detection import detect_paintings
+from tasks.painting_rectification import rectify_painting
+from tasks.painting_retrieval import retrieve_paintings
+from tasks.people_detection import detect_people
+from tasks.paintings_and_people_localization import locale_paintings_and_people
 
 import cv2
 import os

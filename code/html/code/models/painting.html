@@ -46,8 +46,37 @@ class Painting:
                  bounding_box=None,
                  frame_contour=None,
                  points=None,
-                 corners=None):
-        # It will contain the DB image or the rectified sub-image (up-scaled if necessary)
+                 corners=None,
+                 keypoints=None,
+                 descriptors=None):
+        &#34;&#34;&#34;Constructor of the Painting class.
+
+        Parameters
+        ----------
+        image: ndarray
+            It will contain the DB image or the rectified sub-image (up-scaled if necessary)
+        title: str
+            Title of the painting
+        author: str
+            Author of the painting
+        room: int
+            number of the romm where the painting is located
+        filename: str
+            name of the file in the DB asspciated to the painting
+        bounding_box: ndarray
+            array [x, y, w, h] representing the bounding box of the painting
+        frame_contour: list
+            list of points (x, y) representing the contours of the painting including the frame
+        points: list
+            list of points (x, y) representing the contours of the painting without the frame
+        corners: ndarray
+            array of point [x,y] representing the corners of the painting
+        keypoints: list
+            ORB keypoints for the Painting Retrieval Task
+        descriptors: list
+            ORB descriptors for the Painting Retrieval Task
+        &#34;&#34;&#34;
+
         self.image = image
         self.title = title
         self.author = author
@@ -56,7 +85,9 @@ class Painting:
         self.frame_contour = frame_contour
         self.points = points
         self.corners = corners
-        self.bounding_box = bounding_box</code></pre>
+        self.bounding_box = bounding_box
+        self.keypoints = keypoints
+        self.descriptors = descriptors</code></pre>
 </details>
 </section>
 <section>
@@ -70,10 +101,36 @@ class Painting:
 <dl>
 <dt id="code.models.painting.Painting"><code class="flex name class">
 <span>class <span class="ident">Painting</span></span>
-<span>(</span><span>image=None, title=None, author=None, room=None, filename=None, bounding_box=None, frame_contour=None, points=None, corners=None)</span>
+<span>(</span><span>image=None, title=None, author=None, room=None, filename=None, bounding_box=None, frame_contour=None, points=None, corners=None, keypoints=None, descriptors=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Class describing a painting.</p></div>
+<div class="desc"><p>Class describing a painting.</p>
+<p>Constructor of the Painting class.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>It will contain the DB image or the rectified sub-image (up-scaled if necessary)</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
+<dd>Title of the painting</dd>
+<dt><strong><code>author</code></strong> :&ensp;<code>str</code></dt>
+<dd>Author of the painting</dd>
+<dt><strong><code>room</code></strong> :&ensp;<code>int</code></dt>
+<dd>number of the romm where the painting is located</dd>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>name of the file in the DB asspciated to the painting</dd>
+<dt><strong><code>bounding_box</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>array [x, y, w, h] representing the bounding box of the painting</dd>
+<dt><strong><code>frame_contour</code></strong> :&ensp;<code>list</code></dt>
+<dd>list of points (x, y) representing the contours of the painting including the frame</dd>
+<dt><strong><code>points</code></strong> :&ensp;<code>list</code></dt>
+<dd>list of points (x, y) representing the contours of the painting without the frame</dd>
+<dt><strong><code>corners</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>array of point [x,y] representing the corners of the painting</dd>
+<dt><strong><code>keypoints</code></strong> :&ensp;<code>list</code></dt>
+<dd>ORB keypoints for the Painting Retrieval Task</dd>
+<dt><strong><code>descriptors</code></strong> :&ensp;<code>list</code></dt>
+<dd>ORB descriptors for the Painting Retrieval Task</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -92,8 +149,37 @@ class Painting:
                  bounding_box=None,
                  frame_contour=None,
                  points=None,
-                 corners=None):
-        # It will contain the DB image or the rectified sub-image (up-scaled if necessary)
+                 corners=None,
+                 keypoints=None,
+                 descriptors=None):
+        &#34;&#34;&#34;Constructor of the Painting class.
+
+        Parameters
+        ----------
+        image: ndarray
+            It will contain the DB image or the rectified sub-image (up-scaled if necessary)
+        title: str
+            Title of the painting
+        author: str
+            Author of the painting
+        room: int
+            number of the romm where the painting is located
+        filename: str
+            name of the file in the DB asspciated to the painting
+        bounding_box: ndarray
+            array [x, y, w, h] representing the bounding box of the painting
+        frame_contour: list
+            list of points (x, y) representing the contours of the painting including the frame
+        points: list
+            list of points (x, y) representing the contours of the painting without the frame
+        corners: ndarray
+            array of point [x,y] representing the corners of the painting
+        keypoints: list
+            ORB keypoints for the Painting Retrieval Task
+        descriptors: list
+            ORB descriptors for the Painting Retrieval Task
+        &#34;&#34;&#34;
+
         self.image = image
         self.title = title
         self.author = author
@@ -102,7 +188,9 @@ class Painting:
         self.frame_contour = frame_contour
         self.points = points
         self.corners = corners
-        self.bounding_box = bounding_box</code></pre>
+        self.bounding_box = bounding_box
+        self.keypoints = keypoints
+        self.descriptors = descriptors</code></pre>
 </details>
 </dd>
 </dl>

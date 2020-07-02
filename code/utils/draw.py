@@ -300,7 +300,6 @@ def draw_paintings_info(img, paintings, scale_factor):
 
             bottom_left_corner_of_title = (xb_title, yb_title)
 
-            # TODO: manage special character (like "ù") printed as "??"
             cv2.putText(img,
                         title,
                         bottom_left_corner_of_title,

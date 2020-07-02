@@ -11,13 +11,13 @@ Main script to execute the following operation, depending on the arguments recei
 """
 from utils.draw import step_generator, draw_paintings_info, draw_people_bounding_box, show_image_window, print_next_step_info, \
     print_nicer, print_time_info
-from image_processing import create_segmented_image, image_resize
+from tasks.image_processing import create_segmented_image, image_resize
 from utils.math_utils import translate_points
-from painting_detection import detect_paintings
-from painting_rectification import rectify_painting
-from painting_retrieval import create_paintings_db, retrieve_paintings
-from people_detection import detect_people
-from paintings_and_people_localization import locale_paintings_and_people
+from tasks.painting_detection import detect_paintings
+from tasks.painting_rectification import rectify_painting
+from tasks.painting_retrieval import create_paintings_db, retrieve_paintings
+from tasks.people_detection import detect_people
+from tasks.paintings_and_people_localization import locale_paintings_and_people
 from yolo.people_detection import PeopleDetection
 
 import cv2

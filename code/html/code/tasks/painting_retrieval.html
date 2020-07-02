@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.3" />
+<title>code.tasks.painting_retrieval API documentation</title>
+<meta name="description" content="Module containing functions to perform Painting Retrieval." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>code.tasks.painting_retrieval</code></h1>
+</header>
+<section id="section-intro">
+<p>Module containing functions to perform Painting Retrieval.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Module containing functions to perform Painting Retrieval.
+&#34;&#34;&#34;
+import sys
+
+from tasks.image_processing import automatic_brightness_and_contrast
+from tasks.painting_rectification import rectify_painting
+from models.painting import Painting
+
+import pandas as pd
+import cv2
+import numpy as np
+import os
+import time
+import ntpath
+
+
+def create_paintings_db(db_path, data_path):
+    &#34;&#34;&#34;Creates a list of all paintings in the DB and their info.
+
+    Parameters
+    ----------
+    db_path: str
+        path of the directory containing all painting files.
+    data_path: str
+        path of the &#39;.csv&#39; file containing all paintings info.
+
+    Returns
+    -------
+    list
+        list of `Painting` objects, describing all the paintings that populate
+        the DB.
+    &#34;&#34;&#34;
+    paintings_db = []
+
+    try:
+        df_painting_data = pd.read_csv(ntpath.realpath(data_path))
+    except UnicodeDecodeError:
+        sys.exit(f&#34;Error in the data file format: {data_path}&#34;)
+
+    db_path = ntpath.realpath(db_path)
+    orb = cv2.ORB_create()
+    for subdir, dirs, files in os.walk(db_path):
+        for painting_file in files:
+            image = cv2.imread(os.path.join(db_path, painting_file))
+
+            painting_info = df_painting_data.loc[df_painting_data[&#39;Image&#39;] == painting_file].iloc[0]
+            title = painting_info[&#39;Title&#39;]
+            author = painting_info[&#39;Author&#39;]
+            room = painting_info[&#39;Room&#39;]
+
+            # create ORB keypoints and descriptors for each painting in the DB
+            src_kp, src_des = orb.detectAndCompute(image, None)
+            painting = Painting(
+                image,
+                title,
+                author,
+                room,
+                painting_file,
+                keypoints=src_kp,
+                descriptors=src_des
+            )
+            paintings_db.append(painting)
+    return paintings_db
+
+
+def match_features_orb(src_img, dst_img, max_matches=50):
+    &#34;&#34;&#34;Find the matches between two images.
+
+    Find the matches between two images using ORB to find Keypoints.
+
+    Parameters
+    ----------
+    src_img: ndarray
+        source image
+    dst_img: Painting
+        destination image
+    max_matches: int
+        maximum number of the best (lower distance) matches found that we consider
+    Returns
+    -------
+    float
+        Returns the average distance value considering only the best (lower distance)
+        `max_matches` matches.
+
+    Notes
+    -----
+    For details visit
+    - https://docs.opencv.org/3.4.0/d3/da1/classcv_1_1BFMatcher.html#ac6418c6f87e0e12a88979ea57980c020
+    &#34;&#34;&#34;
+    orb = cv2.ORB_create()
+
+    src_kp, src_des = orb.detectAndCompute(src_img, None)
+    # show_image(&#34;src_kp&#34;, cv2.drawKeypoints(src_img, src_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
+
+    dst_kp, dst_des = dst_img.keypoints, dst_img.descriptors
+    # show_image(&#34;dst_kp&#34;, cv2.drawKeypoints(dst_img, dst_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
+
+    # Find matches between the features in the source image and the destination
+    # image (i.e. painting)
+    matcher = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True)
+    matches = matcher.match(src_des, dst_des)
+    matches_value = np.inf
+    if len(matches) &gt; 0:
+        matches_value = np.mean([i.distance for i in sorted(matches, key=lambda x: x.distance)[:max_matches]])
+
+    # Show matches
+    # draw_params = dict(singlePointColor=None, flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT)
+    # matches_img = cv2.drawMatches(src_img, src_kp, dst_img.image, dst_kp, matches, None, **draw_params)
+    # show_image(&#34;matches_img&#34;, matches_img, wait_key=False)
+    # cv2.waitKey(0)
+
+    return matches_value
+
+
+def histo_matching(src_img, dst_img):
+    &#34;&#34;&#34;Histogram Comparison of two images.
+
+    Parameters
+    ----------
+    src_img: ndarray
+        first image to compare
+    dst_img: ndarray
+        second image to compare
+
+    Returns
+    -------
+    float
+        Returns the value of the Histogram Comparison of two images using the
+        Intersection method.
+
+    Notes
+    -----
+    For details visit:
+    - https://docs.opencv.org/3.4/d8/dc8/tutorial_histogram_comparison.html
+    - https://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html
+    - https://docs.opencv.org/3.4/d8/dbc/tutorial_histogram_calculation.html
+    - https://docs.opencv.org/3.4/d6/dc7/group__imgproc__hist.html#ga6ca1876785483836f72a77ced8ea759a
+    &#34;&#34;&#34;
+
+    # Convert image from BGR to HSV
+    src_img = cv2.cvtColor(src_img, cv2.COLOR_BGR2HSV)
+    dst_img = cv2.cvtColor(dst_img, cv2.COLOR_BGR2HSV)
+
+    # Set number of bins for hue and saturation
+    hue_bins = 50
+    sat_bins = 60
+    hist_size = [hue_bins, sat_bins]
+
+    # Set ranges for hue and saturation
+    hue_range = [0, 180]
+    sat_range = [0, 256]
+    hist_range = hue_range + sat_range
+
+    # Use the 0-th and 1-st channels of the histograms for the comparison
+    channels = [0, 1]
+
+    # Create histograms
+    src_hist = cv2.calcHist(
+        [src_img],
+        channels,
+        None,
+        hist_size,
+        hist_range,
+        accumulate=False
+    )
+    cv2.normalize(src_hist, src_hist, 0, 1, cv2.NORM_MINMAX)
+
+    dst_hist = cv2.calcHist(
+        [dst_img],
+        channels,
+        None,
+        hist_size,
+        hist_range,
+        accumulate=False
+    )
+    cv2.normalize(dst_hist, dst_hist, 0, 1, cv2.NORM_MINMAX)
+
+    hist_comparison = cv2.compareHist(src_hist, dst_hist, cv2.HISTCMP_INTERSECT)
+    return hist_comparison
+
+
+def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step, print_time, max_matches=40,
+                       threshold=0.92, match_db_image=False, histo_mode=False):
+    &#34;&#34;&#34;Lookup the DB for a specific painting using ORB or histogram matching.
+
+    Parameters
+    ----------
+    img: ndarray
+        the input image.
+    paintings_db: list
+        list of all `Painting` object that populate the DB.
+    generator: generator
+        generator used to print useful information during processing
+    show_image: function
+        function used to show image of the intermediate results
+    print_next_step:function
+        function used to print info about current processing step
+    print_time: function
+        function used to print info about execution time
+    max_matches: int
+        maximum number of the best (lower distance) matches found that we consider
+    threshold: float
+        rejects matches if the ratio between the best and the second-best match is
+        below the `threshold`. Credits:
+         https://stackoverflow.com/questions/17967950/improve-matching-of-feature-points-with-opencv
+    match_db_image: bool
+        define if:
+        - rectify `img` one time using aspect ratio (True)
+        - rectify `img` for every painting in `paintings_db`
+    histo_mode: bool
+        indicate which method use for the matching:
+        - True = Histogram Matching.
+        - False = ORB matching.
+
+    Returns
+    -------
+    tuple[ndarray, bool]
+        Returns:
+        - a NumPy array of tuple (id, mean_distance), where id is the
+        identification number of the current painting of the DB and
+        mean_distance is the mean distance between `img` and the current
+        painting of the DB. The array is sorted in ascending order of distance.
+        - a boolean representing if a good match was found or not
+
+
+    Notes
+    -----
+    For details visit:
+    - https://docs.opencv.org/3.4/d1/d89/tutorial_py_orb.html
+    - https://numpy.org/doc/1.18/reference/generated/numpy.sort.html
+    &#34;&#34;&#34;
+
+    dtype = [(&#39;painting_id&#39;, int), (&#39;val_matches&#39;, float)]
+    matches_rank = np.array([], dtype=dtype)
+
+    rectified_img = img
+    # print(rectified_img.shape)
+
+    for id, painting_obj in enumerate(paintings_db):
+        painting_img = painting_obj.image
+        # show_image(&#39;image_db&#39;, painting, wait_key=False)
+
+        if match_db_image:
+            # Step 15: Rectify Painting
+            # ----------------------------
+            print_next_step(generator, &#34;Rectify Painting&#34;)
+            start_time = time.time()
+            corners = np.float32([
+                [0, 0],
+                [img.shape[1] - 1, 0],
+                [img.shape[1] - 1, img.shape[0] - 1],
+                [0, img.shape[0] - 1]
+            ])
+            rectified_img = rectify_painting(img, corners, painting_img)
+            print_time(start_time)
+            # show_image(&#39;image_rectified&#39;, rectified_img, wait_key=True)
+
+            # Step AUTO-ADJUST: Adjust automatically brightness and contrast of the image
+            # ----------------------------
+            print_next_step(generator, &#34;Adjust brightness and contrast&#34;)
+            start_time = time.time()
+            rectified_img, alpha, beta = automatic_brightness_and_contrast(rectified_img)
+            # print(f&#34;\talpha: {alpha}&#34;)
+            # print(f&#34;\tbeta: {beta}&#34;)
+            print_time(start_time)
+            # show_image(&#39;auto_adjusted&#39;, rectified_img)
+
+        if not histo_mode:
+            # Step 16: Match features using ORB
+            # ----------------------------
+            print_next_step(generator, &#34;Match features using ORB&#34;)
+            start_time = time.time()
+            # max_distance = 40
+            match_size = match_features_orb(rectified_img, painting_obj, max_matches)
+            print_time(start_time)
+        else:
+            # Step 17: Match features using HISTOGRAMS
+            # ----------------------------
+            print_next_step(generator, &#34;Match features using HISTOGRAMS&#34;)
+            start_time = time.time()
+            match_size = histo_matching(rectified_img, painting_img)
+            print_time(start_time)
+
+        matches_rank = np.append(matches_rank, np.array([(id, match_size)], dtype=dtype))
+
+    matches_rank = np.sort(matches_rank, order=&#39;val_matches&#39;)
+
+    good_match_found = False
+
+    if matches_rank.size &gt; 0:
+        if histo_mode:
+            matches_rank = np.flip(matches_rank)
+            if matches_rank[0][1] &gt; 0:
+                good_match_found = True
+        else:
+            if matches_rank[0][1] &lt; np.inf and matches_rank[0][1] &lt; matches_rank[1][1] * threshold:
+                good_match_found = True
+
+    return matches_rank, good_match_found
+
+
+def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, print_next_step, print_time,
+                       match_db_image=False, histo_mode=False, scale_factor=1.):
+    &#34;&#34;&#34;Match each detected painting to the paintings DB.
+
+    Parameters
+    ----------
+    paintings_detected: list
+        a list containing one `Painting` object for each
+        painting detected in the input image.
+    paintings_db: list
+        a list containing one `Painting` object for each
+        painting in the DB.
+    generator: generator
+        generator function used to take track of the current step number
+        and print useful information during processing.
+    show_image: function
+        function used to show image of the intermediate results
+    print_next_step:function
+        function used to print info about current processing step
+    print_time: function
+        function used to print info about execution time
+    match_db_image: bool
+        define if:
+        - False: rectify each painting one time using a calculated aspect ratio
+        - True: rectify each painting to match the aspect ration of every painting in `paintings_db`
+    histo_mode: bool
+        indicates whether to perform a Histogram Matching in the case ORB
+        does not produce any match.
+    scale_factor: float
+        scale factor for which the original image was scaled
+
+    Returns
+    -------
+    None
+        add painting DB info (e.g. title, author, room, etc.) to the paintings
+        in the `paintings_detected` list
+    &#34;&#34;&#34;
+    paintings_retieved = []
+    for i, painting in enumerate(paintings_detected):
+        print(&#39;\n# Processing painting #%d/%d&#39; % (i + 1, len(paintings_detected)))
+
+        sub_img = painting.image
+
+        sub_img = cv2.resize(
+            sub_img,
+            (int(sub_img.shape[1] / scale_factor), int(sub_img.shape[0] / scale_factor)),
+            cv2.INTER_CUBIC
+        )
+
+        # Step AUTO-ADJUST: Adjust automatically brightness and contrast of the image
+        # ----------------------------
+        print_next_step(generator, &#34;Adjust brightness and contrast&#34;)
+        start_time = time.time()
+        img_auto_adjusted, alpha, beta = automatic_brightness_and_contrast(sub_img)
+        # print(f&#34;\talpha: {alpha}&#34;)
+        # print(f&#34;\tbeta: {beta}&#34;)
+        print_time(start_time)
+        show_image(&#39;auto_adjusted_image&#39;, img_auto_adjusted)
+
+        sub_img = img_auto_adjusted
+
+        # Step 14: Painting DB lookup
+        # ----------------------------
+        threshold = 0.92
+        print_next_step(generator, &#34;Painting DB lookup&#34;)
+        max_matches = 30  # 40
+        matches_rank, good_match_found = painting_db_lookup(
+            sub_img,
+            paintings_db,
+            generator=generator,
+            show_image=show_image,
+            print_next_step=print_next_step,
+            print_time=print_time,
+            threshold=threshold,
+            max_matches=max_matches,
+            match_db_image=match_db_image,
+        )
+        if not good_match_found and histo_mode:
+            if matches_rank[0][1] == np.inf:
+                matches_rank, good_match_found = painting_db_lookup(
+                    sub_img,
+                    paintings_db,
+                    generator=generator,
+                    show_image=show_image,
+                    print_next_step=print_next_step,
+                    print_time=print_time,
+                    max_matches=max_matches,
+                    match_db_image=match_db_image,
+                    histo_mode=histo_mode
+                )
+            else:
+                good_match_found = True
+        if good_match_found:
+            painting_id = matches_rank[0][0]
+            # Manage case when I find duplicated painting in the current video frame
+            if painting_id is not None and painting_id not in paintings_retieved:
+                paintings_retieved.append(painting_id)
+                recognized_painting = paintings_db[painting_id]
+                painting.title = recognized_painting.title
+                painting.author = recognized_painting.author
+                painting.room = recognized_painting.room
+                painting.filename = recognized_painting.filename
+                show_image(&#34;DB_image_predicted&#34;, recognized_painting.image)
+
+        print(&#39;\n# Painting #%d/%d information:&#39; % (i + 1, len(paintings_detected)))
+        if painting.title is not None:
+            print(&#34;\t{:10s} {}&#34;.format(&#34;title:&#34;, painting.title))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;author:&#34;, painting.author))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;room:&#34;, painting.room))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;filename:&#34;, painting.filename))
+        else:
+            print(&#34;\t-- No DB match --&#34;)
+
+        # cv2.waitKey(0)
+
+    # return paintings_detected</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="code.tasks.painting_retrieval.create_paintings_db"><code class="name flex">
+<span>def <span class="ident">create_paintings_db</span></span>(<span>db_path, data_path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates a list of all paintings in the DB and their info.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>db_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path of the directory containing all painting files.</dd>
+<dt><strong><code>data_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>path of the '.csv' file containing all paintings info.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>list of <code>Painting</code> objects, describing all the paintings that populate
+the DB.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_paintings_db(db_path, data_path):
+    &#34;&#34;&#34;Creates a list of all paintings in the DB and their info.
+
+    Parameters
+    ----------
+    db_path: str
+        path of the directory containing all painting files.
+    data_path: str
+        path of the &#39;.csv&#39; file containing all paintings info.
+
+    Returns
+    -------
+    list
+        list of `Painting` objects, describing all the paintings that populate
+        the DB.
+    &#34;&#34;&#34;
+    paintings_db = []
+
+    try:
+        df_painting_data = pd.read_csv(ntpath.realpath(data_path))
+    except UnicodeDecodeError:
+        sys.exit(f&#34;Error in the data file format: {data_path}&#34;)
+
+    db_path = ntpath.realpath(db_path)
+    orb = cv2.ORB_create()
+    for subdir, dirs, files in os.walk(db_path):
+        for painting_file in files:
+            image = cv2.imread(os.path.join(db_path, painting_file))
+
+            painting_info = df_painting_data.loc[df_painting_data[&#39;Image&#39;] == painting_file].iloc[0]
+            title = painting_info[&#39;Title&#39;]
+            author = painting_info[&#39;Author&#39;]
+            room = painting_info[&#39;Room&#39;]
+
+            # create ORB keypoints and descriptors for each painting in the DB
+            src_kp, src_des = orb.detectAndCompute(image, None)
+            painting = Painting(
+                image,
+                title,
+                author,
+                room,
+                painting_file,
+                keypoints=src_kp,
+                descriptors=src_des
+            )
+            paintings_db.append(painting)
+    return paintings_db</code></pre>
+</details>
+</dd>
+<dt id="code.tasks.painting_retrieval.histo_matching"><code class="name flex">
+<span>def <span class="ident">histo_matching</span></span>(<span>src_img, dst_img)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Histogram Comparison of two images.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>src_img</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>first image to compare</dd>
+<dt><strong><code>dst_img</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>second image to compare</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>Returns the value of the Histogram Comparison of two images using the
+Intersection method.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>For details visit:
+- <a href="https://docs.opencv.org/3.4/d8/dc8/tutorial_histogram_comparison.html">https://docs.opencv.org/3.4/d8/dc8/tutorial_histogram_comparison.html</a>
+- <a href="https://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html">https://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html</a>
+- <a href="https://docs.opencv.org/3.4/d8/dbc/tutorial_histogram_calculation.html">https://docs.opencv.org/3.4/d8/dbc/tutorial_histogram_calculation.html</a>
+- <a href="https://docs.opencv.org/3.4/d6/dc7/group__imgproc__hist.html#ga6ca1876785483836f72a77ced8ea759a">https://docs.opencv.org/3.4/d6/dc7/group__imgproc__hist.html#ga6ca1876785483836f72a77ced8ea759a</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def histo_matching(src_img, dst_img):
+    &#34;&#34;&#34;Histogram Comparison of two images.
+
+    Parameters
+    ----------
+    src_img: ndarray
+        first image to compare
+    dst_img: ndarray
+        second image to compare
+
+    Returns
+    -------
+    float
+        Returns the value of the Histogram Comparison of two images using the
+        Intersection method.
+
+    Notes
+    -----
+    For details visit:
+    - https://docs.opencv.org/3.4/d8/dc8/tutorial_histogram_comparison.html
+    - https://docs.opencv.org/2.4/modules/imgproc/doc/histograms.html
+    - https://docs.opencv.org/3.4/d8/dbc/tutorial_histogram_calculation.html
+    - https://docs.opencv.org/3.4/d6/dc7/group__imgproc__hist.html#ga6ca1876785483836f72a77ced8ea759a
+    &#34;&#34;&#34;
+
+    # Convert image from BGR to HSV
+    src_img = cv2.cvtColor(src_img, cv2.COLOR_BGR2HSV)
+    dst_img = cv2.cvtColor(dst_img, cv2.COLOR_BGR2HSV)
+
+    # Set number of bins for hue and saturation
+    hue_bins = 50
+    sat_bins = 60
+    hist_size = [hue_bins, sat_bins]
+
+    # Set ranges for hue and saturation
+    hue_range = [0, 180]
+    sat_range = [0, 256]
+    hist_range = hue_range + sat_range
+
+    # Use the 0-th and 1-st channels of the histograms for the comparison
+    channels = [0, 1]
+
+    # Create histograms
+    src_hist = cv2.calcHist(
+        [src_img],
+        channels,
+        None,
+        hist_size,
+        hist_range,
+        accumulate=False
+    )
+    cv2.normalize(src_hist, src_hist, 0, 1, cv2.NORM_MINMAX)
+
+    dst_hist = cv2.calcHist(
+        [dst_img],
+        channels,
+        None,
+        hist_size,
+        hist_range,
+        accumulate=False
+    )
+    cv2.normalize(dst_hist, dst_hist, 0, 1, cv2.NORM_MINMAX)
+
+    hist_comparison = cv2.compareHist(src_hist, dst_hist, cv2.HISTCMP_INTERSECT)
+    return hist_comparison</code></pre>
+</details>
+</dd>
+<dt id="code.tasks.painting_retrieval.match_features_orb"><code class="name flex">
+<span>def <span class="ident">match_features_orb</span></span>(<span>src_img, dst_img, max_matches=50)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Find the matches between two images.</p>
+<p>Find the matches between two images using ORB to find Keypoints.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>src_img</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>source image</dd>
+<dt><strong><code>dst_img</code></strong> :&ensp;<code>Painting</code></dt>
+<dd>destination image</dd>
+<dt><strong><code>max_matches</code></strong> :&ensp;<code>int</code></dt>
+<dd>maximum number of the best (lower distance) matches found that we consider</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>Returns the average distance value considering only the best (lower distance)
+<code>max_matches</code> matches.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>For details visit
+- <a href="https://docs.opencv.org/3.4.0/d3/da1/classcv_1_1BFMatcher.html#ac6418c6f87e0e12a88979ea57980c020">https://docs.opencv.org/3.4.0/d3/da1/classcv_1_1BFMatcher.html#ac6418c6f87e0e12a88979ea57980c020</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def match_features_orb(src_img, dst_img, max_matches=50):
+    &#34;&#34;&#34;Find the matches between two images.
+
+    Find the matches between two images using ORB to find Keypoints.
+
+    Parameters
+    ----------
+    src_img: ndarray
+        source image
+    dst_img: Painting
+        destination image
+    max_matches: int
+        maximum number of the best (lower distance) matches found that we consider
+    Returns
+    -------
+    float
+        Returns the average distance value considering only the best (lower distance)
+        `max_matches` matches.
+
+    Notes
+    -----
+    For details visit
+    - https://docs.opencv.org/3.4.0/d3/da1/classcv_1_1BFMatcher.html#ac6418c6f87e0e12a88979ea57980c020
+    &#34;&#34;&#34;
+    orb = cv2.ORB_create()
+
+    src_kp, src_des = orb.detectAndCompute(src_img, None)
+    # show_image(&#34;src_kp&#34;, cv2.drawKeypoints(src_img, src_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
+
+    dst_kp, dst_des = dst_img.keypoints, dst_img.descriptors
+    # show_image(&#34;dst_kp&#34;, cv2.drawKeypoints(dst_img, dst_kp, None, color=(0, 255, 0), flags=0), wait_key=False)
+
+    # Find matches between the features in the source image and the destination
+    # image (i.e. painting)
+    matcher = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True)
+    matches = matcher.match(src_des, dst_des)
+    matches_value = np.inf
+    if len(matches) &gt; 0:
+        matches_value = np.mean([i.distance for i in sorted(matches, key=lambda x: x.distance)[:max_matches]])
+
+    # Show matches
+    # draw_params = dict(singlePointColor=None, flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT)
+    # matches_img = cv2.drawMatches(src_img, src_kp, dst_img.image, dst_kp, matches, None, **draw_params)
+    # show_image(&#34;matches_img&#34;, matches_img, wait_key=False)
+    # cv2.waitKey(0)
+
+    return matches_value</code></pre>
+</details>
+</dd>
+<dt id="code.tasks.painting_retrieval.painting_db_lookup"><code class="name flex">
+<span>def <span class="ident">painting_db_lookup</span></span>(<span>img, paintings_db, generator, show_image, print_next_step, print_time, max_matches=40, threshold=0.92, match_db_image=False, histo_mode=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Lookup the DB for a specific painting using ORB or histogram matching.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>img</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>the input image.</dd>
+<dt><strong><code>paintings_db</code></strong> :&ensp;<code>list</code></dt>
+<dd>list of all <code>Painting</code> object that populate the DB.</dd>
+<dt><strong><code>generator</code></strong> :&ensp;<code>generator</code></dt>
+<dd>generator used to print useful information during processing</dd>
+<dt><strong><code>show_image</code></strong> :&ensp;<code>function</code></dt>
+<dd>function used to show image of the intermediate results</dd>
+<dt>print_next_step:function</dt>
+<dt>function used to print info about current processing step</dt>
+<dt><strong><code>print_time</code></strong> :&ensp;<code>function</code></dt>
+<dd>function used to print info about execution time</dd>
+<dt><strong><code>max_matches</code></strong> :&ensp;<code>int</code></dt>
+<dd>maximum number of the best (lower distance) matches found that we consider</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code></dt>
+<dd>rejects matches if the ratio between the best and the second-best match is
+below the <code>threshold</code>. Credits:
+<a href="https://stackoverflow.com/questions/17967950/improve-matching-of-feature-points-with-opencv">https://stackoverflow.com/questions/17967950/improve-matching-of-feature-points-with-opencv</a></dd>
+<dt><strong><code>match_db_image</code></strong> :&ensp;<code>bool</code></dt>
+<dd>define if:
+- rectify <code>img</code> one time using aspect ratio (True)
+- rectify <code>img</code> for every painting in <code>paintings_db</code></dd>
+<dt><strong><code>histo_mode</code></strong> :&ensp;<code>bool</code></dt>
+<dd>indicate which method use for the matching:
+- True = Histogram Matching.
+- False = ORB matching.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple[ndarray, bool]</code></dt>
+<dd>Returns:
+- a NumPy array of tuple (id, mean_distance), where id is the
+identification number of the current painting of the DB and
+mean_distance is the mean distance between <code>img</code> and the current
+painting of the DB. The array is sorted in ascending order of distance.
+- a boolean representing if a good match was found or not</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>For details visit:
+- <a href="https://docs.opencv.org/3.4/d1/d89/tutorial_py_orb.html">https://docs.opencv.org/3.4/d1/d89/tutorial_py_orb.html</a>
+- <a href="https://numpy.org/doc/1.18/reference/generated/numpy.sort.html">https://numpy.org/doc/1.18/reference/generated/numpy.sort.html</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def painting_db_lookup(img, paintings_db, generator, show_image, print_next_step, print_time, max_matches=40,
+                       threshold=0.92, match_db_image=False, histo_mode=False):
+    &#34;&#34;&#34;Lookup the DB for a specific painting using ORB or histogram matching.
+
+    Parameters
+    ----------
+    img: ndarray
+        the input image.
+    paintings_db: list
+        list of all `Painting` object that populate the DB.
+    generator: generator
+        generator used to print useful information during processing
+    show_image: function
+        function used to show image of the intermediate results
+    print_next_step:function
+        function used to print info about current processing step
+    print_time: function
+        function used to print info about execution time
+    max_matches: int
+        maximum number of the best (lower distance) matches found that we consider
+    threshold: float
+        rejects matches if the ratio between the best and the second-best match is
+        below the `threshold`. Credits:
+         https://stackoverflow.com/questions/17967950/improve-matching-of-feature-points-with-opencv
+    match_db_image: bool
+        define if:
+        - rectify `img` one time using aspect ratio (True)
+        - rectify `img` for every painting in `paintings_db`
+    histo_mode: bool
+        indicate which method use for the matching:
+        - True = Histogram Matching.
+        - False = ORB matching.
+
+    Returns
+    -------
+    tuple[ndarray, bool]
+        Returns:
+        - a NumPy array of tuple (id, mean_distance), where id is the
+        identification number of the current painting of the DB and
+        mean_distance is the mean distance between `img` and the current
+        painting of the DB. The array is sorted in ascending order of distance.
+        - a boolean representing if a good match was found or not
+
+
+    Notes
+    -----
+    For details visit:
+    - https://docs.opencv.org/3.4/d1/d89/tutorial_py_orb.html
+    - https://numpy.org/doc/1.18/reference/generated/numpy.sort.html
+    &#34;&#34;&#34;
+
+    dtype = [(&#39;painting_id&#39;, int), (&#39;val_matches&#39;, float)]
+    matches_rank = np.array([], dtype=dtype)
+
+    rectified_img = img
+    # print(rectified_img.shape)
+
+    for id, painting_obj in enumerate(paintings_db):
+        painting_img = painting_obj.image
+        # show_image(&#39;image_db&#39;, painting, wait_key=False)
+
+        if match_db_image:
+            # Step 15: Rectify Painting
+            # ----------------------------
+            print_next_step(generator, &#34;Rectify Painting&#34;)
+            start_time = time.time()
+            corners = np.float32([
+                [0, 0],
+                [img.shape[1] - 1, 0],
+                [img.shape[1] - 1, img.shape[0] - 1],
+                [0, img.shape[0] - 1]
+            ])
+            rectified_img = rectify_painting(img, corners, painting_img)
+            print_time(start_time)
+            # show_image(&#39;image_rectified&#39;, rectified_img, wait_key=True)
+
+            # Step AUTO-ADJUST: Adjust automatically brightness and contrast of the image
+            # ----------------------------
+            print_next_step(generator, &#34;Adjust brightness and contrast&#34;)
+            start_time = time.time()
+            rectified_img, alpha, beta = automatic_brightness_and_contrast(rectified_img)
+            # print(f&#34;\talpha: {alpha}&#34;)
+            # print(f&#34;\tbeta: {beta}&#34;)
+            print_time(start_time)
+            # show_image(&#39;auto_adjusted&#39;, rectified_img)
+
+        if not histo_mode:
+            # Step 16: Match features using ORB
+            # ----------------------------
+            print_next_step(generator, &#34;Match features using ORB&#34;)
+            start_time = time.time()
+            # max_distance = 40
+            match_size = match_features_orb(rectified_img, painting_obj, max_matches)
+            print_time(start_time)
+        else:
+            # Step 17: Match features using HISTOGRAMS
+            # ----------------------------
+            print_next_step(generator, &#34;Match features using HISTOGRAMS&#34;)
+            start_time = time.time()
+            match_size = histo_matching(rectified_img, painting_img)
+            print_time(start_time)
+
+        matches_rank = np.append(matches_rank, np.array([(id, match_size)], dtype=dtype))
+
+    matches_rank = np.sort(matches_rank, order=&#39;val_matches&#39;)
+
+    good_match_found = False
+
+    if matches_rank.size &gt; 0:
+        if histo_mode:
+            matches_rank = np.flip(matches_rank)
+            if matches_rank[0][1] &gt; 0:
+                good_match_found = True
+        else:
+            if matches_rank[0][1] &lt; np.inf and matches_rank[0][1] &lt; matches_rank[1][1] * threshold:
+                good_match_found = True
+
+    return matches_rank, good_match_found</code></pre>
+</details>
+</dd>
+<dt id="code.tasks.painting_retrieval.retrieve_paintings"><code class="name flex">
+<span>def <span class="ident">retrieve_paintings</span></span>(<span>paintings_detected, paintings_db, generator, show_image, print_next_step, print_time, match_db_image=False, histo_mode=False, scale_factor=1.0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Match each detected painting to the paintings DB.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>paintings_detected</code></strong> :&ensp;<code>list</code></dt>
+<dd>a list containing one <code>Painting</code> object for each
+painting detected in the input image.</dd>
+<dt><strong><code>paintings_db</code></strong> :&ensp;<code>list</code></dt>
+<dd>a list containing one <code>Painting</code> object for each
+painting in the DB.</dd>
+<dt><strong><code>generator</code></strong> :&ensp;<code>generator</code></dt>
+<dd>generator function used to take track of the current step number
+and print useful information during processing.</dd>
+<dt><strong><code>show_image</code></strong> :&ensp;<code>function</code></dt>
+<dd>function used to show image of the intermediate results</dd>
+<dt>print_next_step:function</dt>
+<dt>function used to print info about current processing step</dt>
+<dt><strong><code>print_time</code></strong> :&ensp;<code>function</code></dt>
+<dd>function used to print info about execution time</dd>
+<dt><strong><code>match_db_image</code></strong> :&ensp;<code>bool</code></dt>
+<dd>define if:
+- False: rectify each painting one time using a calculated aspect ratio
+- True: rectify each painting to match the aspect ration of every painting in <code>paintings_db</code></dd>
+<dt><strong><code>histo_mode</code></strong> :&ensp;<code>bool</code></dt>
+<dd>indicates whether to perform a Histogram Matching in the case ORB
+does not produce any match.</dd>
+<dt><strong><code>scale_factor</code></strong> :&ensp;<code>float</code></dt>
+<dd>scale factor for which the original image was scaled</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>None</code></dt>
+<dd>add painting DB info (e.g. title, author, room, etc.) to the paintings
+in the <code>paintings_detected</code> list</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def retrieve_paintings(paintings_detected, paintings_db, generator, show_image, print_next_step, print_time,
+                       match_db_image=False, histo_mode=False, scale_factor=1.):
+    &#34;&#34;&#34;Match each detected painting to the paintings DB.
+
+    Parameters
+    ----------
+    paintings_detected: list
+        a list containing one `Painting` object for each
+        painting detected in the input image.
+    paintings_db: list
+        a list containing one `Painting` object for each
+        painting in the DB.
+    generator: generator
+        generator function used to take track of the current step number
+        and print useful information during processing.
+    show_image: function
+        function used to show image of the intermediate results
+    print_next_step:function
+        function used to print info about current processing step
+    print_time: function
+        function used to print info about execution time
+    match_db_image: bool
+        define if:
+        - False: rectify each painting one time using a calculated aspect ratio
+        - True: rectify each painting to match the aspect ration of every painting in `paintings_db`
+    histo_mode: bool
+        indicates whether to perform a Histogram Matching in the case ORB
+        does not produce any match.
+    scale_factor: float
+        scale factor for which the original image was scaled
+
+    Returns
+    -------
+    None
+        add painting DB info (e.g. title, author, room, etc.) to the paintings
+        in the `paintings_detected` list
+    &#34;&#34;&#34;
+    paintings_retieved = []
+    for i, painting in enumerate(paintings_detected):
+        print(&#39;\n# Processing painting #%d/%d&#39; % (i + 1, len(paintings_detected)))
+
+        sub_img = painting.image
+
+        sub_img = cv2.resize(
+            sub_img,
+            (int(sub_img.shape[1] / scale_factor), int(sub_img.shape[0] / scale_factor)),
+            cv2.INTER_CUBIC
+        )
+
+        # Step AUTO-ADJUST: Adjust automatically brightness and contrast of the image
+        # ----------------------------
+        print_next_step(generator, &#34;Adjust brightness and contrast&#34;)
+        start_time = time.time()
+        img_auto_adjusted, alpha, beta = automatic_brightness_and_contrast(sub_img)
+        # print(f&#34;\talpha: {alpha}&#34;)
+        # print(f&#34;\tbeta: {beta}&#34;)
+        print_time(start_time)
+        show_image(&#39;auto_adjusted_image&#39;, img_auto_adjusted)
+
+        sub_img = img_auto_adjusted
+
+        # Step 14: Painting DB lookup
+        # ----------------------------
+        threshold = 0.92
+        print_next_step(generator, &#34;Painting DB lookup&#34;)
+        max_matches = 30  # 40
+        matches_rank, good_match_found = painting_db_lookup(
+            sub_img,
+            paintings_db,
+            generator=generator,
+            show_image=show_image,
+            print_next_step=print_next_step,
+            print_time=print_time,
+            threshold=threshold,
+            max_matches=max_matches,
+            match_db_image=match_db_image,
+        )
+        if not good_match_found and histo_mode:
+            if matches_rank[0][1] == np.inf:
+                matches_rank, good_match_found = painting_db_lookup(
+                    sub_img,
+                    paintings_db,
+                    generator=generator,
+                    show_image=show_image,
+                    print_next_step=print_next_step,
+                    print_time=print_time,
+                    max_matches=max_matches,
+                    match_db_image=match_db_image,
+                    histo_mode=histo_mode
+                )
+            else:
+                good_match_found = True
+        if good_match_found:
+            painting_id = matches_rank[0][0]
+            # Manage case when I find duplicated painting in the current video frame
+            if painting_id is not None and painting_id not in paintings_retieved:
+                paintings_retieved.append(painting_id)
+                recognized_painting = paintings_db[painting_id]
+                painting.title = recognized_painting.title
+                painting.author = recognized_painting.author
+                painting.room = recognized_painting.room
+                painting.filename = recognized_painting.filename
+                show_image(&#34;DB_image_predicted&#34;, recognized_painting.image)
+
+        print(&#39;\n# Painting #%d/%d information:&#39; % (i + 1, len(paintings_detected)))
+        if painting.title is not None:
+            print(&#34;\t{:10s} {}&#34;.format(&#34;title:&#34;, painting.title))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;author:&#34;, painting.author))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;room:&#34;, painting.room))
+            print(&#34;\t{:10s} {}&#34;.format(&#34;filename:&#34;, painting.filename))
+        else:
+            print(&#34;\t-- No DB match --&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="code.tasks" href="index.html">code.tasks</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="code.tasks.painting_retrieval.create_paintings_db" href="#code.tasks.painting_retrieval.create_paintings_db">create_paintings_db</a></code></li>
+<li><code><a title="code.tasks.painting_retrieval.histo_matching" href="#code.tasks.painting_retrieval.histo_matching">histo_matching</a></code></li>
+<li><code><a title="code.tasks.painting_retrieval.match_features_orb" href="#code.tasks.painting_retrieval.match_features_orb">match_features_orb</a></code></li>
+<li><code><a title="code.tasks.painting_retrieval.painting_db_lookup" href="#code.tasks.painting_retrieval.painting_db_lookup">painting_db_lookup</a></code></li>
+<li><code><a title="code.tasks.painting_retrieval.retrieve_paintings" href="#code.tasks.painting_retrieval.retrieve_paintings">retrieve_paintings</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
+</footer>
+</body>
+</html>

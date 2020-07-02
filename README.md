@@ -175,4 +175,3 @@ A full example could be:
  If ORB does not produce any match, a match based on histogram will be executed. 
  
  The output is a video stored in `'./output/paintings_and_people_localization/VID_20180529_112627.mp4'` whose frames show the results of the tasks performed on the frames of the input video.
-

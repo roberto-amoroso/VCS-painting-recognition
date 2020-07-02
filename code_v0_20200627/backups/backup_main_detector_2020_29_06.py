@@ -17,7 +17,7 @@ from utils.utils import check_media_file, create_directory
 from utils.draw import step_generator, show_image_window, print_next_step_info, \
     print_nicer, print_time_info, show_image_window_blocking
 
-from painting_retrieval import create_paintings_db
+from tasks.painting_retrieval import create_paintings_db
 from yolo.people_detection import PeopleDetection
 
 import cv2

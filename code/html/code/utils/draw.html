@@ -120,10 +120,11 @@ def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
 
         label = &#34;Person&#34;
         color = (96, 128, 0)
-        cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
+        bbox_line_thickness = round(3 * scale_factor)
+        cv2.rectangle(img, (x, y), (x + w, y + h), color, bbox_line_thickness)
 
         font_scale = 1.5 * scale_factor
-        line_thickness = 2
+        line_thickness = round(2 * scale_factor)
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, font_scale, line_thickness)[0]
         c2 = x + t_size[0] + 3, y + t_size[1] + 4
         cv2.rectangle(img, (x, y), c2, color, -1)
@@ -173,7 +174,70 @@ def draw_corners(img, corners):
         cv2.circle(img, (x, y), 3, 255, -1)
 
 
-def draw_paintings_info(img, paintings, people_room, scale_factor):
+def draw_room_info(img, people_room, scale_factor):
+    &#34;&#34;&#34;Draws information about the room where paintings and people are located.
+
+        Parameters
+        ----------
+        img: ndarray
+            the input image
+        people_room: int or None
+            number of the room where the paintings and people are located
+        scale_factor: float
+            scale factor for which the original image was scaled
+
+        Returns
+        -------
+        ndarray
+            a copy of the input image on which the information about the room
+            were drawn.
+    &#34;&#34;&#34;
+
+    h = img.shape[0]
+    w = img.shape[1]
+
+    if people_room != -1:
+        if people_room is not None:
+            room = f&#34;Room: {people_room}&#34;
+        else:
+            room = &#34;Room: --&#34;
+
+        # Draw the room of the painting
+        font = cv2.FONT_HERSHEY_PLAIN
+        font_scale = 2 * scale_factor
+        line_thickness = round(2 * scale_factor)
+        font_color = (0, 0, 0)
+        room_width, room_height = cv2.getTextSize(
+            room,
+            font,
+            font_scale,
+            line_thickness
+        )[0]
+        # xb_room = int(w / 2 - room_width / 2)
+        xb_room = int(20)
+        yb_room = int(h - 20)
+
+        bottom_left_corner_of_room = (xb_room, yb_room)
+
+        cv2.rectangle(
+            img,
+            (xb_room - 15, yb_room - room_height - 15),
+            (xb_room + room_width + 15, h - 5),
+            (255, 255, 255),
+            -1
+        )
+        cv2.putText(img,
+                    room,
+                    bottom_left_corner_of_room,
+                    font,
+                    font_scale,
+                    font_color,
+                    line_thickness)
+
+    return img
+
+
+def draw_paintings_info(img, paintings, scale_factor):
     &#34;&#34;&#34;Draws all information about paintings found in the image.
 
     Parameters
@@ -182,8 +246,6 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
         the input image
     paintings: list
         list of painting found in the image
-    people_room: int or None
-        number of the room where the paintings and people are located
     scale_factor: float
         scale factor for which the original image was scaled
 
@@ -204,9 +266,9 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
     w = img.shape[1]
 
     font = cv2.FONT_HERSHEY_PLAIN
-    font_scale = 1. * scale_factor
+    font_scale = 1.5 * scale_factor
     font_color = (255, 255, 255)
-    line_thickness = 1
+    line_thickness = round(1 * scale_factor)
 
     for painting in paintings:
         corner_points = painting.corners
@@ -225,7 +287,7 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
         tr = tuple(corner_points[1])
         bl = tuple(corner_points[3])
         br = tuple(corner_points[2])
-        bbox_line_thickness = 3
+        bbox_line_thickness = round(3 * scale_factor)
         cv2.line(img, tl, tr, bbox_color, bbox_line_thickness)
         cv2.line(img, tr, br, bbox_color, bbox_line_thickness)
         cv2.line(img, br, bl, bbox_color, bbox_line_thickness)
@@ -233,8 +295,7 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
 
         if painting.title is not None:
             # Draw the title of the painting
-            # TODO remove filename info
-            title = f&#34;{painting.filename} - {painting.title}&#34;
+            title = f&#34;{painting.title}&#34;
 
             # Find position of text above painting
             top = np.min(corner_points[:, 1])
@@ -270,7 +331,6 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
 
             bottom_left_corner_of_title = (xb_title, yb_title)
 
-            # TODO: manage special character (like &#34;ù&#34;) printed as &#34;??&#34;
             cv2.putText(img,
                         title,
                         bottom_left_corner_of_title,
@@ -282,44 +342,6 @@ def draw_paintings_info(img, paintings, people_room, scale_factor):
         # show_image(&#34;partial_final_frame&#34;, img, height=405, width=720)
 
         # cv2.waitKey(0)
-
-    if people_room != -1:
-        if people_room is not None:
-            room = f&#34;Room: {people_room}&#34;
-        else:
-            room = &#34;Room: --&#34;
-
-        # Draw the room of the painting
-        font_scale = 1.5 * scale_factor
-        line_thickness = 2
-        font_color = (0, 0, 0)
-        room_width, room_height = cv2.getTextSize(
-            room,
-            font,
-            font_scale,
-            line_thickness
-        )[0]
-        # xb_room = int(w / 2 - room_width / 2)
-        xb_room = int(20)
-        yb_room = int(h - 20)
-
-        bottom_left_corner_of_room = (xb_room, yb_room)
-
-        cv2.rectangle(
-            img,
-            (xb_room - 15, yb_room - room_height - 15),
-            (xb_room + room_width + 15, h - 5),
-            (255, 255, 255),
-            -1
-        )
-        cv2.putText(img,
-                    room,
-                    bottom_left_corner_of_room,
-                    font,
-                    font_scale,
-                    font_color,
-                    line_thickness)
-
     return img</code></pre>
 </details>
 </section>
@@ -392,7 +414,7 @@ Hough algorithm.</p></div>
 </details>
 </dd>
 <dt id="code.utils.draw.draw_paintings_info"><code class="name flex">
-<span>def <span class="ident">draw_paintings_info</span></span>(<span>img, paintings, people_room, scale_factor)</span>
+<span>def <span class="ident">draw_paintings_info</span></span>(<span>img, paintings, scale_factor)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Draws all information about paintings found in the image.</p>
@@ -402,8 +424,6 @@ Hough algorithm.</p></div>
 <dd>the input image</dd>
 <dt><strong><code>paintings</code></strong> :&ensp;<code>list</code></dt>
 <dd>list of painting found in the image</dd>
-<dt><strong><code>people_room</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
-<dd>number of the room where the paintings and people are located</dd>
 <dt><strong><code>scale_factor</code></strong> :&ensp;<code>float</code></dt>
 <dd>scale factor for which the original image was scaled</dd>
 </dl>
@@ -421,7 +441,7 @@ the paintings found in it were drawn.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def draw_paintings_info(img, paintings, people_room, scale_factor):
+<pre><code class="python">def draw_paintings_info(img, paintings, scale_factor):
     &#34;&#34;&#34;Draws all information about paintings found in the image.
 
     Parameters
@@ -430,8 +450,6 @@ the paintings found in it were drawn.</dd>
         the input image
     paintings: list
         list of painting found in the image
-    people_room: int or None
-        number of the room where the paintings and people are located
     scale_factor: float
         scale factor for which the original image was scaled
 
@@ -452,9 +470,9 @@ the paintings found in it were drawn.</dd>
     w = img.shape[1]
 
     font = cv2.FONT_HERSHEY_PLAIN
-    font_scale = 1. * scale_factor
+    font_scale = 1.5 * scale_factor
     font_color = (255, 255, 255)
-    line_thickness = 1
+    line_thickness = round(1 * scale_factor)
 
     for painting in paintings:
         corner_points = painting.corners
@@ -473,7 +491,7 @@ the paintings found in it were drawn.</dd>
         tr = tuple(corner_points[1])
         bl = tuple(corner_points[3])
         br = tuple(corner_points[2])
-        bbox_line_thickness = 3
+        bbox_line_thickness = round(3 * scale_factor)
         cv2.line(img, tl, tr, bbox_color, bbox_line_thickness)
         cv2.line(img, tr, br, bbox_color, bbox_line_thickness)
         cv2.line(img, br, bl, bbox_color, bbox_line_thickness)
@@ -481,8 +499,7 @@ the paintings found in it were drawn.</dd>
 
         if painting.title is not None:
             # Draw the title of the painting
-            # TODO remove filename info
-            title = f&#34;{painting.filename} - {painting.title}&#34;
+            title = f&#34;{painting.title}&#34;
 
             # Find position of text above painting
             top = np.min(corner_points[:, 1])
@@ -518,7 +535,6 @@ the paintings found in it were drawn.</dd>
 
             bottom_left_corner_of_title = (xb_title, yb_title)
 
-            # TODO: manage special character (like &#34;ù&#34;) printed as &#34;??&#34;
             cv2.putText(img,
                         title,
                         bottom_left_corner_of_title,
@@ -530,6 +546,85 @@ the paintings found in it were drawn.</dd>
         # show_image(&#34;partial_final_frame&#34;, img, height=405, width=720)
 
         # cv2.waitKey(0)
+    return img</code></pre>
+</details>
+</dd>
+<dt id="code.utils.draw.draw_people_bounding_box"><code class="name flex">
+<span>def <span class="ident">draw_people_bounding_box</span></span>(<span>img, people_bounding_boxes, scale_factor)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Draws the bounding box of people detected in the image.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
+    &#34;&#34;&#34;
+    Draws the bounding box of people detected in the image.
+    &#34;&#34;&#34;
+    for box in people_bounding_boxes:
+        x, y, w, h = box
+
+        label = &#34;Person&#34;
+        color = (96, 128, 0)
+        bbox_line_thickness = round(3 * scale_factor)
+        cv2.rectangle(img, (x, y), (x + w, y + h), color, bbox_line_thickness)
+
+        font_scale = 1.5 * scale_factor
+        line_thickness = round(2 * scale_factor)
+        t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, font_scale, line_thickness)[0]
+        c2 = x + t_size[0] + 3, y + t_size[1] + 4
+        cv2.rectangle(img, (x, y), c2, color, -1)
+        cv2.putText(img, label, (x, y + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, font_scale, [225, 255, 255],
+                    line_thickness)
+    return img</code></pre>
+</details>
+</dd>
+<dt id="code.utils.draw.draw_room_info"><code class="name flex">
+<span>def <span class="ident">draw_room_info</span></span>(<span>img, people_room, scale_factor)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Draws information about the room where paintings and people are located.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>img</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>the input image</dd>
+<dt><strong><code>people_room</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>number of the room where the paintings and people are located</dd>
+<dt><strong><code>scale_factor</code></strong> :&ensp;<code>float</code></dt>
+<dd>scale factor for which the original image was scaled</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>ndarray</code></dt>
+<dd>a copy of the input image on which the information about the room
+were drawn.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def draw_room_info(img, people_room, scale_factor):
+    &#34;&#34;&#34;Draws information about the room where paintings and people are located.
+
+        Parameters
+        ----------
+        img: ndarray
+            the input image
+        people_room: int or None
+            number of the room where the paintings and people are located
+        scale_factor: float
+            scale factor for which the original image was scaled
+
+        Returns
+        -------
+        ndarray
+            a copy of the input image on which the information about the room
+            were drawn.
+    &#34;&#34;&#34;
+
+    h = img.shape[0]
+    w = img.shape[1]
 
     if people_room != -1:
         if people_room is not None:
@@ -538,8 +633,9 @@ the paintings found in it were drawn.</dd>
             room = &#34;Room: --&#34;
 
         # Draw the room of the painting
-        font_scale = 1.5 * scale_factor
-        line_thickness = 2
+        font = cv2.FONT_HERSHEY_PLAIN
+        font_scale = 2 * scale_factor
+        line_thickness = round(2 * scale_factor)
         font_color = (0, 0, 0)
         room_width, room_height = cv2.getTextSize(
             room,
@@ -568,36 +664,6 @@ the paintings found in it were drawn.</dd>
                     font_color,
                     line_thickness)
 
-    return img</code></pre>
-</details>
-</dd>
-<dt id="code.utils.draw.draw_people_bounding_box"><code class="name flex">
-<span>def <span class="ident">draw_people_bounding_box</span></span>(<span>img, people_bounding_boxes, scale_factor)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Draws the bounding box of people detected in the image.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
-    &#34;&#34;&#34;
-    Draws the bounding box of people detected in the image.
-    &#34;&#34;&#34;
-    for box in people_bounding_boxes:
-        x, y, w, h = box
-
-        label = &#34;Person&#34;
-        color = (96, 128, 0)
-        cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
-
-        font_scale = 1.5 * scale_factor
-        line_thickness = 2
-        t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, font_scale, line_thickness)[0]
-        c2 = x + t_size[0] + 3, y + t_size[1] + 4
-        cv2.rectangle(img, (x, y), c2, color, -1)
-        cv2.putText(img, label, (x, y + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, font_scale, [225, 255, 255],
-                    line_thickness)
     return img</code></pre>
 </details>
 </dd>
@@ -748,6 +814,7 @@ must be pressed to continue the execution (mainly used for debugging)</p></div>
 <li><code><a title="code.utils.draw.draw_lines" href="#code.utils.draw.draw_lines">draw_lines</a></code></li>
 <li><code><a title="code.utils.draw.draw_paintings_info" href="#code.utils.draw.draw_paintings_info">draw_paintings_info</a></code></li>
 <li><code><a title="code.utils.draw.draw_people_bounding_box" href="#code.utils.draw.draw_people_bounding_box">draw_people_bounding_box</a></code></li>
+<li><code><a title="code.utils.draw.draw_room_info" href="#code.utils.draw.draw_room_info">draw_room_info</a></code></li>
 <li><code><a title="code.utils.draw.print_next_step_info" href="#code.utils.draw.print_next_step_info">print_next_step_info</a></code></li>
 <li><code><a title="code.utils.draw.print_nicer" href="#code.utils.draw.print_nicer">print_nicer</a></code></li>
 <li><code><a title="code.utils.draw.print_time_info" href="#code.utils.draw.print_time_info">print_time_info</a></code></li>

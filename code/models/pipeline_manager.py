@@ -8,15 +8,15 @@ Class managing the order of execution of the functions necessary to perform:
     - People and Paintings Localization
 """
 from models.media_type import MediaType
-from utils.draw import draw_paintings_info, draw_people_bounding_box, show_image_window, print_nicer, print_time_info, \
+from utils.draw import draw_paintings_info, draw_people_bounding_box, print_nicer, print_time_info, \
     draw_room_info
-from image_processing import create_segmented_image, image_resize
+from tasks.image_processing import create_segmented_image, image_resize
 from utils.math_utils import translate_points
-from painting_detection import detect_paintings
-from painting_rectification import rectify_painting
-from painting_retrieval import retrieve_paintings
-from people_detection import detect_people
-from paintings_and_people_localization import locale_paintings_and_people
+from tasks.painting_detection import detect_paintings
+from tasks.painting_rectification import rectify_painting
+from tasks.painting_retrieval import retrieve_paintings
+from tasks.people_detection import detect_people
+from tasks.paintings_and_people_localization import locale_paintings_and_people
 
 import cv2
 import os
@@ -174,12 +174,12 @@ class PipelineManager:
         print_time_info(start_time, "PAINTING RECTIFICATION - END")
         print("-" * 50)
 
-        # if self.task == Task.painting_rectification:
-        for i, painting in enumerate(paintings_detected):
-            x, y, w_rect, h_rect = painting.bounding_box
-            sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
-            # self.show_image_main(f"sub_img_original_{i}", sub_img_original)
-            self.show_image_main(f"painting_rectified_{i}", painting.image)
+        if self.task == Task.painting_rectification:
+            for i, painting in enumerate(paintings_detected):
+                x, y, w_rect, h_rect = painting.bounding_box
+                sub_img_original = img_original[y:y + h_rect, x:x + w_rect]
+                # self.show_image_main(f"sub_img_original_{i}", sub_img_original)
+                self.show_image_main(f"painting_rectified_{i}", painting.image)
 
     def __painting_retrieval(self, paintings_detected, scale_factor):
         """

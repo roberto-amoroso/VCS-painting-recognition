@@ -14,10 +14,10 @@ from models.task import Task
 from models.media_type import MediaType
 from models.pipeline_manager import PipelineManager
 from utils.utils import check_media_file, create_directory
-from utils.draw import step_generator, show_image_window, print_next_step_info, \
+from utils.draw import step_generator, print_next_step_info, \
     print_nicer, print_time_info, show_image_window_blocking
 
-from painting_retrieval import create_paintings_db
+from tasks.painting_retrieval import create_paintings_db
 from yolo.people_detection import PeopleDetection
 
 import cv2
@@ -69,14 +69,14 @@ def args_parse():
                "\t\t |-- people_detection/\n"
                "\t\t |-- paintings_and_people_localization/\n\n"
                "\tEach sub-directory will contain the output of the related task (indicated by the name of the\n"
-               "\tsub-directory itself). The output filename will be the same of the input ('input_filename').\n"
+               "\tsub-directory itself). The output filename will be the same of the input file processed.\n"
                "\tThe type of the output follows that of the input: 'image -> image' and 'video -> video'.\n"
                "\tThe exception is the Painting Rectification task, which produces only images as output,\n"
-               "\tspecifically one image for each individual painting detected. it is clear that the number of \n"
+               "\tspecifically one image for each individual painting detected. It is clear that the number of \n"
                "\timages produced can be very high, especially in the case of videos. To improve the organization\n"
                "\tand access to data, the rectified images produced are stored in a directory that has the same\n"
-               "\tas 'input_filename'. Inside this directory, the images are named as follows (the extension is\n"
-               "\tneglected):\n"
+               "\tas the input file processed. Inside this directory, the images are named as follows (the\n"
+               "\textension is neglected):\n"
                "\t  input = image -> '<input_filename>_NN' where NN is a progressive number assigned to each\n"
                "\t                    painting found in the image.\n"
                "\t  input = video -> '<input_filename>_FFFFF_NN' where NN has the same meaning as before but\n"
@@ -218,69 +218,23 @@ def main():
     It receives the arguments from `ArgumentParser`
     """
 
-    # arg = args_parse()
+    args = args_parse()
 
-    # input_filename = args.input_filename
-    # painting_db_path = args.db_path
-    # painting_data_path = args.data_filename
-    # output_base_path = args.output
-    # task = Task(args.task)
-    # frame_occurrence = args.frame_occurrence
-    # verbosity_print = args.verbosity_print
-    # verbosity_image = args.verbosity_image
-    # match_db_image = args.match_db_image
-    # histo_mode = args.histo_mode
-
-    verbosity_print = 0
-    verbosity_image = 2
-    task = Task(5)
-    match_db_image = False
-    histo_mode = True
-    frame_occurrence = 40
-    painting_db_path = "paintings_db/"
-    painting_data_path = "data/data.csv"
-    output_base_path = "output_paper"
-    # ----------------------
-    # TESTING TODO remove it
-    # ----------------------
-    # DIR of images and videos
-    input_filename = "dataset/paper_images/"
-    # input_filename += "20180206_113716_0009.jpg"
-    # input_filename += "VID_20180529_112849_0002.jpg"
-    # input_filename += "VID_20180529_112553_0002.jpg"
-    # input_filename += "IMG_2660_0017.jpg"
-    # input_filename += "IMG_2662_0007.jpg"
-    # input_filename += "VID_20180529_112627_0001.jpg"
-    # input_filename += "VIRB0392_0014.jpg"
-    input_filename += "test_2.jpg"
-    # input_filename += "VID_20180529_112627_0001.jpg"
-    # input_filename = "dataset/small_test/"
-    # input_filename += "20180206_112930_0022.jpg"
-    # input_filename += '1.mp4'
-    # VIDEOS
-    # input_filename = "dataset/videos/014/"
-    # input_filename += "VID_20180529_112627.mp4"
-    # input_filename += "20180206_114604.mp4"
-    # IMAGES
-    # input_filename = "dataset/photos/test/"
-    # input_filename += 'wall_mask_test.jpg'  # CRITIC
-    # input_filename += 'VID_20180529_113001_0000.jpg'  # LOTS painting not recognized
-    # input_filename += "VID_20180529_112553_0002.jpg"  # Wall inverted
-    # input_filename += "VID_20180529_112739_0004.jpg"  # Wall inverted
-    # input_filename += "VID_20180529_112627_0000.jpg"  # Wall correct
-    # input_filename += "VID_20180529_112517_0002.jpg"  # strange case
-    # input_filename += "IMG_2646_0003.jpg"  # overlapping contours
-    # input_filename += "IMG_2646_0006.jpg"  # overlapping contours
-    # input_filename += "20180206_114604_0000.jpg"  # people
-    # input_filename += "VID_20180529_112553_0004.jpg"  # wall inverted and cutted painting
-    # input_filename += "IMG_2646_0018.jpg"  # wall inverted and cutted painting
-    # input_filename += "VID_20180529_112553_0003.jpg"  # painting with error people detection
+    input_filename = args.input
+    painting_db_path = args.db_path
+    painting_data_path = args.data_filename
+    output_base_path = args.output
+    task = Task(args.task)
+    frame_occurrence = args.frame_occurrence
+    verbosity_print = args.verbosity_print
+    verbosity_image = args.verbosity_image
+    match_db_image = args.match_db_image
+    histo_mode = args.histo_mode
 
     # ---------------------------------------------------------------------------------------------
     # Script execution time
     # ---------------------------------------------------------------------------------------------
     script_time_start = time.time()
-    total_time = 0
 
     if frame_occurrence < 1:
         sys.exit("frame_occurrence should be >= 1\n")
@@ -296,15 +250,6 @@ def main():
         resize_width = None
 
     # ---------------------------------------------------------------------------------------------
-    # Check if DB path and Data filename are valid
-    # ---------------------------------------------------------------------------------------------
-
-    if not os.path.isdir(painting_db_path):
-        sys.exit(f"\nError in DB path, should be a directory: '{painting_db_path}'\n")
-    if not os.path.exists(painting_data_path):
-        sys.exit(f"\nError in Data file: '{painting_data_path}'\n")
-
-    # ---------------------------------------------------------------------------------------------
     # Check if input is valid
     # ---------------------------------------------------------------------------------------------
 
@@ -318,6 +263,15 @@ def main():
         inputs_list.append(ntpath.join(ntpath.realpath('.'), input_filename))
     except FileNotFoundError:
         sys.exit("No file or directory with the name {}".format(input_filename))
+
+    # ---------------------------------------------------------------------------------------------
+    # Check if DB path and Data filename are valid
+    # ---------------------------------------------------------------------------------------------
+
+    if not os.path.isdir(painting_db_path):
+        sys.exit(f"\nError in DB path, should be a directory: '{painting_db_path}'\n")
+    if not os.path.exists(painting_data_path):
+        sys.exit(f"\nError in Data file: '{painting_data_path}'\n")
 
     # ---------------------------------------------------------------------------------------------
     # Instantiating output path
@@ -362,7 +316,7 @@ def main():
     if frame_occurrence > 1:
         print("\t{:25s} {}".format("-Saving 1 frame every:", frame_occurrence))
     else:
-        print("\t{:25s}".format("-Saving all frames"))
+        print("\t{:25s}".format("-Saving all video frames"))
 
     print("-" * 50)
 
@@ -372,16 +326,6 @@ def main():
 
     # Generator to keep track of the current step number
     generator = step_generator()
-
-    # YOLO People Detector
-    if task.value >= Task.people_detection.value:
-        print_nicer("Creating YOLO People Detector")
-        start_time = time.time()
-        people_detector = PeopleDetection()
-        print_time_info(start_time)
-        print("-" * 50)
-    else:
-        people_detector = None
 
     # ---------------------------------------------------------------------------------------------
     # Instantiating DB
@@ -397,6 +341,18 @@ def main():
     else:
         paintings_db = []
 
+    # ---------------------------------------------------------------------------------------------
+    # Instantiating YOLO People Detector
+    # ---------------------------------------------------------------------------------------------
+    if task.value >= Task.people_detection.value:
+        print_nicer("Creating YOLO People Detector")
+        start_time = time.time()
+        people_detector = PeopleDetection()
+        print_time_info(start_time)
+        print("-" * 50)
+    else:
+        people_detector = None
+
     print("\n\n")
     print("--------------------------------------------------")
     print("--------------   START PROCESSING   --------------")
@@ -407,7 +363,13 @@ def main():
     tot_paintings_retrieved = 0
     tot_people_detected = 0
 
-    for input_filename in inputs_list:
+    for counter, input_filename in enumerate(inputs_list):
+
+        if len(inputs_list) > 1:
+            print()
+            print("#" * 50)
+            print(f"# PROCESSING FILE #{counter + 1}/{len(inputs_list)}")
+            print("#" * 50)
 
         file_time_start = time.time()
 
@@ -568,7 +530,7 @@ def main():
     print("{:25s} {:.4f} s".format("# Total execution time:", time.time() - script_time_start))
 
     if len(inputs_list) > 1:
-        print("\t{:25s} {}".format("-Num files processed:", len(inputs_list)))
+        print("{:25s} {}".format("# Num files processed:", len(inputs_list)))
 
     if task != Task.people_detection:
         print("{:25s} {}".format("# Painting detections:", tot_paintings_detected))

@@ -5,6 +5,8 @@ This document describes the structure and functionality of the software I create
 
 I propose a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, I created a ***Python*** program that is able to locate and recognize paintings and people in a video or image. For the part relating to the paintings, I used the ***OpenCV*** library, while to carry out the people detection operation I used [***YOLO***](https://pjreddie.com/darknet/yolo/), a real-time object detection system.
 
+![Example of output](https://github.com/roberto-amoroso/VCS-painting-recognition/blob/master/doc/images/img_1.png)
+
 Before proceeding to the detailed description of the functionalities of the program and the possible arguments accepted, the prototype invocation of the main script follows:
 
     $ python main_detector.py [-h] [-o OUTPUT] [-t {0,1,2,3,4,5}]

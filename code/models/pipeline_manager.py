@@ -328,6 +328,7 @@ class PipelineManager:
 
         # ------------------------------------------------------------------------
         people_bounding_boxes = []
+
         if self.task.value > Task.painting_retrieval.value or self.task == Task.people_detection:
             # ----------------------
             # PEOPLE DETECTION

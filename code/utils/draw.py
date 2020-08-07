@@ -92,7 +92,7 @@ def draw_people_bounding_box(img, people_bounding_boxes, scale_factor):
         bbox_line_thickness = round(3 * scale_factor)
         cv2.rectangle(img, (x, y), (x + w, y + h), color, bbox_line_thickness)
 
-        font_scale = 1.5 * scale_factor
+        font_scale = 2.5 * scale_factor
         line_thickness = round(2 * scale_factor)
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, font_scale, line_thickness)[0]
         c2 = x + t_size[0] + 3, y + t_size[1] + 4
@@ -173,8 +173,8 @@ def draw_room_info(img, people_room, scale_factor):
 
         # Draw the room of the painting
         font = cv2.FONT_HERSHEY_PLAIN
-        font_scale = 2 * scale_factor
-        line_thickness = round(2 * scale_factor)
+        font_scale = 3 * scale_factor
+        line_thickness = round(2.5 * scale_factor)
         font_color = (0, 0, 0)
         room_width, room_height = cv2.getTextSize(
             room,

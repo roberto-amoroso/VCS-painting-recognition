@@ -1,11 +1,16 @@
 ﻿
 # ArTection: an Art Detection Tool to Locate and Recognize Paintings and People in Museums and Art Galleries
 
+![Example of output](https://github.com/roberto-amoroso/VCS-painting-recognition/blob/master/doc/images/img_3.png)
+
+> [**ArTection: an Art Detection Tool to Locate and Recognize Paintings and People in Museums and Art Galleries**](/doc/Paper_ArTection_an_Art_Detection_Tool_to_Locate_and_Recognize_Paintings_and_Peoplein_Museums_and_Art_Galleries.pdf),            
+> Roberto Amoroso <br>
+> *University of Modena and Reggio Emilia, Italy*       
+> *VCS 2020*
+
 This document describes the structure and functionality of the software I created as the final project of the course of Vision and Cognitive Systems AY 2019/2020.
 
 I propose a method to locate and recognize paintings and people in a museum or art gallery. For this purpose, I created a ***Python*** program that is able to locate and recognize paintings and people in a video or image. For the part relating to the paintings, I used the ***OpenCV*** library, while to carry out the people detection operation I used [***YOLO***](https://pjreddie.com/darknet/yolo/), a real-time object detection system.
-
-![Example of output](https://github.com/roberto-amoroso/VCS-painting-recognition/blob/master/doc/images/img_3.png)
 
 Before proceeding to the detailed description of the functionalities of the program and the possible arguments accepted, the prototype invocation of the main script follows:
 
